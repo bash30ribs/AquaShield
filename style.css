@@ -1,6 +1,9 @@
 /* ============================================================
    AquaShield AI — Tactical Command Center Stylesheet
+   Version: 3.0 (Precision Maritime Intelligence)
    ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
   --bg: #050b0f;
@@ -21,7 +24,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; color-scheme: dark; }
 
 body {
   margin: 0;
@@ -30,9 +33,16 @@ body {
     radial-gradient(circle at 10% 100%, rgba(9,77,99,.12), transparent 35%),
     var(--bg);
   color: var(--text);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* Custom Scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #1a3842; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--cyan2); }
 
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
@@ -44,6 +54,7 @@ a { color: inherit; text-decoration: none; }
   border-bottom: 1px solid var(--line);
   background: rgba(5,11,15,.88);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -76,11 +87,14 @@ a { color: inherit; text-decoration: none; }
   display: block;
   letter-spacing: .08em;
   font-size: 15px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
 }
 .brand small {
   color: var(--muted);
   font-size: 10px;
   letter-spacing: .12em;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .system-status {
@@ -97,6 +111,7 @@ a { color: inherit; text-decoration: none; }
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: .08em;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .dot {
@@ -114,6 +129,8 @@ a { color: inherit; text-decoration: none; }
   color: #cfe1e5;
   font-variant-numeric: tabular-nums;
   font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
   border-left: 1px solid var(--line);
   padding-left: 18px;
 }
@@ -141,6 +158,7 @@ a { color: inherit; text-decoration: none; }
   font-size: 9px;
   letter-spacing: .18em;
   text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
   margin: 14px 10px 8px;
 }
 
@@ -161,7 +179,8 @@ a { color: inherit; text-decoration: none; }
   gap: 11px;
   text-align: left;
   font-size: 12px;
-  transition: .2s;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav button:hover {
@@ -200,12 +219,14 @@ a { color: inherit; text-decoration: none; }
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: .1em;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .network-value {
   color: var(--green);
   margin-top: 8px;
   font-size: 13px;
+  font-weight: 600;
 }
 
 .signal {
@@ -242,12 +263,15 @@ main {
   font-size: 9px;
   letter-spacing: .2em;
   text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
   margin-bottom: 5px;
 }
 
 h1 {
   margin: 0;
   font-size: 25px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
   letter-spacing: -.03em;
 }
 
@@ -271,6 +295,7 @@ h1 {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: .08em;
+  font-weight: 600;
   transition: all 0.2s ease;
 }
 
@@ -283,6 +308,11 @@ h1 {
   background: #0a5365;
   border-color: #167b94;
   color: white;
+  box-shadow: 0 0 15px rgba(57,217,255,0.15);
+}
+.btn.primary:hover {
+  background: #0d6b82;
+  box-shadow: 0 0 20px rgba(57,217,255,0.3);
 }
 
 .btn.danger {
@@ -304,6 +334,7 @@ h1 {
   background: linear-gradient(145deg, #0a171d, #071116);
   padding: 13px;
   min-width: 0;
+  border-radius: 6px;
 }
 
 .metric-label {
@@ -311,6 +342,7 @@ h1 {
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: .13em;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .metric-row {
@@ -322,8 +354,10 @@ h1 {
 
 .metric-value {
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
   letter-spacing: -.04em;
+  color: #ffffff;
 }
 
 .metric-unit {
@@ -334,13 +368,15 @@ h1 {
 
 .trend {
   font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
   color: var(--green);
 }
 
 .trend.warn { color: var(--yellow); }
 .trend.danger { color: var(--red); }
 
-/* ───────── MAP ───────── */
+/* ───────── COMMAND GRID & MAP ───────── */
 .command-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 330px;
@@ -352,6 +388,7 @@ h1 {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--line);
+  border-radius: 6px;
   background: #071217;
 }
 
@@ -405,6 +442,8 @@ h1 {
   font-size: 9px;
   letter-spacing: .12em;
   text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
 }
 
 .label-mumbai { left: 53%; top: 29%; }
@@ -493,11 +532,14 @@ h1 {
   text-transform: uppercase;
   letter-spacing: .08em;
   backdrop-filter: blur(8px);
+  border-radius: 4px;
+  font-weight: 600;
 }
 
 .map-tool.active {
   color: var(--cyan);
   border-color: #27758a;
+  background: rgba(14,35,44,0.9);
 }
 
 .map-status {
@@ -510,11 +552,13 @@ h1 {
   padding: 9px 11px;
   background: rgba(4,11,14,.84);
   border: 1px solid #183640;
+  border-radius: 4px;
   font-size: 9px;
   color: #6e8991;
+  font-family: 'JetBrains Mono', monospace;
 }
 
-.map-status b { color: #bdd3d8; font-weight: 500; }
+.map-status b { color: #bdd3d8; font-weight: 600; }
 
 .map-legend {
   position: absolute;
@@ -524,7 +568,9 @@ h1 {
   padding: 10px;
   background: rgba(5,14,18,.86);
   border: 1px solid #183640;
+  border-radius: 4px;
   font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .legend-title {
@@ -532,6 +578,7 @@ h1 {
   text-transform: uppercase;
   letter-spacing: .12em;
   margin-bottom: 8px;
+  font-weight: 700;
 }
 
 .legend-row {
@@ -558,6 +605,7 @@ h1 {
 .panel {
   border: 1px solid var(--line);
   background: linear-gradient(145deg, #0a171d, #071116);
+  border-radius: 6px;
 }
 
 .panel-head {
@@ -573,11 +621,14 @@ h1 {
   text-transform: uppercase;
   letter-spacing: .13em;
   color: #a9c0c5;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
 }
 
 .panel-meta {
   font-size: 9px;
   color: #52717a;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .panel-body { padding: 13px; }
@@ -597,7 +648,8 @@ h1 {
 .alert h4 {
   margin: 0;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
+  color: #e0f4f7;
 }
 
 .alert p {
@@ -611,6 +663,7 @@ h1 {
   color: #506b73;
   font-size: 8px;
   white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .ai-box {
@@ -648,9 +701,11 @@ h1 {
   position: relative;
   z-index: 2;
   font-size: 15px;
+  font-family: 'Outfit', sans-serif;
+  color: #ffffff;
 }
 
-.ai-copy strong { font-size: 12px; }
+.ai-copy strong { font-size: 12px; color: #dffaff; }
 .ai-copy p {
   margin: 4px 0 0;
   color: #69858d;
@@ -662,6 +717,7 @@ h1 {
   height: 4px;
   background: #122830;
   margin-top: 12px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
@@ -670,6 +726,7 @@ h1 {
   width: 91%;
   height: 100%;
   background: var(--green);
+  box-shadow: 0 0 8px var(--green);
 }
 
 .route-summary {
@@ -682,18 +739,21 @@ h1 {
   padding: 10px;
   border: 1px solid #17343e;
   background: #08151a;
+  border-radius: 4px;
 }
 
 .route-stat small {
   color: #55717a;
   font-size: 8px;
   text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .route-stat strong {
   display: block;
   margin-top: 5px;
   font-size: 16px;
+  font-family: 'Outfit', sans-serif;
 }
 
 .safe { color: var(--green); }
@@ -721,6 +781,7 @@ h1 {
 .wildlife strong {
   display: block;
   font-size: 10px;
+  color: #e0f4f7;
 }
 
 .wildlife small {
@@ -769,6 +830,7 @@ svg.chart-svg {
   justify-content: space-between;
   color: #49666f;
   font-size: 8px;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .incident-list { padding: 4px 13px 10px; }
@@ -787,7 +849,8 @@ svg.chart-svg {
 
 .incident-row strong {
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
+  color: #e0f4f7;
 }
 
 .incident-row small {
@@ -800,6 +863,7 @@ svg.chart-svg {
 .incident-row time {
   color: #4d6870;
   font-size: 8px;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .sos-panel {
@@ -814,7 +878,7 @@ svg.chart-svg {
   background: linear-gradient(145deg, #3b171d, #241015);
   color: #ffb2b9;
   padding: 17px 10px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 11px;
   letter-spacing: .13em;
   text-transform: uppercase;
@@ -826,6 +890,7 @@ svg.chart-svg {
 .sos:hover {
   border-color: #b84957;
   background: #481a21;
+  box-shadow: 0 0 30px rgba(255,82,99,0.3);
 }
 
 .sos-note {
@@ -846,6 +911,7 @@ footer {
   color: #405a62;
   font-size: 8px;
   letter-spacing: .05em;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 /* ───────── MODAL ───────── */
@@ -855,6 +921,7 @@ footer {
   z-index: 500;
   background: rgba(0,0,0,.72);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: none;
   place-items: center;
   padding: 20px;
@@ -869,6 +936,12 @@ footer {
   box-shadow: 0 30px 100px #000;
   border-radius: 9px;
   overflow: hidden;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .modal-head {
@@ -876,10 +949,12 @@ footer {
   border-bottom: 1px solid var(--line);
   display: flex;
   justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
 }
 
-.modal-head strong { font-size: 12px; }
-.close { border: 0; background: none; color: #6d8991; font-size: 18px; cursor: pointer; }
+.modal-head strong { font-size: 12px; color: #dffaff; }
+.close { border: 0; background: none; color: #6d8991; font-size: 18px; cursor: pointer; transition: color 0.2s; }
+.close:hover { color: #ffffff; }
 .modal-body { padding: 17px; }
 
 .sos-warning {
@@ -889,6 +964,7 @@ footer {
   color: #ffb1b8;
   font-size: 11px;
   line-height: 1.6;
+  border-radius: 4px;
 }
 
 .location-box {
@@ -898,6 +974,8 @@ footer {
   border: 1px solid var(--line);
   color: #8ca5ab;
   font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  border-radius: 4px;
 }
 
 .modal-actions {
