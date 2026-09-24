@@ -7,13 +7,24 @@
   <meta name="description" content="AquaShield AI is an AI-powered coastal disaster intelligence and marine safety platform protecting coastal communities using Computer Vision, ML, and LLMs." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=2.5" />
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0077b6" />
+  <meta name="theme-color" content="#050811" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <script>
+    if ('serviceWorker' in navigator) {
+      caches.keys().then(function(names) {
+        names.forEach(function(name) {
+          if (name !== 'aquashield-v2.0-tactical') {
+            caches.delete(name);
+          }
+        });
+      });
+    }
+  </script>
 </head>
 <body>
 
@@ -1259,9 +1270,9 @@
 <!-- Leaflet.js -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <!-- P2P Mesh & WebSocket Broadcast Script -->
-<script src="mesh_broadcast.js"></script>
+<script src="mesh_broadcast.js?v=2.5"></script>
 <!-- Main Script -->
-<script src="app.js"></script>
+<script src="app.js?v=2.5"></script>
 
 <!-- ========== OFFLINE DETECTION BANNER ========== -->
 <div id="offlineBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:10000;padding:10px 20px;background:linear-gradient(90deg,#ef4444,#dc2626);color:white;font-weight:700;font-size:0.9rem;text-align:center;font-family:'Inter',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.4);">

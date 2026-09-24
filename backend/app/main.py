@@ -58,6 +58,7 @@ def health_check():
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 @app.get("/")
+@app.get("/index.html")
 def get_index():
     return FileResponse(os.path.join(ROOT_DIR, "index.html"))
 
