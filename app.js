@@ -3,6 +3,33 @@
    Bulletproof Chart.js, Leaflet Map & Offline Fallbacks
    ============================================================ */
 
+// ======================== Live Telemetry Clock & Ticker ========================
+function updateTelemetryClock() {
+  const clockEl = document.getElementById('utcClock');
+  if (clockEl) {
+    const now = new Date();
+    const utcStr = now.toISOString().substring(11, 19) + ' UTC';
+    clockEl.textContent = utcStr;
+  }
+}
+setInterval(updateTelemetryClock, 1000);
+updateTelemetryClock();
+
+const telemetryMessages = [
+  "🌊 BUOY #04 [MUMBAI]: WAVE 3.4m | WIND 42kts | TEMP 28.5°C  •  🌀 CYCLONE RADAR: TRAJECTORY NW 18km/h",
+  "📡 INCOIS SATELLITE: LIVE TELEMETRY LINK LOCKED  •  🛡️ AI FORENSIC SCANNER: ACTIVE (0 FALSE POSITIVES)",
+  "🐬 MARINE SENSOR #12 [VIZAG]: OLIVE RIDLEY MIGRATION ACTIVE  •  🚑 COAST GUARD HELPLINE: 1554 ONLINE",
+  "🚨 FLOOD TELEMETRY [KOCHI]: MARINA BASIN ELEVATION +1.2m  •  🛣️ AI ROUTE OPTIMIZER: 70% RISK REDUCTION"
+];
+let tickerIdx = 0;
+setInterval(() => {
+  const tickerEl = document.getElementById('telemetryTicker');
+  if (tickerEl) {
+    tickerIdx = (tickerIdx + 1) % telemetryMessages.length;
+    tickerEl.innerHTML = telemetryMessages[tickerIdx];
+  }
+}, 5000);
+
 // ======================== Water Canvas Animation ========================
 const canvas = document.getElementById('waterCanvas');
 const ctx = canvas ? canvas.getContext('2d') : null;

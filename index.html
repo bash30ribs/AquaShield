@@ -17,8 +17,31 @@
 </head>
 <body>
 
-<!-- ========== WATER CANVAS ========== -->
-<canvas id="waterCanvas"></canvas>
+<!-- ========== TOP TELEMETRY BAR ========== -->
+<div class="top-telemetry-bar">
+  <div class="telemetry-left">
+    <div class="telemetry-item">
+      <span class="telemetry-dot"></span>
+      <span>INCOIS-7 SATLINK: ONLINE</span>
+    </div>
+    <div class="telemetry-item">
+      <span class="telemetry-dot"></span>
+      <span>MESH NODES: 14 ACTIVE</span>
+    </div>
+    <div class="telemetry-item">
+      <span class="telemetry-dot critical"></span>
+      <span>DEFCON LEVEL: ADVISORY 3</span>
+    </div>
+  </div>
+  <div class="telemetry-right">
+    <div class="telemetry-ticker" id="telemetryTicker">
+      🌊 BUOY #04 [MUMBAI]: WAVE 3.4m | WIND 42kts | TEMP 28.5°C &nbsp;•&nbsp; 🌀 CYCLONE RADAR: TRAJECTORY NW 18km/h &nbsp;•&nbsp; 📡 FORENSIC ENGINE: READY
+    </div>
+    <div class="telemetry-item" id="utcClock" style="font-weight: 700; color: #ffffff;">
+      00:00:00 UTC
+    </div>
+  </div>
+</div>
 
 <!-- ========== NAV ========== -->
 <nav id="mainNav">
