@@ -37,5 +37,7 @@
 - [x] Modern UI Design System overhaul in `style.css` (Obsidian Maritime Cyber-Glass Theme).
 - [x] Top Telemetry Header Bar & Live Satlink Ticker added in `index.html`.
 - [x] Frontend JavaScript upgrade in `app.js` with live UTC clock and dynamic telemetry ticker.
+- [x] Tactical Radar Sweep animation added to GIS Map viewport.
+- [x] Dedicated Interactive Modals for Emergency Copilot (NDMA SOPs) and Wildlife Rescue Dispatch.
 - [x] Server verified active and live at `http://127.0.0.1:8000`.
 

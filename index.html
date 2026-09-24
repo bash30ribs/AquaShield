@@ -157,6 +157,7 @@
         <div class="map">
 
           <div class="coast"></div>
+          <div class="radar-sweep"></div>
 
           <div class="map-label label-mumbai">Mumbai</div>
           <div class="map-label label-ratnagiri">Ratnagiri</div>
@@ -486,30 +487,102 @@
 <div class="modal" id="aiModal">
   <div class="modal-card">
     <div class="modal-head">
-      <strong>AQUASHIELD FORENSIC AI SCANNER</strong>
+      <strong>⌖ AQUASHIELD FORENSIC AI SCANNER</strong>
       <button class="close" onclick="closeAI()">×</button>
     </div>
     <div class="modal-body">
-      <div style="background:#071217;border:1px dashed #244853;padding:20px;text-align:center;border-radius:6px;margin-bottom:12px;">
-        <div style="font-size:2rem;margin-bottom:6px;">📸</div>
-        <strong style="font-size:12px;color:#dffaff;">Upload Disaster / Marine Photo</strong>
-        <p style="color:#78939c;font-size:10px;margin:4px 0 10px;">Drag & drop image for forensic deepfake & damage severity scanning</p>
+      <div style="background:#071217;border:1px dashed #244853;padding:22px;text-align:center;border-radius:8px;margin-bottom:14px;">
+        <div style="font-size:2.2rem;margin-bottom:8px;">📸</div>
+        <strong style="font-size:13px;color:#dffaff;">Upload Disaster / Coastal Evidence Photo</strong>
+        <p style="color:#78939c;font-size:11px;margin:5px 0 12px;">Automated deepfake detection & multi-hazard severity analysis (YOLOv11 + ViT)</p>
         <input type="file" id="aiFileInput" style="display:none" onchange="runImageScan(this)">
-        <button class="btn primary" onclick="document.getElementById('aiFileInput').click()">Select Photo</button>
+        <button class="btn primary" onclick="document.getElementById('aiFileInput').click()">⚡ Select / Drag Photo</button>
       </div>
-      <div id="aiScanResult" style="background:#08151b;border:1px solid #17343e;padding:12px;border-radius:6px;font-size:11px;color:#9eb5bb;">
+      <div id="aiScanResult" style="background:#08151b;border:1px solid #17343e;padding:14px;border-radius:8px;font-size:11px;color:#9eb5bb;line-height:1.6;">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-          <span>Pipeline Status:</span>
-          <span style="color:#42e6a4;">ONLINE (YOLOv11 + EfficientNet)</span>
+          <span>AI Vision Pipeline:</span>
+          <span style="color:#42e6a4;font-family:'JetBrains Mono',monospace;">ONLINE (YOLOv11 + ViT)</span>
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-          <span>Buoy Sensor Cross-Ref:</span>
-          <span style="color:#39d9ff;">MATCHED (Wave 2.8m)</span>
+          <span>Ocean Sensor Cross-Validation:</span>
+          <span style="color:#39d9ff;font-family:'JetBrains Mono',monospace;">SYNCHRONIZED (Wave 2.8m)</span>
         </div>
         <div style="display:flex;justify-content:space-between;">
-          <span>Authenticity Score:</span>
-          <strong style="color:#42e6a4;">94% Authentic ✓</strong>
+          <span>Authenticity & Severity Confidence:</span>
+          <strong style="color:#42e6a4;font-family:'JetBrains Mono',monospace;">94.2% Real • Grade 3 Surge</strong>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COPILOT MODAL -->
+<div class="modal" id="copilotModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <strong>✦ AI EMERGENCY DISASTER COPILOT</strong>
+      <button class="close" onclick="closeCopilot()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#071217;border:1px solid #17343e;padding:14px;border-radius:8px;margin-bottom:14px;">
+        <div style="font-size:11px;color:#39d9ff;font-family:'JetBrains Mono',monospace;margin-bottom:4px;">Grounded in NDMA & INCOIS Standard Operating Procedures</div>
+        <p style="font-size:11px;color:#8ca5ab;margin:0;line-height:1.5;">Immediate tactical guidance for coastal operations commanders and first responders.</p>
+      </div>
+
+      <div style="display:grid;gap:8px;margin-bottom:14px;">
+        <div style="background:#09161c;border:1px solid #1d3c47;padding:10px 12px;border-radius:6px;">
+          <strong style="color:#42e6a4;font-size:11px;">1. High Sea Surge Protocol</strong>
+          <p style="color:#78939c;font-size:10px;margin:3px 0 0;">Suspend small craft operations at Ratnagiri harbor. Order beach patrol clearance.</p>
+        </div>
+        <div style="background:#09161c;border:1px solid #1d3c47;padding:10px 12px;border-radius:6px;">
+          <strong style="color:#ffd166;font-size:11px;">2. Evacuation Corridor Activation</strong>
+          <p style="color:#78939c;font-size:10px;margin:3px 0 0;">Route A (Eastern Bypass) has 92% clearance. Safe shelter capacity at 64%.</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="copilotPrompt" placeholder="Ask Copilot (e.g. 'Standard cyclone surge procedure')..." style="flex:1;background:#050c0f;border:1px solid #1c3b45;border-radius:6px;padding:9px 12px;color:#fff;font-size:11px;">
+        <button class="btn primary" onclick="queryCopilot()">Ask AI</button>
+      </div>
+      <div id="copilotResponse" style="margin-top:10px;font-size:11px;color:#dffaff;font-family:'JetBrains Mono',monospace;display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- WILDLIFE RESCUE MODAL -->
+<div class="modal" id="wildlifeModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <strong>♧ MARINE WILDLIFE RESCUE DISPATCH</strong>
+      <button class="close" onclick="closeWildlife()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;gap:10px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;background:#08161c;padding:12px;border:1px solid #1a3843;border-radius:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:22px;">🐢</span>
+            <div>
+              <strong style="color:#fff;font-size:12px;">Olive Ridley Turtle Stranding</strong>
+              <div style="color:#78939c;font-size:10px;">Ratnagiri Coast • GPS: 17.001° N, 73.278° E</div>
+            </div>
+          </div>
+          <button class="btn primary" onclick="dispatchRescue(this, 'Ratnagiri Unit')">Dispatch Unit</button>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;background:#08161c;padding:12px;border:1px solid #1a3843;border-radius:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:22px;">🐬</span>
+            <div>
+              <strong style="color:#fff;font-size:12px;">Indo-Pacific Humpback Dolphin</strong>
+              <div style="color:#78939c;font-size:10px;">Goa Estuary • Rescue En Route (ETA 8m)</div>
+            </div>
+          </div>
+          <span style="color:#42e6a4;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;">EN ROUTE</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn primary" style="width:100%" onclick="alert('✓ New Wildlife incident report logged and broadcasted to local NGO network.'); closeWildlife();">+ Report New Marine Stranding</button>
       </div>
     </div>
   </div>
@@ -519,7 +592,6 @@
 /* ─────────────────────────────────────────
    CLOCK
 ───────────────────────────────────────── */
-
 function updateClock(){
   const now = new Date();
   const time = new Intl.DateTimeFormat("en-IN",{
@@ -532,15 +604,12 @@ function updateClock(){
 
   document.getElementById("clock").textContent = time + " IST";
 }
-
 updateClock();
-setInterval(updateClock,1000);
-
+setInterval(updateClock, 1000);
 
 /* ─────────────────────────────────────────
    SIMULATED TELEMETRY
 ───────────────────────────────────────── */
-
 function updateTelemetry(){
   const wave = (2.5 + Math.random() * .7).toFixed(1);
   const wind = Math.floor(59 + Math.random() * 12);
@@ -548,146 +617,154 @@ function updateTelemetry(){
   document.getElementById("wave").textContent = wave;
   document.getElementById("wind").textContent = wind;
 }
-
-setInterval(updateTelemetry,5000);
-
+setInterval(updateTelemetry, 5000);
 
 /* ─────────────────────────────────────────
    MAP SYNC
 ───────────────────────────────────────── */
-
 let syncSeconds = 12;
-
 setInterval(()=>{
   syncSeconds++;
   if(syncSeconds > 59) syncSeconds = 1;
   document.getElementById("sync").textContent = syncSeconds + " sec ago";
-},1000);
-
+}, 1000);
 
 /* ─────────────────────────────────────────
    NAVIGATION
 ───────────────────────────────────────── */
-
 function selectNav(button){
   document.querySelectorAll(".nav button").forEach(btn=>{
     btn.classList.remove("active");
   });
-
   button.classList.add("active");
 
   const label = button.textContent.trim();
-
-  if(label.includes("Tactical")){
+  if(label.includes("Tactical") || label.includes("Command")){
     document.querySelector(".map-panel").scrollIntoView({
+      behavior:"smooth",
+      block:"center"
+    });
+  } else if(label.includes("Evacuation")){
+    document.querySelector(".route-summary").scrollIntoView({
       behavior:"smooth",
       block:"center"
     });
   }
 }
 
-
 /* ─────────────────────────────────────────
    REFRESH
 ───────────────────────────────────────── */
-
 function refreshData(){
   const button = event.currentTarget;
   const old = button.textContent;
-
   button.textContent = "↻ Syncing...";
   button.disabled = true;
-
   syncSeconds = 0;
 
   setTimeout(()=>{
     updateTelemetry();
     button.textContent = "✓ Updated";
-  },700);
+  }, 600);
 
   setTimeout(()=>{
     button.textContent = old;
     button.disabled = false;
-  },1600);
+  }, 1500);
 }
 
-
 /* ─────────────────────────────────────────
-   AI ANALYSIS & COPILOT
+   MODALS: FORENSIC AI, COPILOT & WILDLIFE
 ───────────────────────────────────────── */
-
 function showAI(){
   document.getElementById("aiModal").classList.add("show");
 }
-
 function closeAI(){
   document.getElementById("aiModal").classList.remove("show");
+}
+
+function showCopilot(){
+  document.getElementById("copilotModal").classList.add("show");
+}
+function closeCopilot(){
+  document.getElementById("copilotModal").classList.remove("show");
+}
+
+function showWildlife(){
+  document.getElementById("wildlifeModal").classList.add("show");
+}
+function closeWildlife(){
+  document.getElementById("wildlifeModal").classList.remove("show");
+}
+
+function queryCopilot(){
+  const prompt = document.getElementById("copilotPrompt").value;
+  const res = document.getElementById("copilotResponse");
+  if(!prompt) return;
+  res.style.display = "block";
+  res.textContent = "⚡ AI synthesizing NDMA guidelines for: \"" + prompt + "\"...";
+  setTimeout(()=>{
+    res.innerHTML = "✓ <strong style='color:#42e6a4'>NDMA Guideline Protocol:</strong> Deploy barrier booms along vulnerable shoreline. Direct non-essential personnel to Sector 4 elevated muster stations. Notify Regional Maritime Rescue Coordination Center (MRCC).";
+  }, 800);
+}
+
+function dispatchRescue(btn, unitName){
+  btn.textContent = "✓ Dispatched";
+  btn.style.background = "#123c31";
+  btn.style.borderColor = "#42e6a4";
+  btn.style.color = "#42e6a4";
+  btn.disabled = true;
 }
 
 function runImageScan(input){
   if(input.files && input.files[0]){
     const resultBox = document.getElementById("aiScanResult");
     resultBox.innerHTML = `
-      <div style="color:#39d9ff;margin-bottom:4px;">⚡ Scanning forensic layers...</div>
-      <div style="color:#42e6a4;">✓ YOLOv11: Flood & Submerged Roads detected</div>
-      <div style="color:#42e6a4;">✓ EfficientNet: Severity Level HIGH (1.8m water)</div>
-      <div style="color:#42e6a4;">✓ ViT: No synthetic AI/deepfake artifacts found (98.4% Confidence)</div>
+      <div style="color:#39d9ff;margin-bottom:4px;">⚡ Running YOLOv11 & ViT forensic analysis...</div>
+      <div style="color:#42e6a4;">✓ Object Detection: Flood surge & partially submerged structures identified</div>
+      <div style="color:#42e6a4;">✓ EfficientNet Severity: Level HIGH (Estimated depth 1.75m)</div>
+      <div style="color:#42e6a4;">✓ ViT Forensics: 98.6% Authentic (No generative AI/deepfake artifacts)</div>
     `;
   }
 }
 
-function showCopilot(){
-  alert("🤖 AI Emergency Copilot\n\nGrounded in NDMA (National Disaster Management Authority) and INCOIS SOPs.\n\nQuick Guidance:\n• Cyclone Alert: Move inland to elevated bypass shelters\n• High Tide: Suspend fishing vessels in harbor\n• Emergency Helplines: Coast Guard (1554), NDMA (1078)");
-}
-
-function showWildlife(){
-  alert("🐬 Wildlife Rescue Gateway\n\nActive Sightings:\n1. Olive Ridley Turtle (Ratnagiri) - Priority Medium\n2. Indo-Pacific Dolphin (Goa) - NGO Rescue Dispatched\n3. Marine Mammal Stranding (Alibaug) - Assessment Pending");
-}
-
-
 /* ─────────────────────────────────────────
    SOS
 ───────────────────────────────────────── */
-
 function triggerSOS(){
   document.getElementById("sosModal").classList.add("show");
 }
-
 function closeSOS(){
   document.getElementById("sosModal").classList.remove("show");
 }
-
 function simulateSOS(){
   const button = document.querySelector(".modal .danger");
-
-  button.textContent = "TRANSMITTING...";
-
+  button.textContent = "TRANSMITTING DISTRESS...";
   setTimeout(()=>{
-    button.textContent = "✓ TRANSMISSION QUEUED";
+    button.textContent = "✓ DISTRESS SIGNAL TRANSMITTED";
     button.style.color = "#42e6a4";
     button.style.borderColor = "#2b765b";
     button.style.background = "#102a22";
-  },1200);
+  }, 1200);
 
   setTimeout(()=>{
     closeSOS();
-    button.textContent = "Transmit SOS";
+    button.textContent = "Transmitting SOS";
     button.style = "";
-  },2800);
+  }, 2800);
 }
 
-
 /* ─────────────────────────────────────────
-   CLOSE MODAL WITH ESC
+   CLOSE MODAL WITH ESC KEY
 ───────────────────────────────────────── */
-
-document.addEventListener("keydown",e=>{
+document.addEventListener("keydown", e=>{
   if(e.key === "Escape"){
     closeSOS();
     closeAI();
+    closeCopilot();
+    closeWildlife();
   }
 });
 </script>
-
 </body>
 </html>
