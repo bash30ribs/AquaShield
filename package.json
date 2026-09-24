@@ -1,0 +1,17 @@
+{
+  "name": "aquashield-ai",
+  "version": "1.0.0",
+  "description": "AI-Powered Coastal Disaster Intelligence and Marine Safety Platform",
+  "scripts": {
+    "dev": "./venv/bin/python3 run_app.py",
+    "start": "./venv/bin/python3 run_app.py"
+  },
+  "keywords": [
+    "coastal",
+    "disaster-intelligence",
+    "marine-safety",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT"
+}

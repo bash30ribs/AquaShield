@@ -1,0 +1,19 @@
+{
+  "name": "AquaShield AI — Coastal Disaster Intelligence",
+  "short_name": "AquaShield AI",
+  "description": "AI-Powered Coastal Disaster Intelligence and Marine Safety Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#03045e",
+  "theme_color": "#0077b6",
+  "orientation": "portrait-primary",
+  "categories": ["emergency", "weather", "safety"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%230077b6'/><text x='50' y='65' text-anchor='middle' font-size='50' fill='white'>🌊</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

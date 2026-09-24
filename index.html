@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AquaShield AI — Coastal Disaster Intelligence Platform</title>
+  <meta name="description" content="AquaShield AI is an AI-powered coastal disaster intelligence and marine safety platform protecting coastal communities using Computer Vision, ML, and LLMs." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0077b6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+</head>
+<body>
+
+<!-- ========== WATER CANVAS ========== -->
+<canvas id="waterCanvas"></canvas>
+
+<!-- ========== NAV ========== -->
+<nav id="mainNav">
+  <div class="nav-brand">
+    <div class="nav-logo">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <circle cx="18" cy="18" r="18" fill="url(#logoGrad)"/>
+        <path d="M8 20c2-4 5-6 10-6s8 2 10 6" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M6 24c2-4 6-7 12-7s10 3 12 7" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6"/>
+        <circle cx="18" cy="12" r="3" fill="white"/>
+        <defs>
+          <linearGradient id="logoGrad" x1="0" y1="0" x2="36" y2="36">
+            <stop offset="0%" stop-color="#0077b6"/>
+            <stop offset="100%" stop-color="#00b4d8"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <span class="brand-text">AquaShield <span class="brand-ai">AI</span></span>
+  </div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#dashboard" class="nav-link" data-section="dashboard">Dashboard</a></li>
+    <li><a href="#disaster-map" class="nav-link" data-section="disaster-map">Live Map</a></li>
+    <li><a href="#ai-analysis" class="nav-link" data-section="ai-analysis">AI Analysis</a></li>
+    <li><a href="#marine-rescue" class="nav-link" data-section="marine-rescue">Marine Rescue</a></li>
+    <li><a href="#safe-routes" class="nav-link" data-section="safe-routes">Safe Routes</a></li>
+    <li><a href="#prediction" class="nav-link" data-section="prediction">Prediction</a></li>
+    <li><a href="#assistant" class="nav-link" data-section="assistant">AI Assistant</a></li>
+    <li><a href="#community" class="nav-link" data-section="community">Community</a></li>
+    <li><a href="#sos" class="nav-link sos-link" data-section="sos">🚨 SOS</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ========== HERO ========== -->
+<section id="hero">
+  <div class="hero-particles" id="heroParticles"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="pulse-dot"></span>
+      <span>Live Monitoring Active</span>
+    </div>
+    <h1 class="hero-title">
+      <span class="title-aqua">Aqua</span><span class="title-shield">Shield</span> <span class="title-ai">AI</span>
+    </h1>
+    <p class="hero-tagline">Protecting Coastal Communities using AI, Computer Vision,<br/>Machine Learning, and Large Language Models.</p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="stat-num" data-target="1247">0</span>
+        <span class="stat-label">Reports Verified</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-num" data-target="89">0</span>
+        <span class="stat-label">Marine Rescues</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-num" data-target="15">0</span>
+        <span class="stat-label">Active Alerts</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-num" data-target="342">0</span>
+        <span class="stat-label">Lives Protected</span>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <a href="#dashboard" class="btn-primary ripple" id="dashboardBtn">View Dashboard</a>
+      <a href="#sos" class="btn-sos ripple" id="sosHeroBtn">🚨 Emergency SOS</a>
+    </div>
+  </div>
+  <div class="hero-scroll-hint">
+    <span>Scroll to explore</span>
+    <div class="scroll-arrow"></div>
+  </div>
+
+  <!-- Wave layers -->
+  <div class="wave-container">
+    <svg class="wave wave1" viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <path d="M0,60 C240,120 480,0 720,60 C960,120 1200,0 1440,60 L1440,120 L0,120 Z" fill="rgba(0,180,216,0.15)"/>
+    </svg>
+    <svg class="wave wave2" viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <path d="M0,80 C360,20 720,120 1080,40 C1260,0 1380,80 1440,60 L1440,120 L0,120 Z" fill="rgba(0,119,182,0.2)"/>
+    </svg>
+    <svg class="wave wave3" viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <path d="M0,40 C180,100 360,20 540,60 C720,100 900,20 1080,60 C1260,100 1380,30 1440,50 L1440,120 L0,120 Z" fill="rgba(144,224,239,0.25)"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ========== DASHBOARD ========== -->
+<section id="dashboard" class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-icon">📊</div>
+      <h2>Disaster Intelligence Dashboard</h2>
+      <p>Real-time coastal disaster monitoring across India's coastline</p>
+    </div>
+
+    <!-- Alert Banner -->
+    <div class="alert-banner" id="alertBanner">
+      <div class="alert-pulse"></div>
+      <span class="alert-icon">⚠️</span>
+      <span class="alert-text">ACTIVE ALERT: Cyclone approaching Maharashtra coast — High Risk Zone. Evacuate immediately.</span>
+      <button class="alert-close" onclick="this.parentElement.style.display='none'">✕</button>
+    </div>
+
+    <!-- Risk Level Cards -->
+    <div class="risk-grid">
+      <div class="risk-card risk-severe">
+        <div class="risk-icon">🌀</div>
+        <div class="risk-info">
+          <span class="risk-label">Cyclone</span>
+          <span class="risk-level">🔴 Severe Danger</span>
+          <span class="risk-region">Maharashtra Coast</span>
+        </div>
+        <div class="risk-wave"></div>
+      </div>
+      <div class="risk-card risk-high">
+        <div class="risk-icon">🌊</div>
+        <div class="risk-info">
+          <span class="risk-label">High Waves</span>
+          <span class="risk-level">🟠 High Risk</span>
+          <span class="risk-region">Kerala & Goa</span>
+        </div>
+        <div class="risk-wave"></div>
+      </div>
+      <div class="risk-card risk-moderate">
+        <div class="risk-icon">🌧️</div>
+        <div class="risk-info">
+          <span class="risk-label">Heavy Rainfall</span>
+          <span class="risk-level">🟡 Moderate Risk</span>
+          <span class="risk-region">Karnataka</span>
+        </div>
+        <div class="risk-wave"></div>
+      </div>
+      <div class="risk-card risk-safe">
+        <div class="risk-icon">☀️</div>
+        <div class="risk-info">
+          <span class="risk-label">Tsunami</span>
+          <span class="risk-level">🟢 Safe</span>
+          <span class="risk-region">Tamil Nadu</span>
+        </div>
+        <div class="risk-wave"></div>
+      </div>
+    </div>
+
+    <!-- Weather Strip -->
+    <div class="weather-strip">
+      <div class="weather-item">
+        <span class="wi">🌡️</span>
+        <div>
+          <span class="w-val">28°C</span>
+          <span class="w-lbl">Temperature</span>
+        </div>
+      </div>
+      <div class="weather-item">
+        <span class="wi">💨</span>
+        <div>
+          <span class="w-val">72 km/h</span>
+          <span class="w-lbl">Wind Speed</span>
+        </div>
+      </div>
+      <div class="weather-item">
+        <span class="wi">🌊</span>
+        <div>
+          <span class="w-val">4.2 m</span>
+          <span class="w-lbl">Wave Height</span>
+        </div>
+      </div>
+      <div class="weather-item">
+        <span class="wi">💧</span>
+        <div>
+          <span class="w-val">89%</span>
+          <span class="w-lbl">Humidity</span>
+        </div>
+      </div>
+      <div class="weather-item">
+        <span class="wi">👁️</span>
+        <div>
+          <span class="w-val">2.1 km</span>
+          <span class="w-lbl">Visibility</span>
+        </div>
+      </div>
+      <div class="weather-item">
+        <span class="wi">📡</span>
+        <div>
+          <span class="w-val">1008 hPa</span>
+          <span class="w-lbl">Pressure</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+      <div class="glass-card chart-card">
+        <h3>Disaster Frequency (2024)</h3>
+        <canvas id="disasterChart" height="220"></canvas>
+      </div>
+      <div class="glass-card chart-card">
+        <h3>Risk Level Distribution</h3>
+        <canvas id="riskChart" height="220"></canvas>
+      </div>
+      <div class="glass-card chart-card">
+        <h3>Response Time Trend</h3>
+        <canvas id="responseChart" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- Live Feed -->
+    <div class="glass-card">
+      <h3 class="card-title">🔴 Live Incident Feed</h3>
+      <div class="live-feed" id="liveFeed">
+        <div class="feed-item critical">
+          <div class="feed-dot red"></div>
+          <div class="feed-content">
+            <span class="feed-type">Cyclone Alert</span>
+            <span class="feed-loc">📍 Ratnagiri, MH</span>
+            <span class="feed-time">2 min ago</span>
+          </div>
+          <span class="feed-badge critical-badge">CRITICAL</span>
+        </div>
+        <div class="feed-item high">
+          <div class="feed-dot orange"></div>
+          <div class="feed-content">
+            <span class="feed-type">Coastal Flooding</span>
+            <span class="feed-loc">📍 Kochi, Kerala</span>
+            <span class="feed-time">8 min ago</span>
+          </div>
+          <span class="feed-badge high-badge">HIGH</span>
+        </div>
+        <div class="feed-item moderate">
+          <div class="feed-dot yellow"></div>
+          <div class="feed-content">
+            <span class="feed-type">High Tide Warning</span>
+            <span class="feed-loc">📍 Goa Coastline</span>
+            <span class="feed-time">15 min ago</span>
+          </div>
+          <span class="feed-badge moderate-badge">MODERATE</span>
+        </div>
+        <div class="feed-item marine">
+          <div class="feed-dot blue"></div>
+          <div class="feed-content">
+            <span class="feed-type">Marine Animal Rescue</span>
+            <span class="feed-loc">📍 Vizag Beach, AP</span>
+            <span class="feed-time">22 min ago</span>
+          </div>
+          <span class="feed-badge marine-badge">RESCUE</span>
+        </div>
+        <div class="feed-item moderate">
+          <div class="feed-dot yellow"></div>
+          <div class="feed-content">
+            <span class="feed-type">Oil Spill Detected</span>
+            <span class="feed-loc">📍 Mumbai Harbor</span>
+            <span class="feed-time">31 min ago</span>
+          </div>
+          <span class="feed-badge moderate-badge">MODERATE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== DISASTER MAP ========== -->
+<section id="disaster-map" class="section alt-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-icon">🗺️</div>
+      <h2>Disaster Intelligence Map</h2>
+      <p>Interactive GIS visualization of active disasters, shelters, hospitals, and rescue centers</p>
+    </div>
+    <div class="map-wrapper glass-card">
+      <div class="map-legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>Disaster Zone</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span>Shelter</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>Hospital</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>Warning Area</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#a855f7"></span>Marine Rescue</div>
+      </div>
+      <div id="map" style="height:480px;border-radius:16px;overflow:hidden;"></div>
+    </div>
+    <div class="map-stats">
+      <div class="map-stat glass-card">
+        <span class="ms-icon">🔴</span>
+        <span class="ms-count">12</span>
+        <span class="ms-label">Active Disasters</span>
+      </div>
+      <div class="map-stat glass-card">
+        <span class="ms-icon">🟢</span>
+        <span class="ms-count">47</span>
+        <span class="ms-label">Shelters Active</span>
+      </div>
+      <div class="map-stat glass-card">
+        <span class="ms-icon">🔵</span>
+        <span class="ms-count">23</span>
+        <span class="ms-label">Hospitals Alerted</span>
+      </div>
+      <div class="map-stat glass-card">
+        <span class="ms-icon">🟣</span>
+        <span class="ms-count">8</span>
+        <span class="ms-label">Marine Rescues</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== AI IMAGE ANALYSIS ========== -->
+<section id="ai-analysis" class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-icon">🤖</div>
+      <h2>AI Image Verification</h2>
+      <p>Upload disaster images for instant AI-powered verification and severity assessment</p>
+    </div>
+    <div class="analysis-grid">
+      <div class="glass-card upload-zone" id="uploadZone">
+        <div class="upload-inner" id="uploadInner">
+          <div class="upload-icon">📤</div>
+          <h3>Upload Disaster Image</h3>
+          <p>Drag & drop or click to upload flood, cyclone, or damage images</p>
+          <p class="upload-formats">Supports: JPG, PNG, MP4 • Max 50MB</p>
+          <input type="file" id="fileInput" accept="image/*" style="display:none"/>
+          <button class="btn-primary ripple" onclick="document.getElementById('fileInput').click()">Choose File</button>
+        </div>
+        <div class="upload-preview" id="uploadPreview" style="display:none">
+          <img id="previewImg" src="" alt="Preview"/>
+          <button class="btn-outline" onclick="resetUpload()">Upload Another</button>
+        </div>
+      </div>
+
+      <div class="glass-card analysis-result" id="analysisResult">
+        <h3 class="card-title">🔍 AI Analysis Results</h3>
+        <div class="result-placeholder" id="resultPlaceholder">
+          <div class="placeholder-icon">🌊</div>
+          <p>Upload an image to see AI analysis</p>
+        </div>
+        <div class="result-content" id="resultContent" style="display:none">
+          <div class="ai-model-badge">
+            <span>⚡ YOLOv11 + EfficientNet + ViT</span>
+          </div>
+          <div class="detection-row">
+            <span class="det-label">Flood Detected</span>
+            <span class="det-value yes" id="detFlood">Yes ✓</span>
+          </div>
+          <div class="detection-row">
+            <span class="det-label">Confidence</span>
+            <div class="confidence-bar-wrap">
+              <div class="confidence-bar" id="confBar"></div>
+              <span class="conf-text" id="confText">96%</span>
+            </div>
+          </div>
+          <div class="detection-row">
+            <span class="det-label">Severity</span>
+            <span class="severity-badge" id="sevBadge">🔴 High</span>
+          </div>
+          <div class="detection-row">
+            <span class="det-label">Water Level</span>
+            <span class="det-value" id="detWater">~1.8m estimated</span>
+          </div>
+          <div class="detection-row">
+            <span class="det-label">Objects Detected</span>
+            <span class="det-value" id="detObjects">Submerged Roads, Vehicles</span>
+          </div>
+          <div class="detection-row">
+            <span class="det-label">Fake Report</span>
+            <span class="det-value no" id="detFake">No — Authentic ✓</span>
+          </div>
+          <div class="result-actions">
+            <button class="btn-primary ripple">📄 Generate PDF Report</button>
+            <button class="btn-outline ripple">🚨 Alert Authorities</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Models Info -->
+    <div class="models-row">
+      <div class="glass-card model-card">
+        <div class="model-icon">🎯</div>
+        <h4>YOLOv11</h4>
+        <p>Real-time object detection for floods, road damage, fallen trees, and marine animals</p>
+        <div class="model-tag">Object Detection</div>
+      </div>
+      <div class="glass-card model-card">
+        <div class="model-icon">🧠</div>
+        <h4>EfficientNet</h4>
+        <p>Damage severity classification from low to critical with 94%+ accuracy</p>
+        <div class="model-tag">Classification</div>
+      </div>
+      <div class="glass-card model-card">
+        <div class="model-icon">👁️</div>
+        <h4>Vision Transformer</h4>
+        <p>Advanced image understanding for complex disaster scenes and fake detection</p>
+        <div class="model-tag">Image Understanding</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== MARINE RESCUE ========== -->
+<section id="marine-rescue" class="section alt-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-icon">🐬</div>
+      <h2>Marine Animal Rescue</h2>
+      <p>AI-powered detection and rescue coordination for injured marine wildlife</p>
+    </div>
+    <div class="marine-grid">
+      <div class="glass-card marine-upload">
+        <h3>Report Injured Marine Animal</h3>
+        <div class="marine-steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div>
+              <strong>Upload Image</strong>
+              <p>Photo of injured animal</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div>
+              <strong>AI Identifies</strong>
+              <p>Species + injury severity</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div>
+              <strong>NGO Alerted</strong>
+              <p>GPS location sent instantly</p>
+            </div>
+          </div>
+        </div>
+        <button class="btn-primary ripple" id="marineUploadBtn" onclick="simulateMarineDetection()">📸 Report Sighting</button>
+      </div>
+
+      <div class="glass-card marine-result" id="marineResult">
+        <h3 class="card-title">🔍 Species Detection</h3>
+        <div class="species-cards">
+          <div class="species-card active" onclick="selectSpecies(this, 'Olive Ridley Turtle')">
+            <div class="species-emoji">🐢</div>
+            <span>Turtle</span>
+          </div>
+          <div class="species-card" onclick="selectSpecies(this, 'Bottlenose Dolphin')">
+            <div class="species-emoji">🐬</div>
+            <span>Dolphin</span>
+          </div>
+          <div class="species-card" onclick="selectSpecies(this, 'Humpback Whale')">
+            <div class="species-emoji">🐋</div>
+            <span>Whale</span>
+          </div>
+          <div class="species-card" onclick="selectSpecies(this, 'Clownfish')">
+            <div class="species-emoji">🐟</div>
+            <span>Fish</span>
+          </div>
+          <div class="species-card" onclick="selectSpecies(this, 'Sea Bird')">
+            <div class="species-emoji">🦅</div>
+            <span>Bird</span>
+          </div>
+          <div class="species-card" onclick="selectSpecies(this, 'Hawaiian Seal')">
+            <div class="species-emoji">🦭</div>
+            <span>Seal</span>
+          </div>
+        </div>
+        <div class="marine-detection-box" id="marineDetectionBox">
+          <div class="mdb-row">
+            <span>Species Identified:</span>
+            <strong id="speciesName">Olive Ridley Turtle</strong>
+          </div>
+          <div class="mdb-row">
+            <span>Injury Severity:</span>
+            <span class="severity-badge" style="background:rgba(251,146,60,0.2);color:#fb923c;">🟠 Moderate</span>
+          </div>
+          <div class="mdb-row">
+            <span>GPS Location:</span>
+            <strong>17.6868°N, 83.2185°E</strong>
+          </div>
+          <div class="mdb-row">
+            <span>Nearest NGO:</span>
+            <strong>Sea Turtle Foundation — Vizag</strong>
+          </div>
+          <button class="btn-primary ripple" style="width:100%;margin-top:1rem;">📡 Alert NGO Now</button>
+        </div>
+      </div>
+
+      <div class="glass-card marine-stats">
+        <h3>Rescue Statistics</h3>
+        <canvas id="marineChart" height="200"></canvas>
+        <div class="rescue-list">
+          <div class="rescue-item">
+            <span>🐢 Turtles Rescued</span>
+            <span class="rescue-count">34</span>
+          </div>
+          <div class="rescue-item">
+            <span>🐬 Dolphins Helped</span>
+            <span class="rescue-count">18</span>
+          </div>
+          <div class="rescue-item">
+            <span>🐋 Whales Reported</span>
+            <span class="rescue-count">6</span>
+          </div>
+          <div class="rescue-item">
+            <span>🦅 Sea Birds Treated</span>
+            <span class="rescue-count">31</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SAFE ROUTES ========== -->
+<section id="safe-routes" class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-icon">🛣️</div>
+      <h2>AI Safe Route Recommendation</h2>
+      <p>Our modified A* algorithm finds the safest evacuation route, not just the shortest</p>
+    </div>
+    <div class="routes-grid">
+      <div class="glass-card route-selector">
+        <h3>Configure Route</h3>
+        <div class="form-group">
+          <label>From Location</label>
+          <select class="form-select" id="fromLocation">
+            <option>Ratnagiri Beach Area</option>
+            <option>Kochi Port Area</option>
+            <option>Goa North Beach</option>
+            <option>Vizag Fishing Harbour</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>To (Safe Zone)</label>
+          <select class="form-select" id="toLocation">
+            <option>Ratnagiri Relief Camp</option>
+            <option>District Collector Office</option>
+            <option>Government School Shelter</option>
+            <option>Highway 66 Safe Zone</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Disaster Type</label>
+          <select class="form-select" id="disasterType">
+            <option>🌀 Cyclone</option>
+            <option>🌊 Coastal Flood</option>
+            <option>🌧️ Heavy Rainfall</option>
+            <option>🌊 Tsunami</option>
+          </select>
+        </div>
+        <button class="btn-primary ripple" onclick="calculateRoute()" style="width:100%">🧭 Calculate Safe Route</button>
+      </div>
+
+      <div class="glass-card route-comparison" id="routeComparison">
+        <h3>Route Analysis</h3>
+        <div class="route-compare-grid">
+          <div class="route-box shortest">
+            <div class="route-label">📍 Shortest Route</div>
+            <div class="route-dist">15 km</div>
+            <div class="route-time">⏱ 22 mins</div>
+            <div class="route-risk">🔴 High Risk</div>
+            <div class="route-issues">
+              <span class="issue-tag">⚠️ Flooded Road</span>
+              <span class="issue-tag">⚠️ Cyclone Zone</span>
+            </div>
+            <div class="route-warn">NOT RECOMMENDED</div>
+          </div>
+          <div class="route-vs">VS</div>
+          <div class="route-box safest">
+            <div class="route-label">🛡️ Safest Route</div>
+            <div class="route-dist">18 km</div>
+            <div class="route-time">⏱ 28 mins</div>
+            <div class="route-risk">🟢 Low Risk</div>
+            <div class="route-issues">
+              <span class="safe-tag">✅ Clear Roads</span>
+              <span class="safe-tag">✅ Elevated Path</span>
+            </div>
+            <div class="route-recommend">RECOMMENDED ✓</div>
+          </div>
+        </div>
+        <div class="risk-reduction">
+          <span class="rr-label">Risk Reduction</span>
+          <div class="rr-bar-wrap">
+            <div class="rr-bar"></div>
+          </div>
+          <span class="rr-percent">70%</span>
+        </div>
+        <div class="route-algorithm">
+          <span class="algo-badge">Modified A* + Dijkstra + Weighted Graph Routing</span>
+        </div>
+      </div>
+
+      <div class="glass-card route-factors">
+        <h3>Risk Factors Considered</h3>
+        <div class="factor-list">
+          <div class="factor-item">
+            <span class="factor-icon">💧</span>
+            <div>
+              <strong>Flood Depth</strong>
+              <div class="factor-bar-wrap"><div class="factor-bar" style="width:85%;background:#3b82f6"></div></div>
+            </div>
+            <span class="factor-val">Critical</span>
+          </div>
+          <div class="factor-item">
+            <span class="factor-icon">🚧</span>
+            <div>
+              <strong>Road Closures</strong>
+              <div class="factor-bar-wrap"><div class="factor-bar" style="width:70%;background:#f59e0b"></div></div>
+            </div>
+            <span class="factor-val">High</span>
+          </div>
+          <div class="factor-item">
+            <span class="factor-icon">🌬️</span>
+            <div>
+              <strong>Cyclone Zones</strong>
+              <div class="factor-bar-wrap"><div class="factor-bar" style="width:90%;background:#ef4444"></div></div>
+            </div>
+            <span class="factor-val">Severe</span>
+          </div>
+          <div class="factor-item">
+            <span class="factor-icon">🚗</span>
+            <div>
+              <strong>Traffic Density</strong>
+              <div class="factor-bar-wrap"><div class="factor-bar" style="width:55%;background:#a855f7"></div></div>
+            </div>
+            <span class="factor-val">Moderate</span>
+          </div>
+          <div class="factor-item">
+            <span class="factor-icon">⛰️</span>
+            <div>
+              <strong>Elevation Safety</strong>
+              <div class="factor-bar-wrap"><div class="factor-bar" style="width:78%;background:#22c55e"></div></div>
+            </div>
+            <span class="factor-val">Good</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PREDICTION ========== -->
+<section id="prediction" class="section alt-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-icon">🔮</div>
+      <h2>Historical Disaster Prediction</h2>
+      <p>ML-powered forecasting using Random Forest, XGBoost, and LSTM models</p>
+    </div>
+
+    <div class="prediction-grid">
+      <div class="glass-card prediction-selector">
+        <h3>Select Region & Parameters</h3>
+        <div class="region-tabs">
+          <button class="region-tab active" onclick="selectRegion(this,'Ratnagiri')">Ratnagiri</button>
+          <button class="region-tab" onclick="selectRegion(this,'Kochi')">Kochi</button>
+          <button class="region-tab" onclick="selectRegion(this,'Chennai')">Chennai</button>
+          <button class="region-tab" onclick="selectRegion(this,'Vizag')">Vizag</button>
+          <button class="region-tab" onclick="selectRegion(this,'Mumbai')">Mumbai</button>
+        </div>
+        <div class="models-used">
+          <div class="mu-item">
+            <span class="mu-dot rf"></span>
+            <span>Random Forest — Risk Classification</span>
+          </div>
+          <div class="mu-item">
+            <span class="mu-dot xgb"></span>
+            <span>XGBoost — Severity Prediction</span>
+          </div>
+          <div class="mu-item">
+            <span class="mu-dot lstm"></span>
+            <span>LSTM — Time-Series Forecast</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card prediction-results">
+        <h3>Prediction Results — <span id="predRegion">Ratnagiri</span></h3>
+        <div class="pred-cards">
+          <div class="pred-card">
+            <div class="pred-icon">🌀</div>
+            <div class="pred-name">Cyclone</div>
+            <div class="pred-risk high-risk">High Risk</div>
+            <div class="pred-bar-wrap"><div class="pred-bar" style="width:78%;background:linear-gradient(90deg,#f97316,#ef4444)"></div></div>
+            <div class="pred-pct">78%</div>
+          </div>
+          <div class="pred-card">
+            <div class="pred-icon">🌊</div>
+            <div class="pred-name">Flood</div>
+            <div class="pred-risk moderate-risk">Moderate Risk</div>
+            <div class="pred-bar-wrap"><div class="pred-bar" style="width:55%;background:linear-gradient(90deg,#eab308,#f97316)"></div></div>
+            <div class="pred-pct">55%</div>
+          </div>
+          <div class="pred-card">
+            <div class="pred-icon">🌊</div>
+            <div class="pred-name">Tsunami</div>
+            <div class="pred-risk low-risk">Low Risk</div>
+            <div class="pred-bar-wrap"><div class="pred-bar" style="width:22%;background:linear-gradient(90deg,#22c55e,#16a34a)"></div></div>
+            <div class="pred-pct">22%</div>
+          </div>
+          <div class="pred-card">
+            <div class="pred-icon">🌧️</div>
+            <div class="pred-name">Heavy Rain</div>
+            <div class="pred-risk high-risk">High Risk</div>
+            <div class="pred-bar-wrap"><div class="pred-bar" style="width:82%;background:linear-gradient(90deg,#3b82f6,#1d4ed8)"></div></div>
+            <div class="pred-pct">82%</div>
+          </div>
+          <div class="pred-card">
+            <div class="pred-icon">🌪️</div>
+            <div class="pred-name">Storm Surge</div>
+            <div class="pred-risk moderate-risk">Moderate Risk</div>
+            <div class="pred-bar-wrap"><div class="pred-bar" style="width:48%;background:linear-gradient(90deg,#a855f7,#7c3aed)"></div></div>
+            <div class="pred-pct">48%</div>
+          </div>
+          <div class="pred-card">
+            <div class="pred-icon">🛢️</div>
+            <div class="pred-name">Oil Spill</div>
+            <div class="pred-risk low-risk">Low Risk</div>
+            <div class="pred-bar-wrap"><div class="pred-bar" style="width:18%;background:linear-gradient(90deg,#6b7280,#374151)"></div></div>
+            <div class="pred-pct">18%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card forecast-chart">
+        <h3>7-Day Forecast</h3>
+        <canvas id="forecastChart" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== AI ASSISTANT ========== -->
+<section id="assistant" class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-icon">💬</div>
+      <h2>AI Emergency Assistant</h2>
+      <p>Powered by GPT + Gemini + Llama with NDMA Guidelines & Disaster Manuals via RAG</p>
+    </div>
+    <div class="assistant-container glass-card">
+      <div class="assistant-header">
+        <div class="assistant-avatar">
+          <div class="avatar-pulse"></div>
+          🤖
+        </div>
+        <div class="assistant-info">
+          <strong>AquaShield AI Assistant</strong>
+          <span class="online-status">● Online — Ready to help</span>
+        </div>
+        <div class="rag-sources">
+          <span class="rag-tag">📚 NDMA Guidelines</span>
+          <span class="rag-tag">📋 Disaster Manuals</span>
+          <span class="rag-tag">📜 Govt SOPs</span>
+        </div>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg bot-msg">
+          <div class="msg-avatar">🤖</div>
+          <div class="msg-bubble">
+            Hello! I'm AquaShield AI Assistant. I can help you with disaster safety, evacuation guidance, marine rescue, and emergency procedures. How can I assist you today?
+          </div>
+        </div>
+      </div>
+      <div class="quick-questions">
+        <button class="quick-q ripple" onclick="sendQuickQuestion(this)" data-q="Is my area safe from cyclone today?">🌀 Is my area safe?</button>
+        <button class="quick-q ripple" onclick="sendQuickQuestion(this)" data-q="What should I do during a tsunami?">🌊 Tsunami safety</button>
+        <button class="quick-q ripple" onclick="sendQuickQuestion(this)" data-q="What medicines should I keep in an emergency kit?">💊 Emergency medicines</button>
+        <button class="quick-q ripple" onclick="sendQuickQuestion(this)" data-q="Can I go fishing tomorrow given the weather?">🎣 Fishing safety</button>
+        <button class="quick-q ripple" onclick="sendQuickQuestion(this)" data-q="What is the safest evacuation route?">🛣️ Evacuation route</button>
+      </div>
+      <div class="chat-input-wrap">
+        <input type="text" id="chatInput" class="chat-input" placeholder="Ask about disaster safety, evacuation, marine rescue..." />
+        <button class="chat-send ripple" id="chatSend" onclick="sendMessage()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+        <button class="chat-voice ripple" title="Voice input" onclick="toggleVoice()">🎙️</button>
+      </div>
+    </div>
+    <div class="assistant-features">
+      <div class="glass-card af-card">
+        <div class="af-icon">🌐</div>
+        <h4>Multilingual</h4>
+        <p>Responds in Hindi, Marathi, Tamil, Telugu, Malayalam, and 20+ languages</p>
+      </div>
+      <div class="glass-card af-card">
+        <div class="af-icon">📖</div>
+        <h4>RAG-Powered</h4>
+        <p>Answers grounded in official NDMA guidelines and government SOPs</p>
+      </div>
+      <div class="glass-card af-card">
+        <div class="af-icon">🎙️</div>
+        <h4>Voice Support</h4>
+        <p>Voice input and text-to-speech output for accessibility</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== COMMUNITY REPORTS ========== -->
+<section id="community" class="section alt-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-icon">👥</div>
+      <h2>Community Reporting</h2>
+      <p>AI-verified citizen reports with duplicate detection, spam filtering, and urgency ranking</p>
+    </div>
+    <div class="community-grid">
+      <div class="glass-card report-form">
+        <h3>Submit a Report</h3>
+        <div class="form-group">
+          <label>Report Type</label>
+          <select class="form-select">
+            <option>🌊 Coastal Flooding</option>
+            <option>🌀 Cyclone Damage</option>
+            <option>🏚️ Building Damage</option>
+            <option>🛢️ Oil Spill</option>
+            <option>🐢 Marine Animal Sighting</option>
+            <option>🚧 Road Blockage</option>
+            <option>🆘 Missing Person</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="form-textarea" placeholder="Describe what you observed..." rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" class="form-input" placeholder="Auto-detecting GPS..."/>
+        </div>
+        <div class="form-group">
+          <label>Attach Media</label>
+          <div class="media-attach">
+            <button class="media-btn ripple">📷 Photo</button>
+            <button class="media-btn ripple">🎥 Video</button>
+            <button class="media-btn ripple">🎙️ Voice</button>
+          </div>
+        </div>
+        <button class="btn-primary ripple" style="width:100%;" onclick="submitReport()">Submit Report</button>
+      </div>
+
+      <div class="glass-card report-feed">
+        <div class="feed-header">
+          <h3>Priority Report Queue</h3>
+          <div class="feed-filters">
+            <button class="filter-btn active" onclick="filterReports(this,'all')">All</button>
+            <button class="filter-btn" onclick="filterReports(this,'critical')">Critical</button>
+            <button class="filter-btn" onclick="filterReports(this,'verified')">Verified</button>
+          </div>
+        </div>
+        <div class="report-list" id="reportList">
+          <div class="report-card critical-report">
+            <div class="report-header-row">
+              <span class="report-type">🌀 Cyclone Damage</span>
+              <span class="report-priority critical-p">CRITICAL</span>
+            </div>
+            <p class="report-text">Strong winds destroyed fishing boats at Ratnagiri harbor. At least 30 boats capsized.</p>
+            <div class="report-meta">
+              <span>📍 Ratnagiri Harbor</span>
+              <span>👤 Ramesh K.</span>
+              <span>🕐 5 min ago</span>
+            </div>
+            <div class="report-ai">
+              <span class="ai-verified">✅ AI Verified</span>
+              <span class="ai-conf">Confidence: 94%</span>
+              <span class="ai-dup">No Duplicate</span>
+            </div>
+          </div>
+          <div class="report-card high-report">
+            <div class="report-header-row">
+              <span class="report-type">🌊 Coastal Flooding</span>
+              <span class="report-priority high-p">HIGH</span>
+            </div>
+            <p class="report-text">Water level rising rapidly near Kochi Marina. Several families trapped on rooftops.</p>
+            <div class="report-meta">
+              <span>📍 Kochi Marina</span>
+              <span>👤 Priya M.</span>
+              <span>🕐 12 min ago</span>
+            </div>
+            <div class="report-ai">
+              <span class="ai-verified">✅ AI Verified</span>
+              <span class="ai-conf">Confidence: 89%</span>
+              <span class="ai-dup">No Duplicate</span>
+            </div>
+          </div>
+          <div class="report-card moderate-report">
+            <div class="report-header-row">
+              <span class="report-type">🐢 Marine Animal</span>
+              <span class="report-priority moderate-p">MARINE</span>
+            </div>
+            <p class="report-text">Injured sea turtle spotted near Goa beach. Entangled in fishing net.</p>
+            <div class="report-meta">
+              <span>📍 Goa North Beach</span>
+              <span>👤 Carlos F.</span>
+              <span>🕐 18 min ago</span>
+            </div>
+            <div class="report-ai">
+              <span class="ai-verified">✅ AI Verified</span>
+              <span class="ai-conf">Confidence: 97%</span>
+              <span class="ai-dup">No Duplicate</span>
+            </div>
+          </div>
+          <div class="report-card spam-report">
+            <div class="report-header-row">
+              <span class="report-type">🌊 Flood Report</span>
+              <span class="report-priority spam-p">SPAM</span>
+            </div>
+            <p class="report-text">Flood everywhere, city underwater…</p>
+            <div class="report-meta">
+              <span>📍 Unknown</span>
+              <span>👤 Anonymous</span>
+              <span>🕐 25 min ago</span>
+            </div>
+            <div class="report-ai">
+              <span class="ai-spam">⚠️ Flagged as Spam</span>
+              <span class="ai-conf">Confidence: 12%</span>
+              <span class="ai-dup">Duplicate Detected</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SOS MODULE ========== -->
+<section id="sos" class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-icon">🚨</div>
+      <h2>SOS Emergency Alert</h2>
+      <p>One-click emergency alert with GPS location to authorities, family, and rescue teams</p>
+    </div>
+    <div class="sos-container">
+      <div class="sos-main glass-card">
+        <div class="sos-button-wrap">
+          <button class="sos-btn ripple" id="mainSosBtn" onclick="triggerSOS()">
+            <span class="sos-icon-text">🚨</span>
+            <span class="sos-label">SOS</span>
+            <span class="sos-sub">Hold for Emergency</span>
+          </button>
+          <div class="sos-rings">
+            <div class="sos-ring r1"></div>
+            <div class="sos-ring r2"></div>
+            <div class="sos-ring r3"></div>
+          </div>
+        </div>
+        <div class="sos-info">
+          <h3>Emergency Types</h3>
+          <div class="sos-types">
+            <div class="sos-type active" onclick="selectSOSType(this, 'Flood')">🌊 Flood</div>
+            <div class="sos-type" onclick="selectSOSType(this, 'Medical')">🏥 Medical</div>
+            <div class="sos-type" onclick="selectSOSType(this, 'Rescue')">⛵ Rescue Needed</div>
+            <div class="sos-type" onclick="selectSOSType(this, 'Missing')">👤 Missing Person</div>
+          </div>
+          <div class="sos-will-send">
+            <h4>Will send to:</h4>
+            <div class="sos-recipients">
+              <div class="recipient">🏛️ Disaster Authority</div>
+              <div class="recipient">👨‍👩‍👧 Family Contacts</div>
+              <div class="recipient">⛵ Coastal Guard</div>
+              <div class="recipient">🚑 Ambulance Service</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sos-sent-overlay" id="sosSentOverlay" style="display:none">
+        <div class="sos-sent-box glass-card">
+          <div class="sos-sent-icon">✅</div>
+          <h3>SOS Alert Sent!</h3>
+          <p>Your location and emergency type have been transmitted</p>
+          <div class="sos-details">
+            <div class="sos-detail-row"><span>Type:</span><strong id="sosTypeSent">Flood</strong></div>
+            <div class="sos-detail-row"><span>GPS:</span><strong>17.6868°N, 83.2185°E</strong></div>
+            <div class="sos-detail-row"><span>Time:</span><strong id="sosTimeSent"></strong></div>
+            <div class="sos-detail-row"><span>Notified:</span><strong>4 authorities</strong></div>
+          </div>
+          <button class="btn-outline" onclick="closeSOS()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Emergency Contacts -->
+    <div class="emergency-contacts-grid">
+      <div class="ec-card glass-card">
+        <span class="ec-icon">🚓</span>
+        <div>
+          <strong>Police</strong>
+          <span>100</span>
+        </div>
+        <a href="tel:100" class="call-btn">Call</a>
+      </div>
+      <div class="ec-card glass-card">
+        <span class="ec-icon">🚑</span>
+        <div>
+          <strong>Ambulance</strong>
+          <span>108</span>
+        </div>
+        <a href="tel:108" class="call-btn">Call</a>
+      </div>
+      <div class="ec-card glass-card">
+        <span class="ec-icon">⛵</span>
+        <div>
+          <strong>Coast Guard</strong>
+          <span>1554</span>
+        </div>
+        <a href="tel:1554" class="call-btn">Call</a>
+      </div>
+      <div class="ec-card glass-card">
+        <span class="ec-icon">🔥</span>
+        <div>
+          <strong>Fire Service</strong>
+          <span>101</span>
+        </div>
+        <a href="tel:101" class="call-btn">Call</a>
+      </div>
+      <div class="ec-card glass-card">
+        <span class="ec-icon">🏛️</span>
+        <div>
+          <strong>NDMA Helpline</strong>
+          <span>1078</span>
+        </div>
+        <a href="tel:1078" class="call-btn">Call</a>
+      </div>
+      <div class="ec-card glass-card">
+        <span class="ec-icon">🌊</span>
+        <div>
+          <strong>Disaster Relief</strong>
+          <span>1070</span>
+        </div>
+        <a href="tel:1070" class="call-btn">Call</a>
+      </div>
+    </div>
+
+    <!-- ========== UNIVERSAL EMERGENCY MESH BROADCAST CARD ========== -->
+    <div class="glass-card" style="margin-top: 2rem; padding: 1.8rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom: 1.2rem; border-bottom:1px solid rgba(144,224,239,0.2); padding-bottom:0.8rem;">
+        <div>
+          <h3 style="font-size:1.3rem; font-weight:800; color:#caf0f8; font-family:'Orbitron',sans-serif;">
+            📢 Universal Emergency Broadcast
+          </h3>
+          <p style="font-size:0.85rem; color:#90e0ef; margin-top:2px;">
+            Broadcast flood/disaster alert to EVERYONE connected online or offline via P2P Mesh
+          </p>
+        </div>
+        <div id="meshStatusBadge" style="padding:6px 14px; border-radius:50px; background:rgba(34,197,94,0.2); border:1px solid #22c55e; color:#86efac; font-size:0.8rem; font-weight:700;">
+          📡 ONLINE (Server Broadcast Active)
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem;">
+        <!-- Alert Generation Form -->
+        <div style="background:rgba(255,255,255,0.04); padding:1.2rem; border-radius:12px; border:1px solid rgba(144,224,239,0.15);">
+          <h4 style="font-size:1rem; font-weight:700; color:#e0f7ff; margin-bottom:1rem;">🚨 Generate & Broadcast Disaster Alert</h4>
+          
+          <div style="margin-bottom:1rem;">
+            <label style="font-size:0.8rem; color:#90e0ef; font-weight:600; display:block; margin-bottom:4px;">Disaster / Alert Type</label>
+            <select id="bcastType" style="width:100%; padding:10px; border-radius:8px; background:rgba(3,4,94,0.8); border:1px solid #00b4d8; color:#e0f7ff; font-weight:600;">
+              <option value="Flood Warning 🌊">🌊 Coastal Flood Warning</option>
+              <option value="Cyclone Red Alert 🌀">🌀 Cyclone Red Alert</option>
+              <option value="Tsunami Warning 🌊">🌊 Tsunami High Risk Alert</option>
+              <option value="High Tide Alert ⚠️">⚠️ High Tide & Storm Surge</option>
+              <option value="Oil Spill Contamination 🛢️">🛢️ Oil Spill Hazard</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom:1rem;">
+            <label style="font-size:0.8rem; color:#90e0ef; font-weight:600; display:block; margin-bottom:4px;">Location / Area</label>
+            <input type="text" id="bcastLoc" value="Ratnagiri Coastal Area" style="width:100%; padding:10px; border-radius:8px; background:rgba(3,4,94,0.8); border:1px solid #00b4d8; color:#e0f7ff;" />
+          </div>
+
+          <div style="margin-bottom:1rem;">
+            <label style="font-size:0.8rem; color:#90e0ef; font-weight:600; display:block; margin-bottom:4px;">Emergency Message</label>
+            <textarea id="bcastMsg" rows="3" style="width:100%; padding:10px; border-radius:8px; background:rgba(3,4,94,0.8); border:1px solid #00b4d8; color:#e0f7ff;" placeholder="Type emergency description here...">Water level rising rapidly by 1.8m. All citizens proceed immediately to elevated bypass relief camp.</textarea>
+          </div>
+
+          <button onclick="triggerUniversalBroadcast()" style="width:100%; padding:12px; border-radius:10px; background:linear-gradient(135deg,#ef4444,#dc2626); border:none; color:white; font-weight:800; font-size:0.95rem; cursor:pointer; box-shadow:0 4px 20px rgba(239,68,68,0.4); display:flex; align-items:center; justify-content:center; gap:8px;">
+            <span>📢 BROADCAST TO EVERYONE (Online / Offline)</span>
+          </button>
+        </div>
+
+        <!-- Live Broadcasted Alerts Feed -->
+        <div style="background:rgba(255,255,255,0.04); padding:1.2rem; border-radius:12px; border:1px solid rgba(144,224,239,0.15); display:flex; flex-direction:column;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h4 style="font-size:1rem; font-weight:700; color:#e0f7ff;">📡 Live Mesh Broadcast Feed</h4>
+            <span style="font-size:0.75rem; color:#7fb3c8;">Auto-Synced across all nodes</span>
+          </div>
+
+          <div id="meshBroadcastFeed" style="flex:1; overflow-y:auto; max-height:280px; display:flex; flex-direction:column; gap:10px; padding-right:4px;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== OFFLINE KIT ========== -->
+<section id="offline-kit" class="section alt-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-icon">📦</div>
+      <h2>Offline Emergency Kit</h2>
+      <p>Available without internet — Essential guides for survival in coastal disasters</p>
+    </div>
+    <div class="offline-badge">
+      <span class="offline-dot"></span>
+      Works Offline — No Internet Required
+    </div>
+    <div class="kit-grid">
+      <div class="glass-card kit-card" onclick="toggleKit(this)">
+        <div class="kit-header">
+          <span class="kit-icon">🩺</span>
+          <h4>First Aid Guide</h4>
+          <span class="kit-toggle">▼</span>
+        </div>
+        <div class="kit-content">
+          <div class="kit-item">💉 CPR — 30 compressions, 2 breaths. Rate: 100/min</div>
+          <div class="kit-item">🩸 Bleeding Control — Apply pressure with clean cloth for 10+ mins</div>
+          <div class="kit-item">🦴 Fracture Care — Immobilize, do not move victim</div>
+          <div class="kit-item">🌡️ Heat Stroke — Move to shade, cool with water, call 108</div>
+          <div class="kit-item">🚰 Dehydration — ORS solution: 1L water + 6 tsp sugar + ½ tsp salt</div>
+        </div>
+      </div>
+      <div class="glass-card kit-card" onclick="toggleKit(this)">
+        <div class="kit-header">
+          <span class="kit-icon">🌀</span>
+          <h4>Cyclone Safety</h4>
+          <span class="kit-toggle">▼</span>
+        </div>
+        <div class="kit-content">
+          <div class="kit-item">🏠 Move to a sturdy building immediately</div>
+          <div class="kit-item">🪟 Stay away from windows and glass</div>
+          <div class="kit-item">📻 Listen to All India Radio for updates</div>
+          <div class="kit-item">🚗 Do not drive during cyclone</div>
+          <div class="kit-item">📦 Keep 3-day emergency supply ready</div>
+        </div>
+      </div>
+      <div class="glass-card kit-card" onclick="toggleKit(this)">
+        <div class="kit-header">
+          <span class="kit-icon">🌊</span>
+          <h4>Tsunami Safety</h4>
+          <span class="kit-toggle">▼</span>
+        </div>
+        <div class="kit-content">
+          <div class="kit-item">⛰️ Move to high ground immediately after earthquake</div>
+          <div class="kit-item">🚶 Walk/run — don't wait for vehicle</div>
+          <div class="kit-item">🌊 Stay 1km from coast for 24 hours after warning</div>
+          <div class="kit-item">📡 Wait for official all-clear signal</div>
+          <div class="kit-item">🏊 Never go to beach to watch tsunami waves</div>
+        </div>
+      </div>
+      <div class="glass-card kit-card" onclick="toggleKit(this)">
+        <div class="kit-header">
+          <span class="kit-icon">🌧️</span>
+          <h4>Flood Safety</h4>
+          <span class="kit-toggle">▼</span>
+        </div>
+        <div class="kit-content">
+          <div class="kit-item">🏔️ Move to upper floors — never enter floodwater</div>
+          <div class="kit-item">⚡ Turn off electricity before evacuating</div>
+          <div class="kit-item">🍶 Store clean drinking water</div>
+          <div class="kit-item">🐍 Watch for snakes in floodwater</div>
+          <div class="kit-item">📱 Keep phone charged and emergency contacts saved</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer class="site-footer">
+  <div class="footer-wave">
+    <svg viewBox="0 0 1440 80" preserveAspectRatio="none">
+      <path d="M0,40 C360,80 720,0 1080,40 C1260,60 1380,20 1440,40 L1440,80 L0,80 Z" fill="var(--ocean-dark)"/>
+    </svg>
+  </div>
+  <div class="footer-content">
+    <div class="footer-brand">
+      <span class="brand-text" style="font-size:1.5rem">AquaShield <span class="brand-ai">AI</span></span>
+      <p>Protecting Coastal Communities using AI, Computer Vision, Machine Learning, and Large Language Models.</p>
+    </div>
+    <div class="footer-links">
+      <h5>Platform</h5>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#disaster-map">Live Map</a>
+      <a href="#ai-analysis">AI Analysis</a>
+      <a href="#marine-rescue">Marine Rescue</a>
+    </div>
+    <div class="footer-links">
+      <h5>Resources</h5>
+      <a href="#assistant">AI Assistant</a>
+      <a href="#prediction">Predictions</a>
+      <a href="#community">Community</a>
+      <a href="#offline-kit">Emergency Kit</a>
+    </div>
+    <div class="footer-links">
+      <h5>Data Sources</h5>
+      <a href="#">IMD API</a>
+      <a href="#">INCOIS API</a>
+      <a href="#">OpenWeather</a>
+      <a href="#">NDMA</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 AquaShield AI. Built to protect coastal communities.</p>
+    <p>Powered by YOLOv11 • EfficientNet • Vision Transformer • GPT • Gemini • Llama</p>
+  </div>
+</footer>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Leaflet.js -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- P2P Mesh & WebSocket Broadcast Script -->
+<script src="mesh_broadcast.js"></script>
+<!-- Main Script -->
+<script src="app.js"></script>
+
+<!-- ========== OFFLINE DETECTION BANNER ========== -->
+<div id="offlineBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:10000;padding:10px 20px;background:linear-gradient(90deg,#ef4444,#dc2626);color:white;font-weight:700;font-size:0.9rem;text-align:center;font-family:'Inter',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+  📡 You are OFFLINE — AquaShield AI is running in Emergency Offline Mode. Use SMS SOS below to send help signals.
+  <button onclick="this.parentElement.style.display='none'" style="background:none;border:none;color:white;font-size:1.2rem;cursor:pointer;margin-left:12px;">✕</button>
+</div>
+
+<!-- ========== SMS EMERGENCY FLOATING BUTTON ========== -->
+<div id="smsFloatingBtn" onclick="toggleSMSPanel()" style="position:fixed;bottom:90px;right:20px;z-index:9998;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(34,197,94,0.5);font-size:1.5rem;transition:transform 0.2s ease;" title="SMS Emergency Alert">
+  📱
+</div>
+
+<!-- ========== SMS EMERGENCY PANEL ========== -->
+<div id="smsPanel" style="display:none;position:fixed;bottom:160px;right:20px;z-index:9999;width:340px;max-height:70vh;background:rgba(3,4,94,0.97);border:1px solid rgba(34,197,94,0.5);border-radius:16px;backdrop-filter:blur(20px);box-shadow:0 16px 48px rgba(0,0,0,0.6);font-family:'Inter',sans-serif;overflow:hidden;">
+  
+  <div style="padding:16px 20px;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;">
+    <div style="font-weight:800;font-size:1rem;">📱 SMS Emergency SOS</div>
+    <div style="font-size:0.75rem;opacity:0.9;">Works without internet — sends SMS directly from your phone</div>
+  </div>
+
+  <div style="padding:16px;overflow-y:auto;max-height:50vh;">
+    <div style="font-size:0.8rem;color:#90e0ef;margin-bottom:12px;background:rgba(0,180,216,0.1);padding:8px 12px;border-radius:8px;border-left:3px solid #00b4d8;">
+      💡 <strong>How it works:</strong> Tap any contact below to open your phone's SMS app with a pre-written emergency message including your GPS location.
+    </div>
+
+    <!-- Emergency Type Selector -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:0.75rem;color:#7fb3c8;margin-bottom:6px;font-weight:600;">Emergency Type:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button onclick="setSMSType(this,'Flood')" class="sms-type-btn active" style="padding:4px 12px;border-radius:20px;border:1px solid #22c55e;background:rgba(34,197,94,0.2);color:#86efac;font-size:0.75rem;cursor:pointer;font-weight:600;">🌊 Flood</button>
+        <button onclick="setSMSType(this,'Cyclone')" class="sms-type-btn" style="padding:4px 12px;border-radius:20px;border:1px solid rgba(144,224,239,0.3);background:transparent;color:#90e0ef;font-size:0.75rem;cursor:pointer;">🌀 Cyclone</button>
+        <button onclick="setSMSType(this,'Tsunami')" class="sms-type-btn" style="padding:4px 12px;border-radius:20px;border:1px solid rgba(144,224,239,0.3);background:transparent;color:#90e0ef;font-size:0.75rem;cursor:pointer;">🌊 Tsunami</button>
+        <button onclick="setSMSType(this,'Fire')" class="sms-type-btn" style="padding:4px 12px;border-radius:20px;border:1px solid rgba(144,224,239,0.3);background:transparent;color:#90e0ef;font-size:0.75rem;cursor:pointer;">🔥 Fire</button>
+      </div>
+    </div>
+
+    <!-- Emergency Contacts with SMS Links -->
+    <div id="smsContactList" style="display:flex;flex-direction:column;gap:8px;">
+    </div>
+
+    <div style="margin-top:12px;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;">
+      <div style="font-size:0.75rem;color:#fca5a5;">
+        🚨 <strong>No Signal at all?</strong> Try moving to higher ground. SMS uses basic cell tower signal which works even when mobile data/Wi-Fi is down.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SERVICE WORKER + OFFLINE + SMS SCRIPTS ========== -->
+<script>
+// --- Service Worker Registration ---
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('✅ AquaShield Service Worker registered. Scope:', reg.scope))
+      .catch(err => console.warn('SW registration skipped (file:// protocol or error):', err));
+  });
+}
+
+// --- Offline Detection ---
+function updateOnlineStatus() {
+  const banner = document.getElementById('offlineBanner');
+  const smsBtn = document.getElementById('smsFloatingBtn');
+  if (!navigator.onLine) {
+    if (banner) banner.style.display = 'block';
+    if (smsBtn) smsBtn.style.display = 'flex';
+  } else {
+    if (banner) banner.style.display = 'none';
+  }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// --- SMS Panel Logic ---
+let smsEmergencyType = 'Flood';
+
+const emergencyContacts = [
+  { name: "NDMA Control Room", number: "1078", icon: "🏛️" },
+  { name: "Indian Coast Guard", number: "1554", icon: "⚓" },
+  { name: "Police Emergency", number: "100", icon: "🚔" },
+  { name: "Ambulance / Medical", number: "108", icon: "🚑" },
+  { name: "Disaster Helpline", number: "1070", icon: "🆘" },
+  { name: "Fire Services", number: "101", icon: "🚒" },
+];
+
+function setSMSType(btn, type) {
+  smsEmergencyType = type;
+  document.querySelectorAll('.sms-type-btn').forEach(b => {
+    b.style.border = '1px solid rgba(144,224,239,0.3)';
+    b.style.background = 'transparent';
+    b.style.color = '#90e0ef';
+    b.classList.remove('active');
+  });
+  btn.style.border = '1px solid #22c55e';
+  btn.style.background = 'rgba(34,197,94,0.2)';
+  btn.style.color = '#86efac';
+  btn.classList.add('active');
+  renderSMSContacts();
+}
+
+function getSMSBody() {
+  let lat = 'Unknown', lng = 'Unknown';
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      lat = pos.coords.latitude.toFixed(6);
+      lng = pos.coords.longitude.toFixed(6);
+    }, () => {}, { timeout: 3000 });
+  }
+  return `SOS EMERGENCY - AquaShield AI\nType: ${smsEmergencyType}\nLocation: ${lat}, ${lng}\nMaps: https://maps.google.com/?q=${lat},${lng}\nTime: ${new Date().toLocaleString()}\nPLEASE SEND IMMEDIATE HELP`;
+}
+
+function renderSMSContacts() {
+  const list = document.getElementById('smsContactList');
+  if (!list) return;
+  const body = encodeURIComponent(getSMSBody());
+  list.innerHTML = emergencyContacts.map(c => `
+    <a href="sms:${c.number}?body=${body}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(144,224,239,0.15);border-radius:10px;text-decoration:none;color:#e0f7ff;transition:all 0.2s ease;" onmouseover="this.style.background='rgba(34,197,94,0.15)';this.style.borderColor='rgba(34,197,94,0.4)'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.borderColor='rgba(144,224,239,0.15)'">
+      <div style="width:36px;height:36px;border-radius:50%;background:rgba(34,197,94,0.2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">${c.icon}</div>
+      <div style="flex:1;">
+        <div style="font-weight:600;font-size:0.85rem;">${c.name}</div>
+        <div style="font-size:0.72rem;color:#7fb3c8;">Tap to send SOS SMS → ${c.number}</div>
+      </div>
+      <div style="font-size:1.2rem;">📤</div>
+    </a>
+  `).join('');
+}
+
+function toggleSMSPanel() {
+  const panel = document.getElementById('smsPanel');
+  if (!panel) return;
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    renderSMSContacts();
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+// Pre-render contacts
+renderSMSContacts();
+
+// --- Universal Broadcast Integration ---
+function triggerUniversalBroadcast() {
+  const type = document.getElementById('bcastType')?.value || 'Flood Warning 🌊';
+  const loc = document.getElementById('bcastLoc')?.value || 'Current Zone';
+  const msg = document.getElementById('bcastMsg')?.value || 'Emergency Flood Alert';
+
+  if (!msg.trim()) {
+    alert('Please enter an emergency message to broadcast.');
+    return;
+  }
+
+  if (window.emergencyMesh) {
+    const alert = window.emergencyMesh.broadcastAlert(type, msg, loc, 'CRITICAL');
+    if (window.showToast) window.showToast(`📢 Alert Broadcasted via ${alert.origin_mode}!`, 'sos');
+  }
+}
+
+function renderMeshFeedAlert(alert, source = 'Network') {
+  const feed = document.getElementById('meshBroadcastFeed');
+  if (!feed) return;
+
+  const item = document.createElement('div');
+  const isOfflineMode = alert.origin_mode === 'Offline Mesh' || (source && (source.includes('Offline') || source.includes('Local') || source.includes('P2P')));
+  const badgeColor = isOfflineMode ? '#f59e0b' : '#22c55e';
+  const badgeText = isOfflineMode ? '⚡ P2P Offline Mesh' : '📡 Online Broadcast';
+
+  item.style.cssText = `
+    background: rgba(255,255,255,0.06);
+    border-left: 4px solid ${badgeColor};
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    color: #e0f7ff;
+    margin-bottom: 8px;
+  `;
+
+  item.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+      <strong style="color:#caf0f8; font-size:0.88rem;">${alert.type}</strong>
+      <span style="font-size:0.7rem; font-weight:700; color:${badgeColor}; background:rgba(0,0,0,0.3); padding:2px 8px; border-radius:12px;">${badgeText}</span>
+    </div>
+    <div style="color:#90e0ef; margin-bottom:4px;">${alert.message}</div>
+    <div style="font-size:0.72rem; color:#7fb3c8; display:flex; justify-content:space-between;">
+      <span>📍 ${alert.location || 'Coastal Region'}</span>
+      <span>⏱️ ${alert.timestamp || 'Just now'}</span>
+    </div>
+  `;
+
+  feed.prepend(item);
+  if (feed.children.length > 10) feed.lastChild.remove();
+}
+
+if (window.emergencyMesh) {
+  window.emergencyMesh.onAlert((alert, source) => {
+    renderMeshFeedAlert(alert, source);
+  });
+}
+</script>
+
+</body>
+</html>
