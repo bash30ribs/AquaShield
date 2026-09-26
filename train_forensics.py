@@ -2,11 +2,6 @@
 """
 AquaShield AI — Dual-Stream ELA + RGB Deepfake & Tamper Classifier
 High-Precision Image Forgery Detection trained on CASIA v1.0 / v2.0 / GenImage datasets.
-
-Architecture:
-- Stream 1: RGB Optical Texture Stream (EfficientNet-B0 / ResNet)
-- Stream 2: Error Level Analysis (ELA) Compression Artifact Stream
-- Fusion Head: Cross-attention residual concatenation for binary classification (Authentic vs Tampered)
 """
 
 import os
@@ -15,6 +10,9 @@ import io
 import time
 import argparse
 from typing import Tuple, List, Optional
+
+# CUDA Memory Allocator Optimization
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
 import torch
 import torch.nn as nn
@@ -25,10 +23,6 @@ from PIL import Image, ImageChops, ImageEnhance
 
 # ── 1. Error Level Analysis (ELA) Extractor ──────────────────────────────────
 def extract_ela_image(img: Image.Image, quality: int = 90) -> Image.Image:
-    """
-    Computes the localized pixel compression delta against a 90% JPEG recompression.
-    Amplifies digital editing artifacts and splicing boundaries.
-    """
     rgb = img.convert('RGB')
     buffer = io.BytesIO()
     rgb.save(buffer, 'JPEG', quality=quality)
@@ -50,7 +44,6 @@ class ForensicDataset(Dataset):
         self.samples: List[Tuple[str, int]] = []
         self.transform = transform
         
-        # Search for authentic (0) and tampered (1) directories
         auth_names = ['au', 'authentic', 'real', 'pristine', 'nature']
         tamp_names = ['tp', 'tampered', 'fake', 'spliced', 'copymove', 'synthetic']
         
@@ -72,7 +65,6 @@ class ForensicDataset(Dataset):
                             self.samples.append((os.path.join(target_dir, fname), target_label))
 
         if not found_folders:
-            # Fallback: scan root directory directly for standard CASIA structure
             for label, folder in [(0, 'Au'), (1, 'Tp'), (0, 'authentic'), (1, 'tampered')]:
                 fpath = os.path.join(root_dir, folder)
                 if os.path.exists(fpath):
@@ -94,7 +86,6 @@ class ForensicDataset(Dataset):
             img = Image.open(path).convert('RGB')
             ela = extract_ela_image(img)
         except Exception:
-            # Handle corrupted or unreadable images gracefully
             img = Image.new('RGB', (224, 224), color=(0, 0, 0))
             ela = Image.new('RGB', (224, 224), color=(0, 0, 0))
 
@@ -118,17 +109,14 @@ class DualStreamForensicNet(nn.Module):
         super().__init__()
         weights = models.EfficientNet_B0_Weights.DEFAULT if pretrained else None
         
-        # Stream 1: RGB Optical Texture Stream
         self.rgb_stream = models.efficientnet_b0(weights=weights)
         rgb_feat_dim = self.rgb_stream.classifier[1].in_features
         self.rgb_stream.classifier = nn.Identity()
         
-        # Stream 2: ELA Compression Residual Stream
         self.ela_stream = models.efficientnet_b0(weights=weights)
         ela_feat_dim = self.ela_stream.classifier[1].in_features
         self.ela_stream.classifier = nn.Identity()
         
-        # Cross-Stream Fusion Classifier Head
         self.classifier = nn.Sequential(
             nn.Linear(rgb_feat_dim + ela_feat_dim, 512),
             nn.BatchNorm1d(512),
@@ -138,7 +126,7 @@ class DualStreamForensicNet(nn.Module):
             nn.BatchNorm1d(128),
             nn.SiLU(),
             nn.Dropout(0.2),
-            nn.Linear(128, 2)  # 0: Authentic, 1: Tampered/Fake
+            nn.Linear(128, 2)
         )
 
     def forward(self, rgb: torch.Tensor, ela: torch.Tensor) -> torch.Tensor:
@@ -147,21 +135,30 @@ class DualStreamForensicNet(nn.Module):
         fusion = torch.cat([f_rgb, f_ela], dim=1)
         return self.classifier(fusion)
 
-# ── 4. Training Engine ────────────────────────────────────────────────────────
+# ── 4. High-Performance GPU Training Engine ──────────────────────────────────
 def train_model(
     data_dir: str,
     epochs: int = 15,
     batch_size: int = 32,
-    lr: float = 1e-4,
+    accum_steps: int = 2,
+    lr: float = 2e-4,
     export_path: str = "backend/app/models/aquashield_forensic_dualstream.pth",
     device: Optional[str] = None
 ):
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
     device = torch.device(device)
-    print(f"\n🌊 AquaShield Sentinel — Training Dual-Stream Forensic Net on [{device}]")
 
-    # Data Transforms with Forensic Augmentation
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
+        torch.backends.cudnn.benchmark = True
+        gpu_name = torch.cuda.get_device_name(0)
+        vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+        print(f"\n🚀 [GPU ACCELERATION ACTIVE] Device: {gpu_name} ({vram_gb:.1f} GB VRAM)")
+        print(f"🔥 Mixed Precision (AMP FP16) + Gradient Accumulation Active (Effective Batch: {batch_size * accum_steps})")
+    else:
+        print(f"\n⚡ [CPU MODE] Device: {device}")
+
     train_transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.RandomHorizontalFlip(),
@@ -182,44 +179,70 @@ def train_model(
         print("    Ensure your dataset contains 'Au/' (Authentic) and 'Tp/' (Tampered) subdirectories.")
         sys.exit(1)
 
-    # Train/Validation Split (85% Train, 15% Validation)
     val_size = int(0.15 * len(dataset))
     train_size = len(dataset) - val_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=True)
+    num_workers = 4
+    use_pin_memory = (device.type == "cuda")
+
+    print(f"🧠 Utilizing {num_workers} parallel data workers | Micro-Batch: {batch_size}")
+
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=use_pin_memory,
+        persistent_workers=True if num_workers > 0 else False
+    )
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=use_pin_memory,
+        persistent_workers=True if num_workers > 0 else False
+    )
 
     model = DualStreamForensicNet(pretrained=True).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
+    scaler = torch.cuda.amp.GradScaler(enabled=(device.type == "cuda"))
 
     best_val_acc = 0.0
     os.makedirs(os.path.dirname(export_path), exist_ok=True)
 
     print(f"\n[*] Starting training loop for {epochs} epochs...")
-    print("=" * 70)
+    print("=" * 75)
 
     for epoch in range(1, epochs + 1):
         start_time = time.time()
         
-        # Training Phase
         model.train()
         train_loss = 0.0
         train_correct = 0
         total_train = 0
+        optimizer.zero_grad(set_to_none=True)
 
         for batch_idx, (rgb, ela, labels) in enumerate(train_loader):
-            rgb, ela, labels = rgb.to(device), ela.to(device), labels.to(device)
+            rgb = rgb.to(device, non_blocking=True)
+            ela = ela.to(device, non_blocking=True)
+            labels = labels.to(device, non_blocking=True)
 
-            optimizer.zero_grad()
-            outputs = model(rgb, ela)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
+            with torch.cuda.amp.autocast(enabled=(device.type == "cuda")):
+                outputs = model(rgb, ela)
+                loss = criterion(outputs, labels) / accum_steps
 
-            train_loss += loss.item() * rgb.size(0)
+            scaler.scale(loss).backward()
+
+            if (batch_idx + 1) % accum_steps == 0 or (batch_idx + 1) == len(train_loader):
+                scaler.step(optimizer)
+                scaler.update()
+                optimizer.zero_grad(set_to_none=True)
+
+            train_loss += loss.item() * accum_steps * rgb.size(0)
             _, preds = torch.max(outputs, 1)
             train_correct += (preds == labels).sum().item()
             total_train += rgb.size(0)
@@ -228,7 +251,6 @@ def train_model(
         epoch_train_loss = train_loss / total_train
         epoch_train_acc = (train_correct / total_train) * 100.0
 
-        # Validation Phase
         model.eval()
         val_loss = 0.0
         val_correct = 0
@@ -236,9 +258,13 @@ def train_model(
 
         with torch.no_grad():
             for rgb, ela, labels in val_loader:
-                rgb, ela, labels = rgb.to(device), ela.to(device), labels.to(device)
-                outputs = model(rgb, ela)
-                loss = criterion(outputs, labels)
+                rgb = rgb.to(device, non_blocking=True)
+                ela = ela.to(device, non_blocking=True)
+                labels = labels.to(device, non_blocking=True)
+
+                with torch.cuda.amp.autocast(enabled=(device.type == "cuda")):
+                    outputs = model(rgb, ela)
+                    loss = criterion(outputs, labels)
 
                 val_loss += loss.item() * rgb.size(0)
                 _, preds = torch.max(outputs, 1)
@@ -249,11 +275,16 @@ def train_model(
         epoch_val_acc = (val_correct / total_val) * 100.0 if total_val > 0 else 0
         elapsed = time.time() - start_time
 
-        print(f"Epoch [{epoch:02d}/{epochs:02d}] ({elapsed:.1f}s) "
+        gpu_mem_str = ""
+        if device.type == "cuda":
+            allocated = torch.cuda.max_memory_allocated() / (1024**2)
+            gpu_mem_str = f" | VRAM: {allocated:.0f}MB"
+            torch.cuda.empty_cache()
+
+        print(f"Epoch [{epoch:02d}/{epochs:02d}] ({elapsed:.1f}s{gpu_mem_str}) "
               f"Train Loss: {epoch_train_loss:.4f} | Acc: {epoch_train_acc:.2f}%  ||  "
               f"Val Loss: {epoch_val_loss:.4f} | Val Acc: {epoch_val_acc:.2f}%")
 
-        # Save Best Checkpoint
         if epoch_val_acc > best_val_acc:
             best_val_acc = epoch_val_acc
             torch.save({
@@ -262,19 +293,19 @@ def train_model(
                 'val_acc': epoch_val_acc,
                 'architecture': 'DualStream_EfficientNet_ELA_RGB',
             }, export_path)
-            print(f"  --> Saved Best Model Checkpoint to: {export_path} (Acc: {best_val_acc:.2f}%)")
+            print(f"  --> Saved Best Checkpoint to: {export_path} (Acc: {best_val_acc:.2f}%)")
 
-    print("=" * 70)
-    print(f"\n[✓] Training Complete! Peak Validation Accuracy: {best_val_acc:.2f}%")
-    print(f"[✓] Production Weights Ready at: {export_path}\n")
+    print("=" * 75)
+    print(f"\n[✓] High-Speed Training Complete! Peak Validation Accuracy: {best_val_acc:.2f}%")
+    print(f"[✓] Model Checkpoint Ready: {export_path}\n")
 
-# ── 5. CLI Entrypoint ─────────────────────────────────────────────────────────
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train AquaShield Dual-Stream Forensic Net on CASIA")
-    parser.add_argument("--data-dir", type=str, default="dataset/CASIA2", help="Path to extracted CASIA dataset directory")
+    parser.add_argument("--data-dir", type=str, default="dataset/archive/CASIA2", help="Path to extracted CASIA dataset directory")
     parser.add_argument("--epochs", type=int, default=15, help="Number of training epochs")
     parser.add_argument("--batch-size", type=int, default=32, help="Batch size for training")
-    parser.add_argument("--lr", type=float, default=1e-4, help="Learning rate")
+    parser.add_argument("--accum-steps", type=int, default=2, help="Gradient accumulation steps")
+    parser.add_argument("--lr", type=float, default=2e-4, help="Learning rate")
     parser.add_argument("--export-path", type=str, default="backend/app/models/aquashield_forensic_dualstream.pth", help="Path to save trained weights")
     parser.add_argument("--device", type=str, default=None, help="Device to use ('cuda', 'cpu', or None for auto)")
 
@@ -283,6 +314,7 @@ if __name__ == "__main__":
         data_dir=args.data_dir,
         epochs=args.epochs,
         batch_size=args.batch_size,
+        accum_steps=args.accum_steps,
         lr=args.lr,
         export_path=args.export_path,
         device=args.device
