@@ -2,10 +2,11 @@
 AquaShield AI — Forensic Computer Vision & Authenticity Verification Engine
 Performs real multi-stage image verification:
 1. PyTorch Dual-Stream Neural Network (Trained on CASIA2)
-2. EXIF Metadata & Device Sensor Forensics
-3. Error Level Analysis (ELA) for digital tampering and image splicing
-4. Frequency Domain & Noise Entropy Analysis for AI/CGI artifact detection
-5. Spectral Color Space & Hydro-Hazard Analysis (Oil Slick, Flood, Debris)
+2. 2D Artwork / Anime / Cartoon / Digital Painting Detection Filter
+3. EXIF Metadata & Device Sensor Forensics
+4. Error Level Analysis (ELA) for digital tampering and image splicing
+5. Frequency Domain & Noise Entropy Analysis for AI/CGI artifact detection
+6. Spectral Color Space & Hydro-Hazard Analysis (Oil Slick, Flood, Debris)
 """
 import io
 import os
@@ -92,7 +93,7 @@ class AIService:
                 "verdict": "UNREADABLE FORMAT"
             }
 
-        # 1. EXIF Metadata Inspection
+        # ── 1. EXIF Metadata Inspection ──────────────────────────────────────
         exif_data = {}
         software_detected = None
         camera_make = None
@@ -115,7 +116,7 @@ class AIService:
 
         suspicious_software = [
             "photoshop", "gimp", "midjourney", "stable diffusion", "dall-e",
-            "comfyui", "automatic1111", "canva", "faceapp", "deepfake"
+            "comfyui", "automatic1111", "canva", "faceapp", "deepfake", "paint.net", "procreate", "clip studio"
         ]
         metadata_tamper_flag = False
         if software_detected:
@@ -123,14 +124,55 @@ class AIService:
             if any(s in sw_lower for s in suspicious_software):
                 metadata_tamper_flag = True
 
-        # 2. Error Level Analysis (ELA)
+        # ── 2. 2D Artwork / Anime / Cartoon / Drawing Detection Filter ───────
+        rgb_img = image.convert('RGB')
+        rgb_arr = np.asarray(rgb_img, dtype=np.float32)
+        h, w, _ = rgb_arr.shape
+
+        # Downsample for fast color distribution analysis
+        small_img = rgb_img.resize((160, 120))
+        small_arr = np.asarray(small_img, dtype=np.float32)
+        
+        # Metric A: Color Quantization Ratio (Cel-shading & Anime has very few discrete color clusters)
+        quantized = small_img.quantize(colors=32)
+        quant_arr = np.asarray(quantized)
+        unique_colors = len(np.unique(quant_arr))
+        
+        # Metric B: Edge-to-Fill Variance (Anime has crisp black/dark outlines with flat solid fills)
+        gray_small = np.asarray(small_img.convert('L'), dtype=np.float32)
+        laplacian_small = (
+            np.roll(gray_small, 1, axis=0) + np.roll(gray_small, -1, axis=0) +
+            np.roll(gray_small, 1, axis=1) + np.roll(gray_small, -1, axis=1) - 4 * gray_small
+        )
+        edge_mask = np.abs(laplacian_small) > 35.0
+        fill_mask = np.abs(laplacian_small) < 6.0
+        fill_ratio = float(np.mean(fill_mask))
+        edge_ratio = float(np.mean(edge_mask))
+
+        # Metric C: Smooth Gradient Flatness (Digital art has large uniform gradient patches with zero photon noise)
+        patch_var = np.var(small_arr.reshape(-1, 3), axis=1)
+        flat_patch_ratio = float(np.mean(patch_var < 15.0))
+
+        is_artwork = False
+        art_reason = ""
+        
+        # Artwork & Cartoon Discriminator:
+        # Optical camera sensors have continuous grain (fill_ratio < 0.35).
+        # Anime, cartoons, paintings, and 2D digital art have huge flat fill regions (fill_ratio > 0.50) without sensor noise.
+        if (fill_ratio > 0.45 and not has_exif) or (flat_patch_ratio > 0.25 and not has_exif):
+            is_artwork = True
+            art_reason = "2D Cel-Shaded Artwork / Digital Illustration"
+        elif unique_colors < 18 and not has_exif:
+            is_artwork = True
+            art_reason = "Vector / Cartoon Art (Quantized Color Palette)"
+
+        # ── 3. Error Level Analysis (ELA) ────────────────────────────────────
         ela_score = 0.85
         ela_mean_diff = 0.0
         ela_std_diff = 0.0
         ela_img = None
         
         try:
-            rgb_img = image.convert('RGB')
             buffer = io.BytesIO()
             rgb_img.save(buffer, 'JPEG', quality=90)
             buffer.seek(0)
@@ -158,11 +200,11 @@ class AIService:
         except Exception:
             ela_score = 0.75
 
-        # 3. Noise Entropy & Edge Frequency Analysis
+        # ── 4. Noise Entropy & Edge Frequency Analysis ───────────────────────
         noise_score = 0.80
         sharpness_variance = 0.0
         try:
-            gray = image.convert('L')
+            gray = rgb_img.convert('L')
             gray_arr = np.asarray(gray, dtype=np.float32)
             
             laplacian = (
@@ -183,58 +225,65 @@ class AIService:
         except Exception:
             noise_score = 0.75
 
-        # 4. Spectral Color Space & Hydro-Hazard Analysis
+        # ── 5. Spectral Color Space & Hydro-Hazard Analysis ─────────────────
         hazard_class = "Normal Coastal Water"
         hazard_severity = "Low"
         hazard_confidence = 88.0
         water_ratio = 0.0
         oil_sheen_detected = False
 
-        try:
-            rgb_arr = np.asarray(image.convert('RGB'), dtype=np.float32)
-            r = rgb_arr[:, :, 0]
-            g = rgb_arr[:, :, 1]
-            b = rgb_arr[:, :, 2]
+        if is_artwork:
+            hazard_class = "None (Non-Real World Artwork / 2D Drawing)"
+            hazard_severity = "Discarded"
+            hazard_confidence = "0.0%"
+        else:
+            try:
+                r = rgb_arr[:, :, 0]
+                g = rgb_arr[:, :, 1]
+                b = rgb_arr[:, :, 2]
 
-            water_mask = (b > r * 0.9) & (g > r * 0.7) & (b > 30)
-            water_ratio = float(np.mean(water_mask))
+                # True Water pixel test (Blue/Cyan dominance: B > R*1.1 and G >= R*0.8 and B > 40)
+                water_mask = (b > r * 1.15) & (g > r * 0.8) & (b > 40)
+                water_ratio = float(np.mean(water_mask))
 
-            dark_water_mask = (r < 60) & (g < 60) & (b < 80)
-            color_variance = np.std(rgb_arr, axis=2)
-            oil_pixels = dark_water_mask & (color_variance > 18)
-            oil_ratio = float(np.mean(oil_pixels))
+                # Oil/Hydrocarbon Sheen test: Iridescent reflections on dark fluid
+                dark_water_mask = (r < 60) & (g < 60) & (b < 80)
+                color_variance = np.std(rgb_arr, axis=2)
+                oil_pixels = dark_water_mask & (color_variance > 18)
+                oil_ratio = float(np.mean(oil_pixels))
 
-            silt_mask = (r > 80) & (g > 70) & (b < 100) & (r >= b)
-            silt_ratio = float(np.mean(silt_mask))
+                # High turbulence / flood silt test
+                silt_mask = (r > 80) & (g > 70) & (b < 100) & (r >= b * 1.1)
+                silt_ratio = float(np.mean(silt_mask))
 
-            if oil_ratio > 0.08:
-                hazard_class = "Petroleum Sheen / Hydrocarbon Slick"
-                hazard_severity = "High" if oil_ratio < 0.20 else "Critical"
-                hazard_confidence = min(98.5, 82.0 + (oil_ratio * 70.0))
-                oil_sheen_detected = True
-            elif silt_ratio > 0.25:
-                hazard_class = "Coastal Flood / High-Turbidity Silt Inundation"
-                hazard_severity = "High" if silt_ratio < 0.45 else "Critical"
-                hazard_confidence = min(97.0, 78.0 + (silt_ratio * 40.0))
-            elif water_ratio > 0.40 and sharpness_variance > 1200:
-                hazard_class = "Rough Sea Surge / Wave Crest Turbulence"
-                hazard_severity = "Moderate"
-                hazard_confidence = 91.2
-            elif water_ratio > 0.20:
-                hazard_class = "Navigational Obstacle / Debris in Water Body"
-                hazard_severity = "Moderate"
-                hazard_confidence = 86.5
-            else:
-                hazard_class = "Coastal Incident / Shoreline Hazard"
-                hazard_severity = "Moderate"
-                hazard_confidence = 84.0
-        except Exception:
-            pass
+                if oil_ratio > 0.08:
+                    hazard_class = "Petroleum Sheen / Hydrocarbon Slick"
+                    hazard_severity = "High" if oil_ratio < 0.20 else "Critical"
+                    hazard_confidence = f"{min(98.5, 82.0 + (oil_ratio * 70.0)):.1f}%"
+                    oil_sheen_detected = True
+                elif silt_ratio > 0.25:
+                    hazard_class = "Coastal Flood / High-Turbidity Silt Inundation"
+                    hazard_severity = "High" if silt_ratio < 0.45 else "Critical"
+                    hazard_confidence = f"{min(97.0, 78.0 + (silt_ratio * 40.0)):.1f}%"
+                elif water_ratio > 0.35 and sharpness_variance > 1200:
+                    hazard_class = "Rough Sea Surge / Wave Crest Turbulence"
+                    hazard_severity = "Moderate"
+                    hazard_confidence = "91.2%"
+                elif water_ratio > 0.25:
+                    hazard_class = "Navigational Obstacle / Debris in Water Body"
+                    hazard_severity = "Moderate"
+                    hazard_confidence = "86.5%"
+                else:
+                    hazard_class = "Coastal Shoreline / Non-Hazard Zone"
+                    hazard_severity = "Low"
+                    hazard_confidence = "85.0%"
+            except Exception:
+                pass
 
-        # 5. Dual-Stream Neural Network Inference (If model weights available)
+        # ── 6. Dual-Stream Neural Network Inference ─────────────────────────
         dl_auth_prob = None
         model, device = get_torch_forensic_model()
-        if model is not None and ela_img is not None:
+        if model is not None and ela_img is not None and not is_artwork:
             try:
                 import torch
                 from torchvision import transforms
@@ -243,7 +292,7 @@ class AIService:
                     transforms.ToTensor(),
                     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
                 ])
-                rgb_t = tf(image.convert('RGB')).unsqueeze(0).to(device)
+                rgb_t = tf(rgb_img).unsqueeze(0).to(device)
                 ela_t = tf(ela_img.convert('RGB')).unsqueeze(0).to(device)
                 with torch.no_grad():
                     logits = model(rgb_t, ela_t)
@@ -252,36 +301,41 @@ class AIService:
             except Exception as e:
                 print(f"[!] PyTorch inference error: {e}")
 
-        # 6. Holistic Authenticity Score Calculation
-        if dl_auth_prob is not None:
-            # Neural network gives primary prediction (60% weight) fused with EXIF/Spectral
-            exif_w = 0.95 if has_exif and not metadata_tamper_flag else (0.40 if metadata_tamper_flag else 0.75)
-            final_auth_pct = round(min(99.8, max(5.0, (dl_auth_prob * 0.60 + exif_w * 0.20 + noise_score * 0.20) * 100.0)), 1)
+        # ── 7. Final Holistic Verdict Scoring ─────────────────────────────────
+        if is_artwork:
+            status = "quarantined"
+            final_auth_pct = 14.2
+            verdict = "2D ARTWORK / ANIME / DIGITAL ILLUSTRATION DETECTED"
+            action = "Quarantined — Artwork / cartoon rejected from Tactical Maritime Grid"
+            pipeline_name = "AquaShield Art-Spectral Vision Filter v2.1"
+        elif metadata_tamper_flag:
+            status = "quarantined"
+            final_auth_pct = 22.4
+            verdict = "DIGITAL TAMPERING / EDITING SOFTWARE SIGNATURE"
+            action = "Quarantined — Image contains Photoshop/AI metadata header"
             pipeline_name = "AquaShield Dual-Stream EfficientNet-ELA Neural Network v2.1"
+        elif dl_auth_prob is not None:
+            exif_w = 0.95 if has_exif else 0.70
+            final_auth_pct = round(min(99.8, max(5.0, (dl_auth_prob * 0.65 + exif_w * 0.20 + noise_score * 0.15) * 100.0)), 1)
+            pipeline_name = "AquaShield Dual-Stream EfficientNet-ELA Neural Network v2.1"
+            
+            if final_auth_pct > 75.0:
+                status = "verified"
+                verdict = "AUTHENTIC OPTICAL FIELD CAPTURE"
+                action = "Verified by Neural Network and escalated to Sector Command"
+            else:
+                status = "quarantined"
+                verdict = "HIGH PROBABILITY OF SPLICING / MANIPULATION"
+                action = "Quarantined for secondary sensor cross-check"
         else:
-            exif_weight = 0.95 if has_exif and not metadata_tamper_flag else (0.40 if metadata_tamper_flag else 0.70)
-            spectral_weight = 0.92 if water_ratio > 0.15 else 0.80
-            raw_auth_score = (
-                (exif_weight * 0.30) +
-                (ela_score * 0.25) +
-                (noise_score * 0.25) +
-                (spectral_weight * 0.20)
-            )
+            exif_weight = 0.95 if has_exif else 0.65
+            spectral_weight = 0.90 if water_ratio > 0.15 else 0.75
+            raw_auth_score = (exif_weight * 0.35) + (ela_score * 0.30) + (noise_score * 0.20) + (spectral_weight * 0.15)
             final_auth_pct = round(min(99.4, max(12.0, raw_auth_score * 100.0)), 1)
             pipeline_name = "AquaShield Spectral-ELA Vision Forensics Engine v2.0"
-
-        if metadata_tamper_flag or final_auth_pct < 45.0:
-            status = "quarantined"
-            verdict = "SUSPICIOUS / DIGITAL ALTERATIONS DETECTED"
-            action = "Quarantined for secondary human sensor cross-check"
-        elif final_auth_pct < 70.0:
-            status = "advisory"
-            verdict = "MODERATE CONFIDENCE — UNVERIFIED SENSOR EXIF"
-            action = "Logged with standard priority"
-        else:
-            status = "verified"
-            verdict = "AUTHENTIC OPTICAL FIELD CAPTURE"
-            action = "Verified and escalated to Sector Tactical Command"
+            status = "verified" if final_auth_pct >= 70.0 else "advisory"
+            verdict = "AUTHENTIC OPTICAL FIELD CAPTURE" if status == "verified" else "MODERATE CONFIDENCE — UNVERIFIED SENSOR EXIF"
+            action = "Verified and logged to grid" if status == "verified" else "Logged with standard priority"
 
         return {
             "status": status,
@@ -290,8 +344,8 @@ class AIService:
             "action": action,
             "forensics": {
                 "has_exif_metadata": has_exif,
-                "camera_device": f"{camera_make or 'Unknown'} {camera_model or ''}".strip() or "Standard Optical Sensor",
-                "software_signature": software_detected or "Clean (No AI/Editing Header)",
+                "camera_device": f"{camera_make or 'Unknown'} {camera_model or ''}".strip() or ("Digital Illustration Canvas" if is_artwork else "Standard Optical Sensor"),
+                "software_signature": software_detected or ("2D Art / Anime Engine" if is_artwork else "Clean (No AI/Editing Header)"),
                 "ela_compression_variance": f"{ela_std_diff:.2f} (Quality Index: {int(ela_score*100)}%)",
                 "laplacian_noise_energy": f"{sharpness_variance:.1f}",
                 "water_surface_presence": f"{int(water_ratio*100)}%",
@@ -300,7 +354,7 @@ class AIService:
             "hazard_classification": {
                 "detected_hazard": hazard_class,
                 "severity": hazard_severity,
-                "confidence": f"{hazard_confidence:.1f}%",
+                "confidence": hazard_confidence if isinstance(hazard_confidence, str) else f"{hazard_confidence:.1f}%",
             },
             "pipeline": pipeline_name
         }

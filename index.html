@@ -1335,38 +1335,66 @@
               </p>
             </div>
 
+            <!-- 1. Dropzone Upload -->
             <div class="aq-scanner-dropzone" id="scanner-dropzone" onclick="document.getElementById('scanner-file-input').click()">
-              <input type="file" id="scanner-file-input" accept="image/*" style="display: none;">
+              <input type="file" id="scanner-file-input" accept="image/*" style="display: none;" onchange="handleScannerFileSelect(this)">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--ds-color-brand)" stroke-width="1.6" style="margin: 0 auto 12px;"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
               <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-lg); font-weight: 600; color: var(--ds-text-primary); margin-bottom: 4px;">
-                Drag & Drop Coastal Satellite or Drone Photo
+                Select or Drop Coastal Photo / Drone Feed
               </div>
               <div style="font-size: var(--ds-text-xs); color: var(--ds-text-muted);">
-                Supports JPG, PNG, WEBP up to 25MB · Connected to <code style="color: var(--ds-color-brand)">/api/ai/verify-image</code>
+                Analyzes with PyTorch Dual-Stream (CASIA2 93.92% Weights) + ELA + EXIF Forensics
               </div>
             </div>
 
-            <div id="scanner-results-card" style="display: none; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-brand); border-radius: var(--ds-radius-xl); padding: 20px;">
+            <!-- 2. Staging Card (Selected Image Preview with Manual Trigger) -->
+            <div id="scanner-stage-card" style="display: none; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-xl); padding: 20px;">
+              <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                <img id="scanner-stage-preview" src="" alt="Selected preview" style="width: 160px; height: 120px; object-fit: cover; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-brand);">
+                <div style="flex: 1;">
+                  <div style="font-family: var(--ds-font-mono); font-size: 11px; color: var(--ds-color-brand-light); font-weight: bold; margin-bottom: 4px;">
+                    IMAGE LOADED // READY FOR FORENSIC INSPECTION
+                  </div>
+                  <div id="scanner-stage-filename" style="font-size: 14px; font-weight: bold; color: var(--ds-text-primary); margin-bottom: 6px;">
+                    image.jpg
+                  </div>
+                  <div style="font-size: 12px; color: var(--ds-text-secondary); margin-bottom: 14px;">
+                    Click the scan button below to execute PyTorch Dual-Stream inference on your RTX 4060 GPU.
+                  </div>
+                  <div style="display: flex; gap: 10px;">
+                    <button id="scanner-run-btn" class="aq-btn-primary" style="font-size: var(--ds-text-xs); padding: 8px 18px; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 6px; font-weight: bold; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px;" onclick="executeManualScannerRun()">
+                      ⚡ Run Dual-Stream AI Forensic Scan
+                    </button>
+                    <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 8px 14px; border: 1px solid var(--ds-border-default); border-radius: 6px; color: var(--ds-text-primary); cursor: pointer;" onclick="resetScanner()">
+                      Choose Different Photo
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Final Forensic Results Card -->
+            <div id="scanner-results-card" style="display: none; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-brand); border-radius: var(--ds-radius-xl); padding: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.7);">
               <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
-                <img id="scanner-preview-img" src="" alt="Scan preview" style="width: 180px; height: 130px; object-fit: cover; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-default);">
+                <img id="scanner-preview-img" src="" alt="Scan preview" style="width: 200px; height: 150px; object-fit: cover; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-default);">
                 <div style="flex: 1;">
                   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                    <div id="scanner-status-tag" style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); font-weight: bold; color: var(--ds-color-brand-light);">
-                      ANALYSIS COMPLETE · 99.4% CONFIDENCE
+                    <div id="scanner-status-tag" style="font-family: var(--ds-font-mono); font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 4px;">
+                      ANALYZING...
                     </div>
-                    <span id="scanner-time-tag" style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted);">34ms</span>
+                    <span id="scanner-time-tag" style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted);">--ms</span>
                   </div>
                   <h4 id="scanner-threat-title" style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: bold; color: var(--ds-text-primary); margin-bottom: 8px;">
-                    Toxic Hydrocarbon Slick Detected
+                    Scanning Image...
                   </h4>
-                  <p id="scanner-threat-desc" style="font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: 1.6; margin-bottom: 14px;">
-                    Satellite spectral analysis verifies fuel discharge approximately 4.2 km offshore. Drift vector indicates eastward trajectory toward coastal sanctuary in 6 hours.
-                  </p>
+                  <div id="scanner-threat-desc" style="font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: 1.6; margin-bottom: 16px;">
+                    Running convolutional edge filters, ELA recompression, and Dual-Stream neural network inference...
+                  </div>
                   <div style="display: flex; gap: 10px;">
-                    <button class="aq-btn-primary" style="font-size: var(--ds-text-xs); padding: 6px 14px; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 4px; font-weight: bold;" onclick="switchHudTab('sos')">
-                      Dispatch Containment Cutter
+                    <button class="aq-btn-primary" style="font-size: var(--ds-text-xs); padding: 7px 16px; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 6px; font-weight: bold; border: none; cursor: pointer;" onclick="openReportModal()">
+                      + Pin Verified Incident on Map
                     </button>
-                    <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 6px 14px; border: 1px solid var(--ds-border-default); border-radius: 4px; color: var(--ds-text-primary);" onclick="resetScanner()">
+                    <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 7px 14px; border: 1px solid var(--ds-border-default); border-radius: 6px; color: var(--ds-text-primary); cursor: pointer;" onclick="resetScanner()">
                       Scan Another Image
                     </button>
                   </div>

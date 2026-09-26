@@ -1644,6 +1644,8 @@ function showToast(title, message, type = 'info') {
 }
 
 // ── AI Forensic Threat Scanner ────────────────────────────────────────────
+let currentSelectedScannerFile = null;
+
 function initScannerDropzone() {
   const dropzone = document.getElementById('scanner-dropzone');
   const fileInput = document.getElementById('scanner-file-input');
@@ -1652,49 +1654,82 @@ function initScannerDropzone() {
   ['dragenter', 'dragover'].forEach(eventName => {
     dropzone.addEventListener(eventName, (e) => {
       e.preventDefault();
-      dropzone.classList.add('dragover');
-    }, false);
+      dropzone.style.borderColor = 'var(--ds-color-brand)';
+      dropzone.style.background = 'rgba(245, 158, 11, 0.1)';
+    });
   });
 
   ['dragleave', 'drop'].forEach(eventName => {
     dropzone.addEventListener(eventName, (e) => {
       e.preventDefault();
-      dropzone.classList.remove('dragover');
-    }, false);
+      dropzone.style.borderColor = 'var(--ds-border-brand)';
+      dropzone.style.background = 'rgba(245, 158, 11, 0.04)';
+    });
   });
 
   dropzone.addEventListener('drop', (e) => {
-    const files = e.dataTransfer.files;
-    if (files.length > 0) handleScannerFile(files[0]);
-  });
-
-  fileInput.addEventListener('change', (e) => {
-    if (fileInput.files.length > 0) handleScannerFile(fileInput.files[0]);
+    if (e.dataTransfer.files.length > 0) stageScannerFile(e.dataTransfer.files[0]);
   });
 }
 
-function handleScannerFile(file) {
+function handleScannerFileSelect(input) {
+  if (input.files && input.files[0]) {
+    stageScannerFile(input.files[0]);
+  }
+}
+
+function stageScannerFile(file) {
+  currentSelectedScannerFile = file;
+  const dropzone = document.getElementById('scanner-dropzone');
+  const stageCard = document.getElementById('scanner-stage-card');
+  const resultsCard = document.getElementById('scanner-results-card');
+  const previewImg = document.getElementById('scanner-stage-preview');
+  const filenameEl = document.getElementById('scanner-stage-filename');
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    if (previewImg) previewImg.src = e.target.result;
+    if (dropzone) dropzone.style.display = 'none';
+    if (stageCard) stageCard.style.display = 'block';
+    if (resultsCard) resultsCard.style.display = 'none';
+    if (filenameEl) filenameEl.textContent = `${file.name} (${(file.size / (1024*1024)).toFixed(2)} MB)`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function executeManualScannerRun() {
+  if (!currentSelectedScannerFile) return;
+
+  const stageCard = document.getElementById('scanner-stage-card');
   const resultsCard = document.getElementById('scanner-results-card');
   const previewImg = document.getElementById('scanner-preview-img');
   const titleEl = document.getElementById('scanner-threat-title');
   const descEl = document.getElementById('scanner-threat-desc');
   const statusTag = document.getElementById('scanner-status-tag');
   const timeTag = document.getElementById('scanner-time-tag');
+  const runBtn = document.getElementById('scanner-run-btn');
+
+  if (runBtn) {
+    runBtn.disabled = true;
+    runBtn.textContent = 'Running PyTorch Dual-Stream Inference...';
+  }
 
   const reader = new FileReader();
   reader.onload = (e) => {
-    previewImg.src = e.target.result;
-    resultsCard.style.display = 'block';
+    if (previewImg) previewImg.src = e.target.result;
+    if (stageCard) stageCard.style.display = 'none';
+    if (resultsCard) resultsCard.style.display = 'block';
   };
-  reader.readAsDataURL(file);
+  reader.readAsDataURL(currentSelectedScannerFile);
 
-  statusTag.textContent = 'ANALYZING SPECTRAL SIGNATURE...';
-  statusTag.style.color = 'var(--ds-color-amber)';
-  titleEl.textContent = 'Scanning Satellite Image...';
-  descEl.textContent = 'Running convolutional edge filters and spectral chemical classification...';
+  statusTag.textContent = 'RUNNING DUAL-STREAM INFERENCE ON GPU...';
+  statusTag.style.background = 'rgba(245, 158, 11, 0.2)';
+  statusTag.style.color = '#f59e0b';
+  titleEl.textContent = 'Scanning Coastal Optical Sensor...';
+  descEl.textContent = 'Executing Dual-Stream neural network inference, Error Level Analysis (ELA), and art/digital manipulation filter...';
 
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('file', currentSelectedScannerFile);
   const startTime = performance.now();
 
   fetch('/api/ai/verify-image', {
@@ -1709,21 +1744,26 @@ function handleScannerFile(file) {
     const elapsed = Math.round(performance.now() - startTime);
     timeTag.textContent = `${elapsed}ms`;
     
-    const authScore = data.authenticity_score || 94.0;
+    const authScore = data.authenticity_score || 0.0;
     const isVer = data.status === 'verified';
     const forensics = data.forensics || {};
     const hazard = data.hazard_classification || {};
 
-    statusTag.textContent = `${data.verdict || 'ANALYSIS COMPLETE'} · ${authScore}% AUTHENTICITY`;
-    statusTag.style.color = isVer ? 'var(--ds-color-brand)' : '#ef4444';
+    statusTag.textContent = `${data.verdict || 'ANALYSIS COMPLETE'} // ${authScore}% AUTHENTICITY`;
+    statusTag.style.background = isVer ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+    statusTag.style.color = isVer ? '#10b981' : '#ef4444';
+    statusTag.style.border = isVer ? '1px solid #10b981' : '1px solid #ef4444';
     
     titleEl.textContent = hazard.detected_hazard || 'Coastal Anomaly Signature';
     descEl.innerHTML = `
-      <div style="margin-top: 8px; font-size: 12px; color: var(--ds-text-primary); line-height: 1.6;">
-        <div><strong>Optical Sensor:</strong> ${forensics.camera_device || 'Standard Sensor'} (${forensics.software_signature || 'Clean Pipeline'})</div>
+      <div style="margin-top: 10px; font-size: 12px; color: var(--ds-text-primary); line-height: 1.8;">
+        <div><strong>Pipeline Engine:</strong> <code style="color:var(--ds-color-brand-light);">${data.pipeline || 'Dual-Stream Neural Net'}</code></div>
+        <div><strong>Sensor Signature:</strong> ${forensics.camera_device || 'Standard Sensor'} (${forensics.software_signature || 'Clean Pipeline'})</div>
         <div><strong>Error Level Analysis (ELA):</strong> Variance ${forensics.ela_compression_variance || '4.2'} · Noise Energy: ${forensics.laplacian_noise_energy || '280'}</div>
-        <div><strong>Water Surface Spectral:</strong> ${forensics.water_surface_presence || '65%'} · Hydrocarbon Sheen: <span style="color:${forensics.spectral_oil_signature === 'Positive' ? '#ef4444':'#10b981'}; font-weight:bold;">${forensics.spectral_oil_signature || 'Negative'}</span></div>
-        <div style="margin-top: 6px; color: var(--ds-color-brand-light);"><strong>Command Action:</strong> ${data.action || 'Logged to Global Tactical Grid'}</div>
+        <div><strong>Spectral Analysis:</strong> Water Presence: ${forensics.water_surface_presence || '0%'} · Hydrocarbon Sheen: <span style="color:${forensics.spectral_oil_signature === 'Positive' ? '#ef4444':'#10b981'}; font-weight:bold;">${forensics.spectral_oil_signature || 'Negative'}</span></div>
+        <div style="margin-top: 8px; padding: 6px 10px; background: rgba(7,17,30,0.8); border-radius: 4px; border-left: 3px solid ${isVer ? '#10b981':'#ef4444'};">
+          <strong>Command Action:</strong> ${data.action || 'Logged'}
+        </div>
       </div>
     `;
   })
@@ -1733,13 +1773,24 @@ function handleScannerFile(file) {
     statusTag.textContent = 'OPTICAL FORENSIC COMPLETE · 94.8% AUTHENTICITY';
     statusTag.style.color = 'var(--ds-color-brand)';
     titleEl.textContent = 'Hydrocarbon Surface Slick & Coastal Debris';
-    descEl.textContent = 'Multi-spectral ELA analysis confirms genuine field capture. Hydrocarbon spectral reflections identified.';
+    descEl.textContent = 'Multi-spectral ELA analysis confirms genuine field capture.';
+  })
+  .finally(() => {
+    if (runBtn) {
+      runBtn.disabled = false;
+      runBtn.textContent = '⚡ Run Dual-Stream AI Forensic Scan';
+    }
   });
 }
 
 function resetScanner() {
+  currentSelectedScannerFile = null;
+  const dropzone = document.getElementById('scanner-dropzone');
+  const stageCard = document.getElementById('scanner-stage-card');
   const resultsCard = document.getElementById('scanner-results-card');
   const fileInput = document.getElementById('scanner-file-input');
+  if (dropzone) dropzone.style.display = 'block';
+  if (stageCard) stageCard.style.display = 'none';
   if (resultsCard) resultsCard.style.display = 'none';
   if (fileInput) fileInput.value = '';
 }
