@@ -227,23 +227,28 @@ function switchHudTab(tabName) {
   }
 }
 
-// ── MapLibre GL Tactical Multi-Layer Basemap Styles (100% Free & Open) ─────
+// ── MapLibre GL Tactical Multi-Layer Basemap Styles (100% Free & Open, Zero Watermark) ─────
 const MAPLIBRE_STYLES = {
   dark: {
     version: 8,
     sources: {
-      'carto-dark': {
+      'esri-dark-base': {
         type: 'raster',
-        tiles: [
-          'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-          'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-          'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'
-        ],
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'],
         tileSize: 256,
-        attribution: '© OpenStreetMap, © CARTO'
+        attribution: '© Esri, HERE, Garmin, © OpenStreetMap'
+      },
+      'esri-dark-ref': {
+        type: 'raster',
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'],
+        tileSize: 256,
+        attribution: ''
       }
     },
-    layers: [{ id: 'carto-dark-layer', type: 'raster', source: 'carto-dark', minzoom: 0, maxzoom: 20 }]
+    layers: [
+      { id: 'esri-dark-base-layer', type: 'raster', source: 'esri-dark-base', minzoom: 0, maxzoom: 20 },
+      { id: 'esri-dark-ref-layer', type: 'raster', source: 'esri-dark-ref', minzoom: 0, maxzoom: 20 }
+    ]
   },
   satellite: {
     version: 8,
@@ -253,21 +258,33 @@ const MAPLIBRE_STYLES = {
         tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
         tileSize: 256,
         attribution: 'Tiles © Esri, Earthstar Geographics'
+      },
+      'esri-boundaries': {
+        type: 'raster',
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],
+        tileSize: 256,
+        attribution: ''
       }
     },
-    layers: [{ id: 'esri-satellite-layer', type: 'raster', source: 'esri-satellite', minzoom: 0, maxzoom: 20 }]
+    layers: [
+      { id: 'esri-satellite-layer', type: 'raster', source: 'esri-satellite', minzoom: 0, maxzoom: 20 },
+      { id: 'esri-boundaries-layer', type: 'raster', source: 'esri-boundaries', minzoom: 0, maxzoom: 20 }
+    ]
   },
   nautical: {
     version: 8,
     sources: {
-      'carto-voyager': {
+      'esri-ocean-base': {
         type: 'raster',
-        tiles: [
-          'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-          'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'
-        ],
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}'],
         tileSize: 256,
-        attribution: '© OpenStreetMap, © CARTO'
+        attribution: 'Tiles © Esri, GEBCO, NOAA, DeLorme'
+      },
+      'esri-ocean-ref': {
+        type: 'raster',
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}'],
+        tileSize: 256,
+        attribution: ''
       },
       'openseamap': {
         type: 'raster',
@@ -277,24 +294,26 @@ const MAPLIBRE_STYLES = {
       }
     },
     layers: [
-      { id: 'voyager-base', type: 'raster', source: 'carto-voyager', minzoom: 0, maxzoom: 20 },
+      { id: 'ocean-base-layer', type: 'raster', source: 'esri-ocean-base', minzoom: 0, maxzoom: 20 },
+      { id: 'ocean-ref-layer', type: 'raster', source: 'esri-ocean-ref', minzoom: 0, maxzoom: 20 },
       { id: 'seamark-overlay', type: 'raster', source: 'openseamap', minzoom: 0, maxzoom: 18 }
     ]
   },
   street: {
     version: 8,
     sources: {
-      'carto-positron': {
+      'osm-street': {
         type: 'raster',
         tiles: [
-          'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
-          'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png'
+          'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
         ],
         tileSize: 256,
-        attribution: '© OpenStreetMap, © CARTO'
+        attribution: '© OpenStreetMap contributors'
       }
     },
-    layers: [{ id: 'carto-positron-layer', type: 'raster', source: 'carto-positron', minzoom: 0, maxzoom: 20 }]
+    layers: [{ id: 'osm-street-layer', type: 'raster', source: 'osm-street', minzoom: 0, maxzoom: 20 }]
   }
 };
 
