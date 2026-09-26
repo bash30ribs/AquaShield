@@ -158,11 +158,45 @@ function closeCommandCenter() {
   }
 }
 
+function openPrivacyModal() {
+  const modal = document.getElementById('privacy-modal');
+  if (modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closePrivacyModal() {
+  const modal = document.getElementById('privacy-modal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+  }
+}
+
+function openTermsModal() {
+  const modal = document.getElementById('terms-modal');
+  if (modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeTermsModal() {
+  const modal = document.getElementById('terms-modal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+  }
+}
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeCommandCenter();
     closeReportModal();
     closeAuthModal();
+    closePrivacyModal();
+    closeTermsModal();
   }
 });
 

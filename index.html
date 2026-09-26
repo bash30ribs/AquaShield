@@ -12,6 +12,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'><path d='M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm0 2.18l6 2.25v4.66c0 4.14-2.67 7.97-6 9.04-3.33-1.07-6-4.9-6-9.04V6.43l6-2.25z'/></svg>">
+
   <!-- Leaflet CSS for Tactical GIS Map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
@@ -1073,10 +1076,10 @@
           © 2026 AquaShield Technologies. Midnight Navy · Distress Amber · Horizon Steel.
         </span>
         <div style="display: flex; gap: var(--ds-space-6);">
-          <a href="#" style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">Privacy Policy</a>
-          <a href="#" style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">Terms of Use</a>
-          <a href="#" style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">Security</a>
-          <a href="#" style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">Accessibility</a>
+          <a href="javascript:void(0)" onclick="openPrivacyModal()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-secondary); text-decoration: underline; text-underline-offset: 3px;">Privacy Policy</a>
+          <a href="javascript:void(0)" onclick="openTermsModal()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-secondary); text-decoration: underline; text-underline-offset: 3px;">Terms of Service</a>
+          <a href="javascript:void(0)" onclick="openCommandCenter('overview')" style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">Security & Compliance</a>
+          <a href="javascript:void(0)" onclick="window.scrollTo({top:0, behavior:'smooth'})" style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">Back to Top ↑</a>
         </div>
       </div>
     </div>
@@ -1794,6 +1797,68 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Privacy Policy Modal ──────────────────────────────────────── -->
+  <div class="aq-modal-backdrop" id="privacy-modal" onclick="if(event.target===this)closePrivacyModal()">
+    <div class="aq-modal-card" style="max-width: 680px; max-height: 85vh; overflow-y: auto;">
+      <div class="aq-modal-header" style="position: sticky; top: 0; background: var(--ds-bg-surface); z-index: 2;">
+        <div>
+          <div class="aq-modal-tag">LEGAL & DATA COMPLIANCE</div>
+          <h2 class="aq-modal-title">Privacy Policy</h2>
+        </div>
+        <button class="aq-modal-close" onclick="closePrivacyModal()">✕</button>
+      </div>
+      <div style="padding: 24px; color: var(--ds-text-secondary); font-size: var(--ds-text-sm); line-height: 1.7;">
+        <p style="margin-bottom: 14px;"><strong style="color: var(--ds-text-primary);">Effective Date:</strong> September 2026</p>
+        <h3 style="color: var(--ds-text-primary); font-size: var(--ds-text-base); margin: 16px 0 8px;">1. Operational Geolocation Data</h3>
+        <p style="margin-bottom: 14px;">AquaShield Sentinel collects coastal coordinate telemetry, emergency report submissions, and sensor readings solely for coastal threat mitigation, maritime safety, and emergency response orchestration.</p>
+        
+        <h3 style="color: var(--ds-text-primary); font-size: var(--ds-text-base); margin: 16px 0 8px;">2. Community Incident Submissions</h3>
+        <p style="margin-bottom: 14px;">Citizen and operator submitted reports (including photographs, GPS coordinates, and hazard classifications) are cryptographically hashed and verified. Identity details are protected under standard sovereign data protection protocols.</p>
+
+        <h3 style="color: var(--ds-text-primary); font-size: var(--ds-text-base); margin: 16px 0 8px;">3. No Third-Party Commercial Tracking</h3>
+        <p style="margin-bottom: 14px;">AquaShield does not sell, license, or monetize user data. All mapping infrastructure runs on open planetary tile servers (CARTO, Esri, OpenStreetMap) without commercial tracker beacons.</p>
+
+        <h3 style="color: var(--ds-text-primary); font-size: var(--ds-text-base); margin: 16px 0 8px;">4. Data Retention & Deletion</h3>
+        <p style="margin-bottom: 20px;">Authenticated operators can request access to or permanent deletion of their field submission history by contacting their designated zone administration coordinator.</p>
+        
+        <button class="aq-btn-primary" style="width: 100%; padding: 10px; background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 6px;" onclick="closePrivacyModal()">
+          Acknowledge & Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Terms of Service Modal ───────────────────────────────────────── -->
+  <div class="aq-modal-backdrop" id="terms-modal" onclick="if(event.target===this)closeTermsModal()">
+    <div class="aq-modal-card" style="max-width: 680px; max-height: 85vh; overflow-y: auto;">
+      <div class="aq-modal-header" style="position: sticky; top: 0; background: var(--ds-bg-surface); z-index: 2;">
+        <div>
+          <div class="aq-modal-tag">OPERATIONAL FRAMEWORK</div>
+          <h2 class="aq-modal-title">Terms of Service</h2>
+        </div>
+        <button class="aq-modal-close" onclick="closeTermsModal()">✕</button>
+      </div>
+      <div style="padding: 24px; color: var(--ds-text-secondary); font-size: var(--ds-text-sm); line-height: 1.7;">
+        <p style="margin-bottom: 14px;"><strong style="color: var(--ds-text-primary);">Effective Date:</strong> September 2026</p>
+        <h3 style="color: var(--ds-text-primary); font-size: var(--ds-text-base); margin: 16px 0 8px;">1. System Purpose & Authorized Usage</h3>
+        <p style="margin-bottom: 14px;">AquaShield is designed for maritime disaster prevention, coastal observation, environmental protection, and search-and-rescue dispatch assistance. Users agree to submit authentic, verifiable incident telemetry.</p>
+        
+        <h3 style="color: var(--ds-text-primary); font-size: var(--ds-text-base); margin: 16px 0 8px;">2. Zero Tolerance for Malicious or False Alarms</h3>
+        <p style="margin-bottom: 14px;">Deliberate transmission of fabricated distress signals, spoofed GPS coordinates, or fraudulent emergency alerts is strictly prohibited and subject to immediate credential revocation and referral to maritime enforcement authorities.</p>
+
+        <h3 style="color: var(--ds-text-primary); font-size: var(--ds-text-base); margin: 16px 0 8px;">3. Service Reliability & Emergency Disclaimer</h3>
+        <p style="margin-bottom: 14px;">While AquaShield provides 38ms AI inference and 99.97% system uptime, community scouts and vessels in life-critical danger must simultaneously alert primary emergency coastal radio channels (VHF Channel 16 / INCOIS / Coast Guard).</p>
+
+        <h3 style="color: var(--ds-text-primary); font-size: var(--ds-text-base); margin: 16px 0 8px;">4. Intellectual Property & Sensor Telemetry</h3>
+        <p style="margin-bottom: 20px;">Platform telemetry algorithms, edge sensor models, and unified interface designs are proprietary to AquaShield Technologies and partner agencies.</p>
+        
+        <button class="aq-btn-primary" style="width: 100%; padding: 10px; background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 6px;" onclick="closeTermsModal()">
+          Accept Terms & Close
+        </button>
       </div>
     </div>
   </div>
