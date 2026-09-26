@@ -5,13 +5,76 @@ Performs real multi-stage image verification:
 2. Error Level Analysis (ELA) for digital tampering and image splicing
 3. Frequency Domain & Noise Entropy Analysis for AI/CGI artifact detection
 4. Spectral Color Space & Hydro-Hazard Analysis (Oil Slick, Flood, Debris)
-"""
 import io
 import os
 import math
 from typing import Dict, Any, Optional
 from PIL import Image, ImageChops, ImageEnhance, ExifTags
 import numpy as np
+
+# Optional PyTorch Dual-Stream Model Loader
+_TORCH_MODEL = None
+_TORCH_DEVICE = None
+
+def get_torch_forensic_model():
+    global _TORCH_MODEL, _TORCH_DEVICE
+    if _TORCH_MODEL is not None:
+        return _TORCH_MODEL, _TORCH_DEVICE
+
+    model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models", "aquashield_forensic_dualstream.pth")
+    if os.path.exists(model_path):
+        try:
+            import torch
+            import torch.nn as nn
+            from torchvision import models
+
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            
+            # Reconstruct DualStreamForensicNet
+            class DualStreamForensicNet(nn.Module):
+                def __init__(self):
+                    super().__init__()
+                    self.rgb_stream = models.efficientnet_b0(weights=None)
+                    rgb_dim = self.rgb_stream.classifier[1].in_features
+                    self.rgb_stream.classifier = nn.Identity()
+                    
+                    self.ela_stream = models.efficientnet_b0(weights=None)
+                    ela_dim = self.ela_stream.classifier[1].in_features
+                    self.ela_stream.classifier = nn.Identity()
+                    
+                    self.classifier = nn.Sequential(
+                        nn.Linear(rgb_dim + ela_dim, 512),
+                        nn.BatchNorm1d(512),
+                        nn.SiLU(),
+                        nn.Dropout(0.4),
+                        nn.Linear(512, 128),
+                        nn.BatchNorm1d(128),
+                        nn.SiLU(),
+                        nn.Dropout(0.2),
+                        nn.Linear(128, 2)
+                    )
+
+                def forward(self, rgb, ela):
+                    f_rgb = self.rgb_stream(rgb)
+                    f_ela = self.ela_stream(ela)
+                    return self.classifier(torch.cat([f_rgb, f_ela], dim=1))
+
+            net = DualStreamForensicNet()
+            checkpoint = torch.load(model_path, map_location=device)
+            if 'model_state_dict' in checkpoint:
+                net.load_state_dict(checkpoint['model_state_dict'])
+            else:
+                net.load_state_dict(checkpoint)
+            net.to(device)
+            net.eval()
+            _TORCH_MODEL = net
+            _TORCH_DEVICE = device
+            print(f"[✓] Loaded Custom PyTorch Dual-Stream Forensic Weights from {model_path}")
+            return _TORCH_MODEL, _TORCH_DEVICE
+        except Exception as e:
+            print(f"[!] Warning loading PyTorch weights: {e}")
+            return None, None
+    return None, None
 
 class AIService:
     @staticmethod
