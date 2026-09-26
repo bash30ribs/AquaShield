@@ -1,0 +1,10 @@
+{
+  "description": "This web application offers a sleek, user-friendly interface for showcasing content, ideal for businesses seeking to enhance their online presence with modern design.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

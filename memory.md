@@ -39,5 +39,20 @@
 - [x] Frontend JavaScript upgrade in `app.js` with live UTC clock and dynamic telemetry ticker.
 - [x] Tactical Radar Sweep animation added to GIS Map viewport.
 - [x] Dedicated Interactive Modals for Emergency Copilot (NDMA SOPs) and Wildlife Rescue Dispatch.
+- [x] Fully functional Community Incident & Hazard Reporting engine (`/api/reports`) with AI forensic verification.
+- [x] Operator & Scout Authentication Portal (`/api/auth`) with unique Login IDs (Badge IDs) and 1-click Demo Accounts.
+- [x] Live Field Reports feed & dynamic Leaflet Tactical Map marker plotting.
 - [x] Server verified active and live at `http://127.0.0.1:8000`.
+
+---
+
+## 🔑 Operator & Scout Access Credentials
+
+| Operational Role | Scout / Officer Name | Login ID (Badge) | Email | Demo Password |
+| :--- | :--- | :--- | :--- | :--- |
+| **Coastal Defense Commander** | Commander Rajesh Varma | `SENTINEL-7049` | `commander@aquashield.marine` | `Sentinel@2026` |
+| **Marine Biologist & Rescue (NGO)** | Dr. Ananya Iyer | `RESCUE-9012` | `rescue.lead@aquashield.marine` | `Rescue@2026` |
+| **NDMA Rapid Tactical Lead** | Lt. Vikram Singh | `NDMA-3301` | `responder@aquashield.marine` | `Ndma@2026` |
+| **Citizen Coastal Scout** | Aarav Patil | `CITIZEN-1084` | `citizen@aquashield.marine` | `Citizen@2026` |
+
 

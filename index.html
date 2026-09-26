@@ -1,770 +1,1676 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#061016">
-<meta name="description" content="AquaShield AI — Coastal Disaster Intelligence & Marine Wildlife Safety Platform">
-<title>AquaShield AI | Coastal Intelligence Command</title>
-<link rel="manifest" href="manifest.json">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07111e">
+  <meta name="description" content="AquaShield Sentinel — Coastal AI intelligence protecting lives, ecosystems, and strategic sovereign coastlines. 21 smart buoys, real-time radar, 38ms threat detection.">
+  <title>AquaShield Sentinel · Coastal Intelligence Platform</title>
 
-<link rel="stylesheet" href="style.css?v=3.0">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS for Tactical GIS Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- 3-Tone Design System: Midnight Navy + Distress Amber + Horizon Steel -->
+  <style>
+    :root {
+      /* ── 1. Midnight Navy (Deep Ocean Structural Foundation) ─────────── */
+      --ds-bg-base:        #07111e;
+      --ds-bg-surface:     #0c1827;
+      --ds-bg-raised:      #122238;
+      --ds-bg-overlay:     #162a45;
+      --ds-bg-card:        #0f1e33;
+      --ds-bg-card-hover:  #142742;
+
+      /* ── 2. Distress Amber (Tactical Single Accent & Action Brand) ─── */
+      --ds-color-brand:        #f59e0b;
+      --ds-color-brand-light:  #fbbf24;
+      --ds-color-brand-dark:   #d97706;
+      --ds-color-brand-glow:   rgba(245, 158, 11, 0.25);
+
+      --ds-color-amber:        #f59e0b;
+      --ds-color-amber-light:  #fbbf24;
+      --ds-color-amber-dark:   #b45309;
+
+      /* ── 3. Horizon Steel (Crisp High-Contrast Neutral & Slate Dividers) */
+      --ds-text-primary:   #f1f5f9;
+      --ds-text-secondary: #94a3b8;
+      --ds-text-muted:     #5b7086;
+      --ds-text-inverse:   #07111e;
+
+      --ds-border-subtle:  rgba(148, 163, 184, 0.10);
+      --ds-border-default: rgba(148, 163, 184, 0.20);
+      --ds-border-strong:  rgba(148, 163, 184, 0.35);
+      --ds-border-brand:   rgba(245, 158, 11, 0.45);
+
+      --ds-font-display: 'Outfit', sans-serif;
+      --ds-font-body:    'Inter', sans-serif;
+      --ds-font-mono:    'JetBrains Mono', monospace;
+
+      --ds-text-xs:   0.6875rem;
+      --ds-text-sm:   0.8125rem;
+      --ds-text-base: 0.9375rem;
+      --ds-text-lg:   1.0625rem;
+      --ds-text-xl:   1.25rem;
+      --ds-text-2xl:  1.5rem;
+      --ds-text-3xl:  1.875rem;
+      --ds-text-4xl:  2.375rem;
+      --ds-text-5xl:  3rem;
+      --ds-text-6xl:  3.75rem;
+      --ds-text-7xl:  4.75rem;
+
+      --ds-weight-regular:   400;
+      --ds-weight-medium:    500;
+      --ds-weight-semibold:  600;
+      --ds-weight-bold:      700;
+      --ds-weight-extrabold: 800;
+
+      --ds-leading-tight:   1.15;
+      --ds-leading-snug:    1.35;
+      --ds-leading-normal:  1.6;
+      --ds-leading-relaxed: 1.75;
+
+      --ds-space-1:  0.25rem;
+      --ds-space-2:  0.5rem;
+      --ds-space-3:  0.75rem;
+      --ds-space-4:  1rem;
+      --ds-space-5:  1.25rem;
+      --ds-space-6:  1.5rem;
+      --ds-space-8:  2rem;
+      --ds-space-10: 2.5rem;
+      --ds-space-12: 3rem;
+      --ds-space-14: 3.5rem;
+      --ds-space-16: 4rem;
+      --ds-space-20: 5rem;
+      --ds-space-24: 6rem;
+
+      --ds-radius-xs:   2px;
+      --ds-radius-sm:   4px;
+      --ds-radius-md:   6px;
+      --ds-radius-lg:   10px;
+      --ds-radius-xl:   14px;
+      --ds-radius-2xl:  20px;
+      --ds-radius-full: 9999px;
+
+      --ds-transition-fast: 140ms ease;
+      --ds-transition-base: 280ms ease;
+      --ds-transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+      --ds-max-width:  1280px;
+      --ds-nav-height: 62px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; text-size-adjust: 100%; }
+    body {
+      background-color: var(--ds-bg-base);
+      color: var(--ds-text-primary);
+      font-family: var(--ds-font-body);
+      font-size: var(--ds-text-base);
+      line-height: var(--ds-leading-normal);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; border: none; background: none; cursor: pointer; }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--ds-bg-base); }
+    ::-webkit-scrollbar-thumb { background: var(--ds-border-default); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--ds-border-strong); }
+
+    :focus-visible { outline: 2px solid var(--ds-color-brand); outline-offset: 3px; }
+    ::selection { background: rgba(245, 158, 11, 0.25); color: var(--ds-text-primary); }
+
+    .aq-nav-links { display: flex; }
+    .aq-nav-right { display: flex; }
+    .aq-hamburger { display: none !important; }
+    .aq-caps-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--ds-space-4); }
+    .aq-tech-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--ds-space-5); }
+    .aq-news-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--ds-space-6); }
+    .aq-footer-grid { display: grid; grid-template-columns: 240px repeat(4,1fr); gap: var(--ds-space-10); }
+    .aq-stats-grid { display: grid; grid-template-columns: repeat(4,1fr); }
+    .aq-split-grid { display: grid; grid-template-columns: 1fr 1fr; }
+    .aq-resp-grid  { display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; }
+
+    .aq-marquee { display: flex; width: max-content; animation: aq-marquee 34s linear infinite; }
+    .aq-marquee:hover { animation-play-state: paused; }
+
+    .aq-card { cursor: pointer; transition: border-color var(--ds-transition-base), transform var(--ds-transition-base), background var(--ds-transition-base); }
+    .aq-card:hover { border-color: var(--ds-border-brand) !important; transform: translateY(-3px); background: var(--ds-bg-card-hover) !important; }
+    .aq-card:hover .aq-card-img { transform: scale(1.04); }
+    .aq-card-img { transition: transform 600ms cubic-bezier(0.4,0,0.2,1); }
+
+    .aq-nav-link { position: relative; }
+    .aq-nav-link::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--ds-color-brand); transform: scaleX(0); transform-origin: left; transition: transform 200ms ease; }
+    .aq-nav-link:hover { color: var(--ds-text-primary) !important; }
+    .aq-nav-link:hover::after { transform: scaleX(1); }
+
+    .aq-btn-primary { transition: opacity var(--ds-transition-fast), transform var(--ds-transition-fast), box-shadow var(--ds-transition-fast); }
+    .aq-btn-primary:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 4px 18px var(--ds-color-brand-glow); }
+    .aq-btn-ghost { transition: background var(--ds-transition-fast), border-color var(--ds-transition-fast), color var(--ds-transition-fast); }
+    .aq-btn-ghost:hover { background: rgba(148, 163, 184, 0.08) !important; border-color: var(--ds-border-strong) !important; color: var(--ds-text-primary) !important; }
+
+    .aq-tl { transition: border-color var(--ds-transition-base), transform var(--ds-transition-base); }
+    .aq-tl:hover { border-color: var(--ds-border-brand) !important; transform: translateY(-3px); }
+
+    @keyframes aq-nav-in {
+      from { transform: translateY(-100%); opacity: 0; }
+      to   { transform: translateY(0);     opacity: 1; }
+    }
+    @keyframes aq-radar-sweep {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes aq-marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    .aq-reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .aq-reveal.aq-revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .aq-reveal-left {
+      opacity: 0;
+      transform: translateX(-28px);
+      transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .aq-reveal-left.aq-revealed { opacity: 1; transform: translateX(0); }
+
+    .aq-reveal-right {
+      opacity: 0;
+      transform: translateX(28px);
+      transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .aq-reveal-right.aq-revealed { opacity: 1; transform: translateX(0); }
+
+    @media(max-width:1100px){
+      .aq-caps-grid { grid-template-columns: repeat(2,1fr); }
+      .aq-tech-grid { grid-template-columns: repeat(2,1fr); }
+      .aq-footer-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .aq-split-grid { grid-template-columns: 1fr; }
+      .aq-resp-grid  { grid-template-columns: 1fr; }
+    }
+    @media(max-width:900px){
+      .aq-news-grid { grid-template-columns: 1fr; }
+    }
+    @media(max-width:768px){
+      .aq-nav-links { display:none !important; }
+      .aq-nav-right { display:none !important; }
+      .aq-hamburger { display:flex !important; }
+      .aq-caps-grid { grid-template-columns: 1fr; }
+      .aq-stats-grid { grid-template-columns: 1fr 1fr; }
+      .aq-footer-grid { grid-template-columns: 1fr 1fr; }
+      .aq-hero-side { display:none !important; }
+    }
+    @media(max-width:480px){
+      .aq-footer-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Integrated Command HUD Modal ─────────────────────────────────── */
+    .aq-command-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(7, 17, 30, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: none;
+      opacity: 0;
+      transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .aq-command-overlay.active { display: flex; opacity: 1; }
+    .aq-command-modal {
+      width: 95vw;
+      max-width: 1400px;
+      height: 92vh;
+      margin: auto;
+      background: var(--ds-bg-surface);
+      border: 1px solid var(--ds-border-default);
+      border-radius: var(--ds-radius-2xl);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .aq-hud-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: var(--ds-bg-raised);
+      border-bottom: 1px solid var(--ds-border-subtle);
+      flex-shrink: 0;
+    }
+    .aq-hud-tabs {
+      display: flex;
+      gap: 6px;
+      background: var(--ds-bg-surface);
+      padding: 4px;
+      border-radius: var(--ds-radius-md);
+      border: 1px solid var(--ds-border-subtle);
+    }
+    .aq-hud-tab {
+      font-family: var(--ds-font-body);
+      font-size: var(--ds-text-xs);
+      font-weight: var(--ds-weight-semibold);
+      color: var(--ds-text-secondary);
+      padding: 6px 14px;
+      border-radius: var(--ds-radius-sm);
+      transition: all var(--ds-transition-fast);
+    }
+    .aq-hud-tab:hover { color: var(--ds-text-primary); }
+    .aq-hud-tab.active {
+      color: var(--ds-bg-base);
+      background: var(--ds-color-brand);
+      font-weight: 700;
+    }
+    .aq-hud-body { display: flex; flex: 1; overflow: hidden; }
+    .aq-hud-panel { display: none; width: 100%; height: 100%; overflow-y: auto; }
+    .aq-hud-panel.active { display: flex; }
+
+    #tactical-map-container { width: 100%; height: 100%; background: #07111e; }
+    .leaflet-container { background: #07111e !important; font-family: var(--ds-font-body) !important; }
+    .leaflet-popup-content-wrapper {
+      background: var(--ds-bg-raised) !important;
+      color: var(--ds-text-primary) !important;
+      border: 1px solid var(--ds-border-brand) !important;
+      border-radius: var(--ds-radius-md) !important;
+    }
+    .leaflet-popup-tip { background: var(--ds-bg-raised) !important; }
+
+    .aq-scanner-dropzone {
+      border: 2px dashed var(--ds-border-brand);
+      background: rgba(245, 158, 11, 0.04);
+      border-radius: var(--ds-radius-xl);
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: background var(--ds-transition-fast);
+    }
+    .aq-scanner-dropzone:hover { background: rgba(245, 158, 11, 0.08); }
+
+    .aq-chat-msg {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: var(--ds-radius-lg);
+      font-size: var(--ds-text-sm);
+      line-height: var(--ds-leading-relaxed);
+    }
+    .aq-chat-msg.bot {
+      align-self: flex-start;
+      background: var(--ds-bg-raised);
+      border: 1px solid var(--ds-border-subtle);
+      color: var(--ds-text-primary);
+    }
+    .aq-chat-msg.user {
+      align-self: flex-end;
+      background: var(--ds-color-brand-dark);
+      color: #fff;
+    }
+  </style>
 </head>
 
 <body>
 
-<header class="topbar">
-  <div class="brand">
-    <div class="brand-mark">
-      <svg viewBox="0 0 40 40" fill="none">
-        <path d="M20 5C20 5 9 16 9 25a11 11 0 0 0 22 0C31 16 20 5 20 5Z"
-              stroke="#39d9ff" stroke-width="2"/>
-        <path d="M14 27c3 4 9 5 13 1" stroke="#42e6a4" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div>
-      <strong>AQUASHIELD <span style="color:#39d9ff">AI</span></strong>
-      <small>COASTAL INTELLIGENCE NETWORK</small>
-    </div>
-  </div>
-
-  <div class="system-status">
-    <div class="status-item"><i class="dot"></i> Core Online</div>
-    <div class="status-item"><i class="dot"></i> 18/21 Buoys</div>
-    <div class="status-item"><i class="dot yellow"></i> 2 Incidents</div>
-    <div class="clock" id="clock">00:00:00 IST</div>
-  </div>
-</header>
-
-<div class="app">
-
-  <aside class="sidebar">
-    <div class="nav-label">Operations</div>
-    <nav class="nav">
-      <button class="active" onclick="selectNav(this)">
-        <span class="nav-icon">◈</span> Command Center
-      </button>
-      <button onclick="selectNav(this)">
-        <span class="nav-icon">⌁</span> Live Intelligence
-      </button>
-      <button onclick="selectNav(this)">
-        <span class="nav-icon">◎</span> Tactical Map
-      </button>
-      <button onclick="selectNav(this)">
-        <span class="nav-icon">↗</span> Evacuation
-      </button>
-    </nav>
-
-    <div class="nav-label">AI Systems</div>
-    <nav class="nav">
-      <button onclick="showAI()">
-        <span class="nav-icon">◇</span> Forensic Verification
-      </button>
-      <button onclick="showCopilot()">
-        <span class="nav-icon">✦</span> Emergency Copilot
-      </button>
-    </nav>
-
-    <div class="nav-label">Field Response</div>
-    <nav class="nav">
-      <button onclick="selectNav(this)">
-        <span class="nav-icon">♢</span> Incident Queue
-      </button>
-      <button onclick="showWildlife()">
-        <span class="nav-icon">♧</span> Wildlife Rescue
-      </button>
-      <button onclick="triggerSOS()">
-        <span class="nav-icon" style="color:#ff5263">!</span> Emergency SOS
-      </button>
-    </nav>
-
-    <div class="sidebar-bottom">
-      <div class="network-card">
-        <div class="network-head">
-          <span>Resilience Layer</span>
-          <span style="color:#42e6a4">ACTIVE</span>
+  <!-- ── Top Navigation Bar ──────────────────────────────────────────── -->
+  <header style="position: fixed; inset: 0 0 auto 0; z-index: 200; height: var(--ds-nav-height); background: rgba(7,17,30,0.85); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--ds-border-subtle); transition: background 350ms ease;" id="navbar">
+    <div style="max-width: var(--ds-max-width); margin: 0 auto; height: 100%; padding: 0 var(--ds-space-6); display: flex; align-items: center; gap: var(--ds-space-8);">
+      <a href="#" style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+        <div style="width: 34px; height: 34px; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-default); display: flex; align-items: center; justify-content: center; background: var(--ds-bg-raised);">
+          <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
+            <path d="M11 2.5L19.5 6.5V12C19.5 16.5 11 20 11 20C11 20 2.5 16.5 2.5 12V6.5Z" stroke="var(--ds-color-brand)" stroke-width="1.6"/>
+            <path d="M6.5 12.5 Q8.75 10 11 12.5 Q13.25 15 15.5 12.5" stroke="var(--ds-color-brand)" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
         </div>
-        <div class="network-value">Offline mesh ready</div>
-        <div class="signal"><span></span></div>
-      </div>
-    </div>
-  </aside>
+        <div>
+          <div style="font-family: var(--ds-font-display); font-weight: var(--ds-weight-bold); font-size: var(--ds-text-lg); letter-spacing: -0.025em; color: var(--ds-text-primary); line-height: 1;">AquaShield</div>
+          <div style="font-family: var(--ds-font-mono); font-size: 0.58rem; color: var(--ds-text-muted); letter-spacing: 0.12em;">SENTINEL PLATFORM</div>
+        </div>
+      </a>
 
+      <nav class="aq-nav-links" style="flex: 1; align-items: center; gap: 2px;">
+        <a href="#platform" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 13px; border-radius: var(--ds-radius-md);">Platform</a>
+        <a href="#capabilities" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 13px; border-radius: var(--ds-radius-md);">Intelligence</a>
+        <a href="#tech" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 13px; border-radius: var(--ds-radius-md);">Architecture</a>
+        <a href="#response" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 13px; border-radius: var(--ds-radius-md);">Response</a>
+        <a href="#enterprise" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 13px; border-radius: var(--ds-radius-md);">Enterprise</a>
+      </nav>
+
+      <div class="aq-nav-right" style="align-items: center; gap: var(--ds-space-3); flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 6px; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-full); padding: 4px 12px;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-color-brand); flex-shrink: 0; box-shadow: 0 0 8px var(--ds-color-brand);"></span>
+          <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-primary); letter-spacing: 0.06em; font-weight: 500;">21/21 Buoys Online</span>
+        </div>
+
+        <button class="aq-btn-ghost" onclick="openReportModal()"
+          style="display: flex; align-items: center; gap: 6px; font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-bold); color: var(--ds-color-brand-light); border: 1px solid var(--ds-border-brand); background: rgba(245, 158, 11, 0.08); padding: 6px 14px; border-radius: var(--ds-radius-md);">
+          <span style="font-size: 14px;">+</span> Report Incident
+        </button>
+
+        <div id="nav-user-container">
+          <button class="aq-btn-ghost" onclick="openAuthModal()"
+            style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-medium); color: var(--ds-text-primary); border: 1px solid var(--ds-border-default); padding: 6px 12px; border-radius: var(--ds-radius-md);">
+            🔑 Scout Login
+          </button>
+        </div>
+
+        <button class="aq-btn-primary" onclick="openCommandCenter('overview')"
+          style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-bold); color: var(--ds-bg-base); background: var(--ds-color-brand); padding: 7px 18px; border-radius: var(--ds-radius-md);">
+          Command HUD
+        </button>
+      </div>
+
+      <button class="aq-hamburger" aria-label="Menu" onclick="toggleMobileMenu()"
+        style="background: none; border: none; cursor: pointer; color: var(--ds-text-primary); padding: 8px; margin-left: auto; align-items: center;">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <line x1="2" y1="6" x2="18" y2="6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="2" y1="10" x2="18" y2="10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="2" y1="14" x2="18" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+
+    <!-- Mobile Drawer Menu -->
+    <div id="mobile-menu" style="display: none; background: rgba(7,17,30,0.98); backdrop-filter: blur(20px); border-top: 1px solid var(--ds-border-subtle); padding: var(--ds-space-5) var(--ds-space-6); flex-direction: column; gap: var(--ds-space-2);">
+      <a href="#platform" onclick="toggleMobileMenu()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-lg); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: var(--ds-space-3) var(--ds-space-4); border-bottom: 1px solid var(--ds-border-subtle);">Platform</a>
+      <a href="#capabilities" onclick="toggleMobileMenu()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-lg); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: var(--ds-space-3) var(--ds-space-4); border-bottom: 1px solid var(--ds-border-subtle);">Intelligence</a>
+      <a href="#tech" onclick="toggleMobileMenu()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-lg); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: var(--ds-space-3) var(--ds-space-4); border-bottom: 1px solid var(--ds-border-subtle);">Architecture</a>
+      <a href="#response" onclick="toggleMobileMenu()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-lg); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: var(--ds-space-3) var(--ds-space-4); border-bottom: 1px solid var(--ds-border-subtle);">Response</a>
+      <a href="#enterprise" onclick="toggleMobileMenu()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-lg); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: var(--ds-space-3) var(--ds-space-4); border-bottom: 1px solid var(--ds-border-subtle);">Enterprise</a>
+      <button onclick="openCommandCenter('overview'); toggleMobileMenu();"
+        style="margin-top: var(--ds-space-3); font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-bold); color: var(--ds-bg-base); background: var(--ds-color-brand); padding: var(--ds-space-3) var(--ds-space-4); border-radius: var(--ds-radius-md); text-align: center;">
+        Launch Command HUD
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Main Content ────────────────────────────────────────────────── -->
   <main>
 
-    <div class="page-head">
-      <div>
-        <div class="eyebrow">National Coastal Operations // West Sector</div>
-        <h1>Command Center</h1>
-        <div class="page-sub">Real-time environmental intelligence, risk analysis and emergency coordination.</div>
-      </div>
+    <!-- 1. Hero Section -->
+    <section style="position: relative; height: 100vh; min-height: 640px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--ds-bg-base);" id="hero">
+      <img src="https://images.unsplash.com/photo-1647441167595-2db0166db955?w=1920&h=1080&fit=crop&auto=format" alt="" aria-hidden style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 40%; opacity: 0.32; filter: contrast(1.1) brightness(0.9);" />
+      <div aria-hidden style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(7,17,30,0.65) 0%, rgba(7,17,30,0.15) 40%, rgba(7,17,30,0.85) 78%, var(--ds-bg-base) 100%); pointer-events: none;"></div>
+      <div aria-hidden style="position: absolute; inset: 0; background-image: linear-gradient(rgba(148,163,184,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,0.03) 1px,transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse 70% 45% at 50% 55%, black 20%, transparent 100%); -webkit-mask-image: radial-gradient(ellipse 70% 45% at 50% 55%, black 20%, transparent 100%); pointer-events: none;"></div>
 
-      <div class="head-actions">
-        <button class="btn" onclick="refreshData()">↻ Refresh</button>
-        <button class="btn primary" onclick="showAI()">AI Analysis</button>
-      </div>
-    </div>
-
-    <!-- ENVIRONMENTAL TELEMETRY -->
-
-    <section class="metrics">
-      <div class="metric">
-        <div class="metric-label">Wave Height</div>
-        <div class="metric-row">
-          <div class="metric-value"><span id="wave">2.8</span><span class="metric-unit">m</span></div>
-          <div class="trend warn">▲ 8.4%</div>
+      <!-- Floating Buoy widget (Left) -->
+      <div class="aq-hero-side" style="position: absolute; left: 5%; top: 32%; pointer-events: auto;">
+        <div style="background: var(--ds-bg-card); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-xl); padding: var(--ds-space-5); width: 200px; box-shadow: 0 16px 36px rgba(0,0,0,0.5);">
+          <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.12em; margin-bottom: var(--ds-space-3);">BUOY NETWORK</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--ds-border-subtle);">
+            <div style="display: flex; align-items: center; gap: 7px;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-text-secondary); flex-shrink: 0;"></span>
+              <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-primary);">B-04</span>
+            </div>
+            <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">1.2 m</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--ds-border-subtle);">
+            <div style="display: flex; align-items: center; gap: 7px;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-text-secondary); flex-shrink: 0;"></span>
+              <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-primary);">B-07</span>
+            </div>
+            <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">1.8 m</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--ds-border-subtle);">
+            <div style="display: flex; align-items: center; gap: 7px;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-color-brand); flex-shrink: 0; box-shadow: 0 0 6px var(--ds-color-brand);"></span>
+              <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); font-weight: bold;">B-12</span>
+            </div>
+            <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); font-weight: bold;">3.4 m ⚠</span>
+          </div>
+          <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary); text-align: right; margin-top: var(--ds-space-2); font-weight: 500;">21/21 online</div>
         </div>
       </div>
 
-      <div class="metric">
-        <div class="metric-label">Wind Speed</div>
-        <div class="metric-row">
-          <div class="metric-value"><span id="wind">64</span><span class="metric-unit">km/h</span></div>
-          <div class="trend danger">▲ 14.2%</div>
+      <!-- Floating Radar widget (Right) -->
+      <div class="aq-hero-side" style="position: absolute; right: 6%; top: 20%; pointer-events: auto;">
+        <div style="background: var(--ds-bg-card); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-xl); padding: var(--ds-space-5); box-shadow: 0 16px 36px rgba(0,0,0,0.5);">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: var(--ds-space-3);">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-color-brand); flex-shrink: 0; box-shadow: 0 0 6px var(--ds-color-brand);"></span>
+            <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.12em;">ZONE 4 RADAR</span>
+          </div>
+          <!-- Radar Scope -->
+          <div style="width: 126px; height: 126px; border-radius: 50%; background: radial-gradient(circle, rgba(245,158,11,0.05) 0%, rgba(7,17,30,0.98) 75%); border: 1px solid var(--ds-border-default); position: relative; overflow: hidden; margin: 0 auto;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 32%; height: 32%; border-radius: 50%; border: 1px solid rgba(148,163,184,0.12);"></div>
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 58%; height: 58%; border-radius: 50%; border: 1px solid rgba(148,163,184,0.12);"></div>
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 82%; height: 82%; border-radius: 50%; border: 1px solid rgba(148,163,184,0.12);"></div>
+            <div style="position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: rgba(148,163,184,0.1);"></div>
+            <div style="position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(148,163,184,0.1);"></div>
+            <div style="position: absolute; top: 50%; left: 50%; width: 48%; height: 1px; margin-top: -0.5px; transform-origin: 0 50%; animation: aq-radar-sweep 3.5s linear infinite; background: linear-gradient(90deg, rgba(245,158,11,0.7), transparent);"></div>
+            <div style="position: absolute; top: 26%; left: 60%; width: 4px; height: 4px; border-radius: 50%; background: var(--ds-color-brand); box-shadow: 0 0 6px var(--ds-color-brand);"></div>
+            <div style="position: absolute; top: 62%; left: 36%; width: 4px; height: 4px; border-radius: 50%; background: var(--ds-color-brand); opacity: 0.85;"></div>
+            <div style="position: absolute; top: 72%; left: 66%; width: 4px; height: 4px; border-radius: 50%; background: var(--ds-color-brand); opacity: 0.85;"></div>
+          </div>
+          <div style="margin-top: var(--ds-space-3); display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-md); padding: 5px 8px; text-align: center;">
+              <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: var(--ds-weight-bold); color: var(--ds-text-primary); line-height: 1;">3</div>
+              <div style="font-family: var(--ds-font-mono); font-size: 0.6rem; color: var(--ds-text-muted); letter-spacing: 0.06em;">Vessels</div>
+            </div>
+            <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-md); padding: 5px 8px; text-align: center;">
+              <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: var(--ds-weight-bold); color: var(--ds-color-brand); line-height: 1;">0</div>
+              <div style="font-family: var(--ds-font-mono); font-size: 0.6rem; color: var(--ds-text-muted); letter-spacing: 0.06em;">Threats</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="metric">
-        <div class="metric-label">Atmospheric Pressure</div>
-        <div class="metric-row">
-          <div class="metric-value">986<span class="metric-unit">hPa</span></div>
-          <div class="trend danger">▼ 6.1%</div>
+      <!-- Hero Center Copy -->
+      <div style="position: relative; z-index: 1; text-align: center; padding: 0 var(--ds-space-6); max-width: 840px;">
+        <div style="margin-bottom: var(--ds-space-5);">
+          <span style="display: inline-flex; align-items: center; gap: 8px; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-full); padding: 5px 16px;">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-color-brand); flex-shrink: 0; box-shadow: 0 0 6px var(--ds-color-brand);"></span>
+            <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-primary); letter-spacing: 0.08em; font-weight: 500;">AquaShield Sentinel · v4.2 · System Active</span>
+          </span>
+        </div>
+        <h1 style="font-family: var(--ds-font-display); font-size: clamp(2.8rem, 7.5vw, 6.5rem); font-weight: var(--ds-weight-extrabold); line-height: var(--ds-leading-tight); letter-spacing: -0.05em; color: var(--ds-text-primary); margin-bottom: var(--ds-space-4);">
+          Coastal Intelligence.<br />Never Blinks.
+        </h1>
+        <p style="font-family: var(--ds-font-body); font-size: clamp(var(--ds-text-base), 2vw, var(--ds-text-xl)); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed); max-width: 580px; margin: 0 auto var(--ds-space-10);">
+          21 smart buoys. 847 km² of real-time coverage. 38ms AI threat detection. AquaShield protects coastlines, lives, and marine ecosystems — without pause.
+        </p>
+        <div style="display: flex; gap: var(--ds-space-4); justify-content: center; flex-wrap: wrap;">
+          <button onclick="openCommandCenter('overview')" class="aq-btn-primary"
+            style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-bold); color: var(--ds-bg-base); background: var(--ds-color-brand); padding: var(--ds-space-3) var(--ds-space-8); border-radius: var(--ds-radius-md);">
+            Deploy in Your Zone
+          </button>
+          <a href="#platform" class="aq-btn-ghost"
+            style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-primary); background: transparent; border: 1px solid var(--ds-border-default); padding: var(--ds-space-3) var(--ds-space-8); border-radius: var(--ds-radius-md);">
+            View Platform ↓
+          </a>
         </div>
       </div>
 
-      <div class="metric">
-        <div class="metric-label">Sea Surface Temp.</div>
-        <div class="metric-row">
-          <div class="metric-value">28.4<span class="metric-unit">°C</span></div>
-          <div class="trend">STABLE</div>
-        </div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">Network Coverage</div>
-        <div class="metric-row">
-          <div class="metric-value">94<span class="metric-unit">%</span></div>
-          <div class="trend">● HEALTHY</div>
+      <!-- Mouse Scroll Indicator -->
+      <div style="position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); opacity: 0.45;">
+        <div style="width: 18px; height: 28px; border: 1.5px solid var(--ds-border-strong); border-radius: 10px; display: flex; align-items: flex-start; justify-content: center; padding: 4px;">
+          <div style="width: 2px; height: 5px; background: var(--ds-color-brand); border-radius: 2px;"></div>
         </div>
       </div>
     </section>
 
-    <div class="command-grid">
-
-      <!-- TACTICAL MAP -->
-
-      <section class="map-panel">
-        <div class="map">
-
-          <div class="coast"></div>
-          <div class="radar-sweep"></div>
-
-          <div class="map-label label-mumbai">Mumbai</div>
-          <div class="map-label label-ratnagiri">Ratnagiri</div>
-          <div class="map-label label-goa">Goa</div>
-          <div class="map-label label-kochi">Kochi</div>
-          <div class="map-label label-arabian">Arabian Sea</div>
-
-          <div class="route"></div>
-
-          <div class="incident i1"></div>
-          <div class="incident yellow i2"></div>
-          <div class="incident green i3"></div>
-          <div class="incident yellow i4"></div>
-
-          <div class="map-tools">
-            <button class="map-tool active">Live</button>
-            <button class="map-tool">Risk</button>
-            <button class="map-tool">Elevation</button>
-            <button class="map-tool">Shelters</button>
-          </div>
-
-          <div class="map-legend">
-            <div class="legend-title">Operational Layer</div>
-            <div class="legend-row"><i class="legend-dot red"></i> Critical incident</div>
-            <div class="legend-row"><i class="legend-dot yellow"></i> Elevated risk</div>
-            <div class="legend-row"><i class="legend-dot green"></i> Safe corridor</div>
-            <div class="legend-row"><i class="legend-dot cyan"></i> Sensor node</div>
-          </div>
-
-          <div class="map-status">
-            <span>MAP ENGINE <b>TACTICAL VECTOR v2.8</b></span>
-            <span>LAST SYNC <b id="sync">12 sec ago</b></span>
-            <span><i class="dot" style="display:inline-block;margin-right:5px"></i><b>LIVE</b></span>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- RIGHT INTELLIGENCE COLUMN -->
-
-      <div class="right-stack">
-
-        <section class="panel">
-          <div class="panel-head">
-            <div class="panel-title">Priority Alerts</div>
-            <div class="panel-meta live">LIVE FEED</div>
-          </div>
-
-          <div class="panel-body">
-
-            <div class="alert">
-              <div class="alert-bar"></div>
-              <div>
-                <h4>Storm surge risk — Mumbai coast</h4>
-                <p>Projected surge corridor intersects low-elevation urban zones.</p>
-              </div>
-              <div class="alert-time">02m</div>
-            </div>
-
-            <div class="alert">
-              <div class="alert-bar yellow"></div>
-              <div>
-                <h4>Wave anomaly detected</h4>
-                <p>Buoy IN-WB-07 reporting abnormal swell pattern.</p>
-              </div>
-              <div class="alert-time">08m</div>
-            </div>
-
-            <div class="alert">
-              <div class="alert-bar yellow"></div>
-              <div>
-                <h4>Wildlife incident — Ratnagiri</h4>
-                <p>Possible stranded Olive Ridley turtle reported.</p>
-              </div>
-              <div class="alert-time">14m</div>
-            </div>
-
-          </div>
-        </section>
-
-        <section class="panel ai-box">
-          <div class="panel-head">
-            <div class="panel-title">Forensic AI</div>
-            <div class="panel-meta">VISION ENGINE</div>
-          </div>
-          <div class="panel-body">
-            <div class="ai-score">
-              <div class="score-ring"><strong>91%</strong></div>
-              <div class="ai-copy">
-                <strong>Evidence confidence</strong>
-                <p>Latest image cross-validated against ocean telemetry and visual artifacts.</p>
-              </div>
-            </div>
-            <div class="progress"><span></span></div>
-            <div style="display:flex;justify-content:space-between;margin-top:7px;color:#5e7a82;font-size:8px">
-              <span>OBJECT DETECTION</span>
-              <span style="color:#42e6a4">VERIFIED</span>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head">
-            <div class="panel-title">Safe Evacuation</div>
-            <div class="panel-meta">RISK-WEIGHTED</div>
-          </div>
-          <div class="panel-body">
-            <div class="route-summary">
-              <div class="route-stat">
-                <small>Recommended</small>
-                <strong class="safe">Route A</strong>
-              </div>
-              <div class="route-stat">
-                <small>Risk Index</small>
-                <strong class="safe">LOW</strong>
-              </div>
-              <div class="route-stat">
-                <small>Distance</small>
-                <strong>7.4 km</strong>
-              </div>
-              <div class="route-stat">
-                <small>Est. Time</small>
-                <strong>18 min</strong>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head">
-            <div class="panel-title">Wildlife Rescue</div>
-            <div class="panel-meta">3 ACTIVE</div>
-          </div>
-          <div class="panel-body">
-
-            <div class="wildlife">
-              <div class="animal">🐢</div>
-              <div>
-                <strong>Olive Ridley Turtle</strong>
-                <small>Ratnagiri • Priority medium</small>
-              </div>
-            </div>
-
-            <div class="wildlife">
-              <div class="animal">🐬</div>
-              <div>
-                <strong>Indo-Pacific Dolphin</strong>
-                <small>Goa • Rescue dispatched</small>
-              </div>
-            </div>
-
-            <div class="wildlife">
-              <div class="animal">🐋</div>
-              <div>
-                <strong>Marine Mammal</strong>
-                <small>Alibaug • Assessment pending</small>
-              </div>
-            </div>
-
-          </div>
-        </section>
-
+    <!-- 2. Alert Ticker -->
+    <div style="border-top: 1px solid var(--ds-border-subtle); border-bottom: 1px solid var(--ds-border-subtle); background: var(--ds-bg-surface); height: 38px; overflow: hidden; display: flex; align-items: center;">
+      <div class="aq-marquee" style="align-items: center;">
+        <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary); padding: 0 var(--ds-space-10); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: 0.03em;">
+          <strong style="color: var(--ds-color-brand);">BUOY B-12</strong> Wave height elevated 3.4m · Monitoring <span style="opacity: 0.35; color: var(--ds-color-brand);">◆</span>
+        </span>
+        <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary); padding: 0 var(--ds-space-10); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: 0.03em;">
+          All 21 buoys nominal · Last telemetry sync 4s ago <span style="opacity: 0.35; color: var(--ds-color-brand);">◆</span>
+        </span>
+        <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary); padding: 0 var(--ds-space-10); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: 0.03em;">
+          Tidal surge forecast +0.6m at 02:00 UTC · Zone 2 <span style="opacity: 0.35; color: var(--ds-color-brand);">◆</span>
+        </span>
+        <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary); padding: 0 var(--ds-space-10); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: 0.03em;">
+          Whale migration corridor active — vessel speed advisory Sector 7 <span style="opacity: 0.35; color: var(--ds-color-brand);">◆</span>
+        </span>
+        <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary); padding: 0 var(--ds-space-10); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: 0.03em;">
+          AquaShield Sentinel v4.2.1 · Horizon defense active <span style="opacity: 0.35; color: var(--ds-color-brand);">◆</span>
+        </span>
+        <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary); padding: 0 var(--ds-space-10); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: 0.03em;">
+          Mesh uplink 99.97% · Satellite backup standby <span style="opacity: 0.35; color: var(--ds-color-brand);">◆</span>
+        </span>
+        <!-- Duplicated for seamless loop -->
+        <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary); padding: 0 var(--ds-space-10); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: 0.03em;">
+          <strong style="color: var(--ds-color-brand);">BUOY B-12</strong> Wave height elevated 3.4m · Monitoring <span style="opacity: 0.35; color: var(--ds-color-brand);">◆</span>
+        </span>
+        <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary); padding: 0 var(--ds-space-10); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: 0.03em;">
+          All 21 buoys nominal · Last telemetry sync 4s ago <span style="opacity: 0.35; color: var(--ds-color-brand);">◆</span>
+        </span>
       </div>
     </div>
 
-    <!-- LOWER INTELLIGENCE -->
-
-    <div class="lower-grid">
-
-      <section class="panel">
-        <div class="panel-head">
-          <div class="panel-title">Wave / Wind Telemetry</div>
-          <div class="panel-meta">LAST 6 HOURS</div>
+    <!-- 3. Stats Strip -->
+    <div style="background: var(--ds-bg-surface); border-bottom: 1px solid var(--ds-border-subtle);">
+      <div class="aq-stats-grid" style="max-width: var(--ds-max-width); margin: 0 auto;">
+        <div style="padding: var(--ds-space-8); border-right: 1px solid var(--ds-border-subtle);">
+          <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-4xl); font-weight: var(--ds-weight-extrabold); letter-spacing: -0.03em; color: var(--ds-text-primary); line-height: 1; margin-bottom: var(--ds-space-1);">21/21</div>
+          <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-muted); font-weight: var(--ds-weight-medium);">Buoys Online</div>
         </div>
-
-        <div class="chart">
-          <div class="chart-grid"></div>
-
-          <svg class="chart-svg" viewBox="0 0 600 150" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="waveFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#39d9ff" stop-opacity=".25"/>
-                <stop offset="1" stop-color="#39d9ff" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-
-            <path d="M0 116 C40 106,55 105,85 108
-                     S130 88,165 95
-                     S210 72,245 81
-                     S285 56,320 67
-                     S360 42,395 58
-                     S440 36,475 49
-                     S530 22,600 31
-                     L600 150 L0 150 Z"
-                  fill="url(#waveFill)"/>
-
-            <path d="M0 116 C40 106,55 105,85 108
-                     S130 88,165 95
-                     S210 72,245 81
-                     S285 56,320 67
-                     S360 42,395 58
-                     S440 36,475 49
-                     S530 22,600 31"
-                  fill="none"
-                  stroke="#39d9ff"
-                  stroke-width="2"/>
-
-            <path d="M0 132 C50 128,75 130,110 122
-                     S170 125,210 115
-                     S270 121,310 101
-                     S370 107,410 94
-                     S470 98,520 72
-                     S565 81,600 65"
-                  fill="none"
-                  stroke="#42e6a4"
-                  stroke-width="1.5"
-                  stroke-dasharray="4 5"/>
-          </svg>
-
-          <div class="chart-labels">
-            <span>-6h</span><span>-5h</span><span>-4h</span>
-            <span>-3h</span><span>-2h</span><span>-1h</span><span>NOW</span>
-          </div>
+        <div style="padding: var(--ds-space-8); border-right: 1px solid var(--ds-border-subtle);">
+          <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-4xl); font-weight: var(--ds-weight-extrabold); letter-spacing: -0.03em; color: var(--ds-text-primary); line-height: 1; margin-bottom: var(--ds-space-1);">847 km²</div>
+          <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-muted); font-weight: var(--ds-weight-medium);">Coverage Area</div>
         </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-head">
-          <div class="panel-title">Incident Queue</div>
-          <div class="panel-meta">SORTED BY RISK</div>
+        <div style="padding: var(--ds-space-8); border-right: 1px solid var(--ds-border-subtle);">
+          <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-4xl); font-weight: var(--ds-weight-extrabold); letter-spacing: -0.03em; color: var(--ds-color-brand); line-height: 1; margin-bottom: var(--ds-space-1);">0</div>
+          <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-muted); font-weight: var(--ds-weight-medium);">Active Critical Threats</div>
         </div>
-
-        <div class="incident-list">
-
-          <div class="incident-row">
-            <i class="incident-status red"></i>
-            <div>
-              <strong>IN-0421 • Flood corridor</strong>
-              <small>Mumbai • 18 reports</small>
-            </div>
-            <time>02m</time>
-          </div>
-
-          <div class="incident-row">
-            <i class="incident-status yellow"></i>
-            <div>
-              <strong>IN-0418 • Wave anomaly</strong>
-              <small>Ratnagiri • 4 reports</small>
-            </div>
-            <time>08m</time>
-          </div>
-
-          <div class="incident-row">
-            <i class="incident-status green"></i>
-            <div>
-              <strong>IN-0412 • Road cleared</strong>
-              <small>Goa • verified</small>
-            </div>
-            <time>21m</time>
-          </div>
-
+        <div style="padding: var(--ds-space-8);">
+          <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-4xl); font-weight: var(--ds-weight-extrabold); letter-spacing: -0.03em; color: var(--ds-text-primary); line-height: 1; margin-bottom: var(--ds-space-1);">38 ms</div>
+          <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-muted); font-weight: var(--ds-weight-medium);">AI Response Time</div>
         </div>
-      </section>
-
-      <section class="panel sos-panel">
-        <div class="panel-head">
-          <div class="panel-title">Emergency Gateway</div>
-          <div class="panel-meta">OFFLINE READY</div>
-        </div>
-
-        <div class="panel-body">
-          <button class="sos" onclick="triggerSOS()">Transmit Emergency SOS</button>
-          <div class="sos-note">
-            Sends emergency coordinates through the configured emergency
-            communication gateway when network connectivity is available.
-            Offline mesh fallback remains armed.
-          </div>
-        </div>
-      </section>
-
+      </div>
     </div>
 
-    <footer>
-      <span>AQUASHIELD AI • COASTAL DISASTER INTELLIGENCE PLATFORM</span>
-      <span>DEMO INTERFACE • TELEMETRY SIMULATED</span>
-    </footer>
+    <!-- 4. Platform Spotlight -->
+    <section id="platform" style="background: var(--ds-bg-base); padding: var(--ds-space-24) var(--ds-space-6);">
+      <div style="max-width: var(--ds-max-width); margin: 0 auto;">
+        <div class="aq-reveal" style="margin-bottom: var(--ds-space-10);">
+          <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: var(--ds-space-3);">The Platform</div>
+          <h2 style="font-family: var(--ds-font-display); font-size: clamp(var(--ds-text-3xl), 4vw, var(--ds-text-5xl)); font-weight: var(--ds-weight-bold); letter-spacing: -0.04em; line-height: var(--ds-leading-tight); color: var(--ds-text-primary); max-width: 620px;">
+            One command layer for the entire coastline.
+          </h2>
+        </div>
+
+        <div class="aq-split-grid aq-reveal" style="border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-2xl); overflow: hidden; background: var(--ds-bg-surface);">
+          <div style="position: relative; min-height: 480px; background: var(--ds-bg-raised); overflow: hidden;">
+            <img src="https://images.unsplash.com/photo-1757882585667-dffbeaaabb81?w=1400&h=900&fit=crop&auto=format" alt="AquaShield Command HUD" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.85);" />
+            <div style="position: absolute; inset: 0; background: linear-gradient(to right, transparent 55%, var(--ds-bg-surface) 100%);"></div>
+            <!-- Targeting Brackets -->
+            <div aria-hidden style="position: absolute; width: 22px; height: 22px; top: 16px; left: 16px; border-top: 2px solid var(--ds-color-brand); border-left: 2px solid var(--ds-color-brand);"></div>
+            <div aria-hidden style="position: absolute; width: 22px; height: 22px; top: 16px; right: 16px; border-top: 2px solid var(--ds-color-brand); border-right: 2px solid var(--ds-color-brand);"></div>
+            <div aria-hidden style="position: absolute; width: 22px; height: 22px; bottom: 16px; left: 16px; border-bottom: 2px solid var(--ds-color-brand); border-left: 2px solid var(--ds-color-brand);"></div>
+            <div aria-hidden style="position: absolute; width: 22px; height: 22px; bottom: 16px; right: 16px; border-bottom: 2px solid var(--ds-color-brand); border-right: 2px solid var(--ds-color-brand);"></div>
+            <div style="position: absolute; top: var(--ds-space-4); left: var(--ds-space-4); background: rgba(7,17,30,0.85); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-sm); padding: 4px 12px;">
+              <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand-light); letter-spacing: 0.08em; font-weight: 600;">COMMAND HUD · LIVE</span>
+            </div>
+          </div>
+
+          <div style="padding: var(--ds-space-14) var(--ds-space-12); display: flex; flex-direction: column; justify-content: center; background: var(--ds-bg-surface);">
+            <h3 style="font-family: var(--ds-font-display); font-size: clamp(var(--ds-text-2xl), 3vw, var(--ds-text-4xl)); font-weight: var(--ds-weight-extrabold); letter-spacing: -0.04em; line-height: var(--ds-leading-tight); color: var(--ds-text-primary); margin-bottom: var(--ds-space-5);">
+              AquaShield<br />Sentinel
+            </h3>
+            <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-lg); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed); margin-bottom: var(--ds-space-8);">
+              Every sensor feed, active alert, evacuation route, vessel track, and AI inference in one composable dashboard. Built for operators who cannot afford blind spots.
+            </p>
+            <div style="display: flex; flex-wrap: wrap; gap: var(--ds-space-2); margin-bottom: var(--ds-space-10);">
+              <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-primary); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); padding: 4px 12px; border-radius: var(--ds-radius-full);">38ms AI Response</span>
+              <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-primary); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); padding: 4px 12px; border-radius: var(--ds-radius-full);">21 Buoy Feeds</span>
+              <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-primary); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); padding: 4px 12px; border-radius: var(--ds-radius-full);">847 km² Coverage</span>
+              <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-primary); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); padding: 4px 12px; border-radius: var(--ds-radius-full);">99.97% Uptime</span>
+              <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-primary); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); padding: 4px 12px; border-radius: var(--ds-radius-full);">Offline-Capable</span>
+            </div>
+            <button onclick="openCommandCenter('overview')" style="align-self: flex-start; font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-bold); color: var(--ds-color-brand);">
+              Explore capabilities →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Capabilities Matrix -->
+    <section id="capabilities" style="background: var(--ds-bg-surface); border-top: 1px solid var(--ds-border-subtle); padding: var(--ds-space-24) var(--ds-space-6);">
+      <div style="max-width: var(--ds-max-width); margin: 0 auto;">
+        <div class="aq-reveal" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: var(--ds-space-12); flex-wrap: wrap; gap: var(--ds-space-4);">
+          <div>
+            <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: var(--ds-space-3);">Intelligence Capabilities</div>
+            <h2 style="font-family: var(--ds-font-display); font-size: clamp(var(--ds-text-3xl), 4vw, var(--ds-text-5xl)); font-weight: var(--ds-weight-bold); letter-spacing: -0.04em; line-height: var(--ds-leading-tight); color: var(--ds-text-primary);">
+              Every layer of coastal defence.
+            </h2>
+          </div>
+          <button onclick="openCommandCenter('overview')" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-color-brand); font-weight: var(--ds-weight-semibold); white-space: nowrap;">View full spec →</button>
+        </div>
+
+        <div class="aq-caps-grid">
+          <!-- Card 1 -->
+          <div onclick="openCommandCenter('overview')" class="aq-card aq-reveal" style="display: flex; flex-direction: column; background: var(--ds-bg-card); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-xl); overflow: hidden; color: inherit;">
+            <div style="height: 176px; overflow: hidden; background: var(--ds-bg-raised); flex-shrink: 0; position: relative;">
+              <img src="https://images.unsplash.com/photo-1534303891689-1fb2f8155c70?w=800&h=600&fit=crop&auto=format" alt="Buoy" class="aq-card-img" style="width: 100%; height: 100%; object-fit: cover;" />
+              <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(7,17,30,0.6) 100%);"></div>
+            </div>
+            <div style="padding: var(--ds-space-5) var(--ds-space-6); display: flex; flex-direction: column; flex: 1;">
+              <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: var(--ds-space-2);">Sensor Network</div>
+              <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: var(--ds-weight-bold); letter-spacing: -0.025em; color: var(--ds-text-primary); line-height: 1.1; margin-bottom: var(--ds-space-2);">Live Intel Feed</h3>
+              <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed); flex: 1; margin-bottom: var(--ds-space-4);">A distributed network of 21 smart buoys streams live telemetry — wave height, temperature, salinity, vessel traffic, and chemical signatures — every 4 seconds.</p>
+              <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-color-brand);">Real-time ocean telemetry, 24/7 →</div>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div onclick="openCommandCenter('map')" class="aq-card aq-reveal" style="display: flex; flex-direction: column; background: var(--ds-bg-card); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-xl); overflow: hidden; color: inherit;">
+            <div style="height: 176px; overflow: hidden; background: var(--ds-bg-raised); flex-shrink: 0; position: relative;">
+              <img src="https://images.unsplash.com/photo-1771331515085-e3eaa2f8b64d?w=800&h=600&fit=crop&auto=format" alt="Radar" class="aq-card-img" style="width: 100%; height: 100%; object-fit: cover;" />
+              <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(7,17,30,0.6) 100%);"></div>
+            </div>
+            <div style="padding: var(--ds-space-5) var(--ds-space-6); display: flex; flex-direction: column; flex: 1;">
+              <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: var(--ds-space-2);">Marine Radar</div>
+              <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: var(--ds-weight-bold); letter-spacing: -0.025em; color: var(--ds-text-primary); line-height: 1.1; margin-bottom: var(--ds-space-2);">Coastal Radar Map</h3>
+              <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed); flex: 1; margin-bottom: var(--ds-space-4);">360° phased-array radar overlaid on live GIS tiles. Tracks every vessel within 120 km, classifies by tonnage, and flags anomalous courses in real time.</p>
+              <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-color-brand);">Full-spectrum vessel tracking →</div>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div onclick="openCommandCenter('evac')" class="aq-card aq-reveal" style="display: flex; flex-direction: column; background: var(--ds-bg-card); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-xl); overflow: hidden; color: inherit;">
+            <div style="height: 176px; overflow: hidden; background: var(--ds-bg-raised); flex-shrink: 0; position: relative;">
+              <img src="https://images.unsplash.com/photo-1783845028687-e68f846797b8?w=800&h=600&fit=crop&auto=format" alt="Coastline" class="aq-card-img" style="width: 100%; height: 100%; object-fit: cover;" />
+              <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(7,17,30,0.6) 100%);"></div>
+            </div>
+            <div style="padding: var(--ds-space-5) var(--ds-space-6); display: flex; flex-direction: column; flex: 1;">
+              <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: var(--ds-space-2);">Emergency Response</div>
+              <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: var(--ds-weight-bold); letter-spacing: -0.025em; color: var(--ds-text-primary); line-height: 1.1; margin-bottom: var(--ds-space-2);">Evacuation Engine</h3>
+              <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed); flex: 1; margin-bottom: var(--ds-space-4);">Dynamic pathfinding calculates evacuation corridors using real-time flood modelling, road capacity, and population density. Updates every 30 seconds during an active event.</p>
+              <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-color-brand);">Optimal routes in under 2 seconds →</div>
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div onclick="openCommandCenter('scanner')" class="aq-card aq-reveal" style="display: flex; flex-direction: column; background: var(--ds-bg-card); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-xl); overflow: hidden; color: inherit;">
+            <div style="height: 176px; overflow: hidden; background: var(--ds-bg-raised); flex-shrink: 0; position: relative;">
+              <img src="https://images.unsplash.com/photo-1757882585667-dffbeaaabb81?w=1400&h=900&fit=crop&auto=format" alt="Scanner" class="aq-card-img" style="width: 100%; height: 100%; object-fit: cover;" />
+              <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(7,17,30,0.6) 100%);"></div>
+            </div>
+            <div style="padding: var(--ds-space-5) var(--ds-space-6); display: flex; flex-direction: column; flex: 1;">
+              <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: var(--ds-space-2);">AI Systems</div>
+              <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: var(--ds-weight-bold); letter-spacing: -0.025em; color: var(--ds-text-primary); line-height: 1.1; margin-bottom: var(--ds-space-2);">Threat Scanner</h3>
+              <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed); flex: 1; margin-bottom: var(--ds-space-4);">Computer vision + spectral analysis on buoy feeds detects oil spills, algae blooms, illegal dumping, and unregistered vessels with 99.3% precision.</p>
+              <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-color-brand);">AI forensics on every anomaly →</div>
+            </div>
+          </div>
+
+          <!-- Card 5 -->
+          <div onclick="openCommandCenter('overview')" class="aq-card aq-reveal" style="display: flex; flex-direction: column; background: var(--ds-bg-card); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-xl); overflow: hidden; color: inherit;">
+            <div style="height: 176px; overflow: hidden; background: var(--ds-bg-raised); flex-shrink: 0; position: relative;">
+              <img src="https://images.unsplash.com/photo-1668110648714-1070e851f855?w=800&h=600&fit=crop&auto=format" alt="Ocean" class="aq-card-img" style="width: 100%; height: 100%; object-fit: cover;" />
+              <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(7,17,30,0.6) 100%);"></div>
+            </div>
+            <div style="padding: var(--ds-space-5) var(--ds-space-6); display: flex; flex-direction: column; flex: 1;">
+              <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: var(--ds-space-2);">Marine Ecology</div>
+              <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: var(--ds-weight-bold); letter-spacing: -0.025em; color: var(--ds-text-primary); line-height: 1.1; margin-bottom: var(--ds-space-2);">Wildlife Monitor</h3>
+              <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed); flex: 1; margin-bottom: var(--ds-space-4);">Passive hydrophone arrays and optical sensors track marine mammal migration, coral health, and protected-species zones — automatically alerting vessels.</p>
+              <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-color-brand);">Protecting what lives beneath →</div>
+            </div>
+          </div>
+
+          <!-- Card 6 -->
+          <div onclick="openCommandCenter('sos')" class="aq-card aq-reveal" style="display: flex; flex-direction: column; background: var(--ds-bg-card); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-xl); overflow: hidden; color: inherit;">
+            <div style="height: 176px; overflow: hidden; background: var(--ds-bg-raised); flex-shrink: 0; position: relative;">
+              <img src="https://images.unsplash.com/photo-1764746363615-fb6d995c07f7?w=800&h=600&fit=crop&auto=format" alt="Lighthouse" class="aq-card-img" style="width: 100%; height: 100%; object-fit: cover;" />
+              <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(7,17,30,0.6) 100%);"></div>
+            </div>
+            <div style="padding: var(--ds-space-5) var(--ds-space-6); display: flex; flex-direction: column; flex: 1;">
+              <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: var(--ds-space-2);">Rescue Operations</div>
+              <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: var(--ds-weight-bold); letter-spacing: -0.025em; color: var(--ds-text-primary); line-height: 1.1; margin-bottom: var(--ds-space-2);">Rescue SOS</h3>
+              <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed); flex: 1; margin-bottom: var(--ds-space-4);">AIS + EPIRB integration means AquaShield detects a distress signal, identifies the nearest asset, and dispatches within 90 seconds — automatically alerting the coast guard.</p>
+              <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-color-brand);">90-second dispatch guarantee →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Tech Stack / Architecture -->
+    <section id="tech" style="background: var(--ds-bg-base); border-top: 1px solid var(--ds-border-subtle); padding: var(--ds-space-24) var(--ds-space-6);">
+      <div style="max-width: var(--ds-max-width); margin: 0 auto;">
+        <div class="aq-reveal" style="max-width: 560px; margin-bottom: var(--ds-space-14);">
+          <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: var(--ds-space-4);">Intelligence Architecture</div>
+          <h2 style="font-family: var(--ds-font-display); font-size: clamp(var(--ds-text-3xl), 4vw, var(--ds-text-5xl)); font-weight: var(--ds-weight-bold); letter-spacing: -0.04em; line-height: var(--ds-leading-tight); color: var(--ds-text-primary); margin-bottom: var(--ds-space-4);">
+            Ocean sensor to command in 38ms.
+          </h2>
+          <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-lg); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed);">
+            Four layers purpose-built for extreme reliability in maritime environments.
+          </p>
+        </div>
+
+        <div class="aq-tech-grid">
+          <div class="aq-tl aq-reveal" style="background: var(--ds-bg-surface); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-xl); padding: var(--ds-space-8); position: relative;">
+            <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.12em; margin-bottom: var(--ds-space-5);">LAYER 01</div>
+            <div style="width: 6px; height: 28px; background: var(--ds-color-brand); border-radius: 3px; margin-bottom: var(--ds-space-5); opacity: 0.9;"></div>
+            <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: var(--ds-weight-bold); color: var(--ds-text-primary); margin-bottom: var(--ds-space-3);">Edge Sensors</h3>
+            <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed);">21 smart buoys + shore radar + UAV feeds. Each node runs RISC-V processors with 72-hour battery backup and salt-resistant housing.</p>
+          </div>
+
+          <div class="aq-tl aq-reveal" style="background: var(--ds-bg-surface); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-xl); padding: var(--ds-space-8); position: relative;">
+            <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.12em; margin-bottom: var(--ds-space-5);">LAYER 02</div>
+            <div style="width: 6px; height: 28px; background: var(--ds-text-secondary); border-radius: 3px; margin-bottom: var(--ds-space-5); opacity: 0.9;"></div>
+            <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: var(--ds-weight-bold); color: var(--ds-text-primary); margin-bottom: var(--ds-space-3);">Ocean Mesh</h3>
+            <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed);">LoRaWAN + 5G mesh fabric with &lt;50ms end-to-end latency. Redundant satellite uplink maintains 99.97% uptime through adverse conditions.</p>
+          </div>
+
+          <div class="aq-tl aq-reveal" style="background: var(--ds-bg-surface); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-xl); padding: var(--ds-space-8); position: relative;">
+            <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.12em; margin-bottom: var(--ds-space-5);">LAYER 03</div>
+            <div style="width: 6px; height: 28px; background: var(--ds-color-brand-light); border-radius: 3px; margin-bottom: var(--ds-space-5); opacity: 0.9;"></div>
+            <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: var(--ds-weight-bold); color: var(--ds-text-primary); margin-bottom: var(--ds-space-3);">AI Core</h3>
+            <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed);">Edge-deployed transformer models classify threats in 38ms. Federated learning keeps updates private — no raw data leaves your zone.</p>
+          </div>
+
+          <div class="aq-tl aq-reveal" style="background: var(--ds-bg-surface); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-xl); padding: var(--ds-space-8); position: relative;">
+            <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.12em; margin-bottom: var(--ds-space-5);">LAYER 04</div>
+            <div style="width: 6px; height: 28px; background: var(--ds-color-brand); border-radius: 3px; margin-bottom: var(--ds-space-5); opacity: 0.9;"></div>
+            <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: var(--ds-weight-bold); color: var(--ds-text-primary); margin-bottom: var(--ds-space-3);">Command HUD</h3>
+            <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed);">A unified dashboard streams all sensor data, active alerts, evacuation routes, and dispatch status in a single composable view.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Emergency Response Workflow -->
+    <section id="response" style="background: var(--ds-bg-surface); border-top: 1px solid var(--ds-border-subtle); padding: var(--ds-space-24) var(--ds-space-6);">
+      <div style="max-width: var(--ds-max-width); margin: 0 auto;">
+        <div class="aq-resp-grid aq-reveal" style="border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-2xl); overflow: hidden; background: var(--ds-bg-card);">
+          <div style="position: relative; min-height: 420px; background: var(--ds-bg-raised); overflow: hidden;">
+            <img src="https://images.unsplash.com/photo-1764746363615-fb6d995c07f7?w=800&h=600&fit=crop&auto=format" alt="Lighthouse" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.85);" />
+            <div style="position: absolute; inset: 0; background: linear-gradient(to right, transparent 40%, rgba(12,24,39,0.8) 100%);"></div>
+            <div style="position: absolute; bottom: var(--ds-space-5); left: var(--ds-space-5); background: rgba(7,17,30,0.92); border: 1px solid var(--ds-color-brand); border-radius: var(--ds-radius-full); display: inline-flex; align-items: center; gap: 7px; padding: 5px 14px;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-color-brand); flex-shrink: 0; box-shadow: 0 0 6px var(--ds-color-brand);"></span>
+              <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand-light); letter-spacing: 0.06em; font-weight: var(--ds-weight-bold);">SOS DETECTED · DISPATCH ACTIVE</span>
+            </div>
+          </div>
+
+          <div style="padding: var(--ds-space-14) var(--ds-space-12); display: flex; flex-direction: column; justify-content: center;">
+            <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: var(--ds-space-4);">Emergency Response</div>
+            <h2 style="font-family: var(--ds-font-display); font-size: clamp(var(--ds-text-2xl), 3.2vw, var(--ds-text-4xl)); font-weight: var(--ds-weight-extrabold); letter-spacing: -0.04em; line-height: var(--ds-leading-tight); color: var(--ds-text-primary); margin-bottom: var(--ds-space-5);">
+              90 seconds from signal<br />to dispatch.
+            </h2>
+            <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed); margin-bottom: var(--ds-space-8);">
+              From EPIRB detection to asset dispatch — every step automated, documented, and tracked in real time.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: var(--ds-space-2); margin-bottom: var(--ds-space-10);">
+              <div style="display: flex; align-items: center; gap: var(--ds-space-4); padding: var(--ds-space-3) var(--ds-space-4); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-md);">
+                <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); font-weight: var(--ds-weight-bold); min-width: 28px;">0s</span>
+                <div style="width: 1px; height: 16px; background: var(--ds-border-subtle); flex-shrink: 0;"></div>
+                <span style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-primary);">SOS / EPIRB signal detected</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: var(--ds-space-4); padding: var(--ds-space-3) var(--ds-space-4); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-md);">
+                <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand-light); font-weight: var(--ds-weight-bold); min-width: 28px;">4s</span>
+                <div style="width: 1px; height: 16px; background: var(--ds-border-subtle); flex-shrink: 0;"></div>
+                <span style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-primary);">AI classifies severity + identifies vessel</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: var(--ds-space-4); padding: var(--ds-space-3) var(--ds-space-4); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-md);">
+                <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); font-weight: var(--ds-weight-bold); min-width: 28px;">12s</span>
+                <div style="width: 1px; height: 16px; background: var(--ds-border-subtle); flex-shrink: 0;"></div>
+                <span style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-primary);">Nearest asset identified · route calculated</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: var(--ds-space-4); padding: var(--ds-space-3) var(--ds-space-4); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-md);">
+                <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand-light); font-weight: var(--ds-weight-bold); min-width: 28px;">90s</span>
+                <div style="width: 1px; height: 16px; background: var(--ds-border-subtle); flex-shrink: 0;"></div>
+                <span style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-primary);">Coast guard dispatched · tracking begins</span>
+              </div>
+            </div>
+            <button onclick="openCommandCenter('sos')" class="aq-btn-primary"
+              style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-bold); color: var(--ds-bg-base); background: var(--ds-color-brand); padding: var(--ds-space-3) var(--ds-space-6); border-radius: var(--ds-radius-md); align-self: flex-start; display: inline-flex; align-items: center; gap: 6px;">
+              Deploy Rescue Module →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. News & Field Reports -->
+    <section style="background: var(--ds-bg-base); border-top: 1px solid var(--ds-border-subtle); padding: var(--ds-space-24) var(--ds-space-6);" id="field-reports-section">
+      <div style="max-width: var(--ds-max-width); margin: 0 auto;">
+        <div class="aq-reveal" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: var(--ds-space-10); flex-wrap: wrap; gap: var(--ds-space-4);">
+          <div>
+            <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: var(--ds-space-3);">LIVE INCIDENTS & AI AUDIT</div>
+            <h2 style="font-family: var(--ds-font-display); font-size: clamp(var(--ds-text-3xl), 4vw, var(--ds-text-5xl)); font-weight: var(--ds-weight-bold); letter-spacing: -0.04em; color: var(--ds-text-primary);">
+              Field Reports & Coastal Intelligence
+            </h2>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <button class="aq-btn-primary" onclick="openReportModal()"
+              style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-bg-base); background: var(--ds-color-brand); font-weight: var(--ds-weight-bold); padding: 8px 18px; border-radius: var(--ds-radius-md);">
+              + Submit Coastal Report
+            </button>
+            <button onclick="openCommandCenter('reports')" class="aq-btn-ghost"
+              style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); padding: 8px 16px; border-radius: var(--ds-radius-md); font-weight: var(--ds-weight-semibold); white-space: nowrap;">
+              View Command Radar Feed →
+            </button>
+          </div>
+        </div>
+
+        <div class="aq-news-grid" id="landing-reports-container">
+          <!-- Dynamically populated from /api/reports -->
+        </div>
+      </div>
+    </section>
+
+
+    <!-- 9. Partner Agencies -->
+    <div style="border-top: 1px solid var(--ds-border-subtle); border-bottom: 1px solid var(--ds-border-subtle); background: var(--ds-bg-surface); padding: var(--ds-space-8) 0; overflow: hidden;">
+      <div style="margin-bottom: var(--ds-space-5); padding-left: var(--ds-space-8);">
+        <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.12em; text-transform: uppercase;">Trusted by maritime agencies worldwide</span>
+      </div>
+      <div class="aq-marquee">
+        <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: -0.01em; padding: 0 var(--ds-space-10);">
+          US Coast Guard <span style="width: 3px; height: 3px; border-radius: 50%; background: var(--ds-border-default); display: inline-block;"></span>
+        </div>
+        <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: -0.01em; padding: 0 var(--ds-space-10);">
+          NOAA <span style="width: 3px; height: 3px; border-radius: 50%; background: var(--ds-border-default); display: inline-block;"></span>
+        </div>
+        <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: -0.01em; padding: 0 var(--ds-space-10);">
+          FEMA <span style="width: 3px; height: 3px; border-radius: 50%; background: var(--ds-border-default); display: inline-block;"></span>
+        </div>
+        <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: -0.01em; padding: 0 var(--ds-space-10);">
+          US Navy <span style="width: 3px; height: 3px; border-radius: 50%; background: var(--ds-border-default); display: inline-block;"></span>
+        </div>
+        <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: -0.01em; padding: 0 var(--ds-space-10);">
+          WWF Ocean <span style="width: 3px; height: 3px; border-radius: 50%; background: var(--ds-border-default); display: inline-block;"></span>
+        </div>
+        <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: -0.01em; padding: 0 var(--ds-space-10);">
+          IMO <span style="width: 3px; height: 3px; border-radius: 50%; background: var(--ds-border-default); display: inline-block;"></span>
+        </div>
+        <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); white-space: nowrap; display: flex; align-items: center; gap: var(--ds-space-10); letter-spacing: -0.01em; padding: 0 var(--ds-space-10);">
+          NATO Maritime <span style="width: 3px; height: 3px; border-radius: 50%; background: var(--ds-border-default); display: inline-block;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. Enterprise Pilot CTA -->
+    <section id="enterprise" style="background: var(--ds-bg-base); padding: var(--ds-space-24) var(--ds-space-6); position: relative; overflow: hidden;">
+      <div aria-hidden style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 700px; height: 700px; background: radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 62%); pointer-events: none;"></div>
+      <div class="aq-reveal" style="max-width: 640px; margin: 0 auto; text-align: center; position: relative; z-index: 1;">
+        <div style="display: inline-flex; align-items: center; gap: 7px; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-full); padding: 5px 16px; margin-bottom: var(--ds-space-8);">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-color-brand); flex-shrink: 0; box-shadow: 0 0 6px var(--ds-color-brand);"></span>
+          <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-primary); letter-spacing: 0.08em; font-weight: 500;">30-DAY PILOT · FREE EVALUATION</span>
+        </div>
+        <h2 style="font-family: var(--ds-font-display); font-size: clamp(2.4rem, 6vw, 4.5rem); font-weight: var(--ds-weight-extrabold); letter-spacing: -0.05em; line-height: var(--ds-leading-tight); color: var(--ds-text-primary); margin-bottom: var(--ds-space-5);">
+          Deploy AquaShield.<br />Protect Your Coast.
+        </h2>
+        <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-xl); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed); margin-bottom: var(--ds-space-10);">
+          From a 21-buoy pilot to full national deployment. We scale to your zone, threat model, and agency's operational cadence.
+        </p>
+        <div style="display: flex; gap: var(--ds-space-4); justify-content: center; flex-wrap: wrap;">
+          <button onclick="openCommandCenter('overview')" class="aq-btn-primary"
+            style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-bold); color: var(--ds-bg-base); background: var(--ds-color-brand); padding: var(--ds-space-4) var(--ds-space-10); border-radius: var(--ds-radius-md); white-space: nowrap;">
+            Start 30-Day Pilot
+          </button>
+          <button onclick="alert('Inquiry submitted. Our technical director will schedule your zone walkthrough.')" class="aq-btn-ghost"
+            style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-primary); background: transparent; border: 1px solid var(--ds-border-default); padding: var(--ds-space-4) var(--ds-space-10); border-radius: var(--ds-radius-md); white-space: nowrap;">
+            Talk to our team
+          </button>
+        </div>
+      </div>
+    </section>
 
   </main>
-</div>
 
-<!-- SOS MODAL -->
-
-<div class="modal" id="sosModal">
-  <div class="modal-card">
-
-    <div class="modal-head">
-      <strong>EMERGENCY TRANSMISSION</strong>
-      <button class="close" onclick="closeSOS()">×</button>
-    </div>
-
-    <div class="modal-body">
-
-      <div class="sos-warning">
-        <strong>Emergency transmission protocol</strong><br>
-        Direct telemetry distress signal will be sent to the nearest Coast Guard and NDMA station with live GPS coordinates.
-      </div>
-
-      <div class="location-box">
-        <div style="color:#4f6d75;font-size:8px;letter-spacing:.12em;margin-bottom:6px">
-          LIVE GPS POSITION
-        </div>
-        LAT 19.0760° N<br>
-        LNG 72.8777° E<br>
-        ACCURACY ±18 m
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn danger" onclick="simulateSOS()">Transmitting SOS</button>
-        <button class="btn" onclick="closeSOS()">Cancel</button>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<!-- FORENSIC AI MODAL -->
-<div class="modal" id="aiModal">
-  <div class="modal-card">
-    <div class="modal-head">
-      <strong>⌖ AQUASHIELD FORENSIC AI SCANNER</strong>
-      <button class="close" onclick="closeAI()">×</button>
-    </div>
-    <div class="modal-body">
-      <div style="background:#071217;border:1px dashed #244853;padding:22px;text-align:center;border-radius:8px;margin-bottom:14px;">
-        <div style="font-size:2.2rem;margin-bottom:8px;">📸</div>
-        <strong style="font-size:13px;color:#dffaff;">Upload Disaster / Coastal Evidence Photo</strong>
-        <p style="color:#78939c;font-size:11px;margin:5px 0 12px;">Automated deepfake detection & multi-hazard severity analysis (YOLOv11 + ViT)</p>
-        <input type="file" id="aiFileInput" style="display:none" onchange="runImageScan(this)">
-        <button class="btn primary" onclick="document.getElementById('aiFileInput').click()">⚡ Select / Drag Photo</button>
-      </div>
-      <div id="aiScanResult" style="background:#08151b;border:1px solid #17343e;padding:14px;border-radius:8px;font-size:11px;color:#9eb5bb;line-height:1.6;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-          <span>AI Vision Pipeline:</span>
-          <span style="color:#42e6a4;font-family:'JetBrains Mono',monospace;">ONLINE (YOLOv11 + ViT)</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-          <span>Ocean Sensor Cross-Validation:</span>
-          <span style="color:#39d9ff;font-family:'JetBrains Mono',monospace;">SYNCHRONIZED (Wave 2.8m)</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;">
-          <span>Authenticity & Severity Confidence:</span>
-          <strong style="color:#42e6a4;font-family:'JetBrains Mono',monospace;">94.2% Real • Grade 3 Surge</strong>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- COPILOT MODAL -->
-<div class="modal" id="copilotModal">
-  <div class="modal-card">
-    <div class="modal-head">
-      <strong>✦ AI EMERGENCY DISASTER COPILOT</strong>
-      <button class="close" onclick="closeCopilot()">×</button>
-    </div>
-    <div class="modal-body">
-      <div style="background:#071217;border:1px solid #17343e;padding:14px;border-radius:8px;margin-bottom:14px;">
-        <div style="font-size:11px;color:#39d9ff;font-family:'JetBrains Mono',monospace;margin-bottom:4px;">Grounded in NDMA & INCOIS Standard Operating Procedures</div>
-        <p style="font-size:11px;color:#8ca5ab;margin:0;line-height:1.5;">Immediate tactical guidance for coastal operations commanders and first responders.</p>
-      </div>
-
-      <div style="display:grid;gap:8px;margin-bottom:14px;">
-        <div style="background:#09161c;border:1px solid #1d3c47;padding:10px 12px;border-radius:6px;">
-          <strong style="color:#42e6a4;font-size:11px;">1. High Sea Surge Protocol</strong>
-          <p style="color:#78939c;font-size:10px;margin:3px 0 0;">Suspend small craft operations at Ratnagiri harbor. Order beach patrol clearance.</p>
-        </div>
-        <div style="background:#09161c;border:1px solid #1d3c47;padding:10px 12px;border-radius:6px;">
-          <strong style="color:#ffd166;font-size:11px;">2. Evacuation Corridor Activation</strong>
-          <p style="color:#78939c;font-size:10px;margin:3px 0 0;">Route A (Eastern Bypass) has 92% clearance. Safe shelter capacity at 64%.</p>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:8px;">
-        <input type="text" id="copilotPrompt" placeholder="Ask Copilot (e.g. 'Standard cyclone surge procedure')..." style="flex:1;background:#050c0f;border:1px solid #1c3b45;border-radius:6px;padding:9px 12px;color:#fff;font-size:11px;">
-        <button class="btn primary" onclick="queryCopilot()">Ask AI</button>
-      </div>
-      <div id="copilotResponse" style="margin-top:10px;font-size:11px;color:#dffaff;font-family:'JetBrains Mono',monospace;display:none;"></div>
-    </div>
-  </div>
-</div>
-
-<!-- WILDLIFE RESCUE MODAL -->
-<div class="modal" id="wildlifeModal">
-  <div class="modal-card">
-    <div class="modal-head">
-      <strong>♧ MARINE WILDLIFE RESCUE DISPATCH</strong>
-      <button class="close" onclick="closeWildlife()">×</button>
-    </div>
-    <div class="modal-body">
-      <div style="display:grid;gap:10px;margin-bottom:14px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;background:#08161c;padding:12px;border:1px solid #1a3843;border-radius:8px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:22px;">🐢</span>
+  <!-- ── Footer ──────────────────────────────────────────────────────── -->
+  <footer style="background: var(--ds-bg-surface); border-top: 1px solid var(--ds-border-subtle); padding: var(--ds-space-20) var(--ds-space-6) var(--ds-space-10);">
+    <div style="max-width: var(--ds-max-width); margin: 0 auto;">
+      <div class="aq-footer-grid" style="margin-bottom: var(--ds-space-14);">
+        <div>
+          <a href="#" style="display: flex; align-items: center; gap: 10px; margin-bottom: var(--ds-space-4);">
+            <div style="width: 30px; height: 30px; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-default); display: flex; align-items: center; justify-content: center; background: var(--ds-bg-raised);">
+              <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+                <path d="M11 2.5L19.5 6.5V12C19.5 16.5 11 20 11 20C11 20 2.5 16.5 2.5 12V6.5Z" stroke="var(--ds-color-brand)" stroke-width="1.6"/>
+                <path d="M6.5 12.5 Q8.75 10 11 12.5 Q13.25 15 15.5 12.5" stroke="var(--ds-color-brand)" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </div>
             <div>
-              <strong style="color:#fff;font-size:12px;">Olive Ridley Turtle Stranding</strong>
-              <div style="color:#78939c;font-size:10px;">Ratnagiri Coast • GPS: 17.001° N, 73.278° E</div>
+              <div style="font-family: var(--ds-font-display); font-weight: var(--ds-weight-bold); font-size: var(--ds-text-base); letter-spacing: -0.02em; color: var(--ds-text-primary); line-height: 1;">AquaShield</div>
+              <div style="font-family: var(--ds-font-mono); font-size: 0.55rem; color: var(--ds-text-muted); letter-spacing: 0.12em;">SENTINEL PLATFORM</div>
+            </div>
+          </a>
+          <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: var(--ds-leading-relaxed); margin-bottom: var(--ds-space-5);">
+            Coastal AI intelligence protecting lives, ecosystems, and critical maritime infrastructure.
+          </p>
+          <div style="display: flex; align-items: center; gap: 7px;">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-color-brand); flex-shrink: 0; box-shadow: 0 0 6px var(--ds-color-brand);"></span>
+            <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-primary); letter-spacing: 0.06em; font-weight: 500;">ALL SYSTEMS OPERATIONAL</span>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-bold); color: var(--ds-text-primary); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: var(--ds-space-5);">Platform</div>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: var(--ds-space-3);">
+            <li><a href="javascript:void(0)" onclick="openCommandCenter('overview')" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Command HUD</a></li>
+            <li><a href="javascript:void(0)" onclick="openCommandCenter('overview')" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Live Intel Feed</a></li>
+            <li><a href="javascript:void(0)" onclick="openCommandCenter('map')" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Radar Map</a></li>
+            <li><a href="javascript:void(0)" onclick="openCommandCenter('scanner')" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">AI Scanner</a></li>
+            <li><a href="javascript:void(0)" onclick="openCommandCenter('evac')" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Evacuation Engine</a></li>
+            <li><a href="javascript:void(0)" onclick="openCommandCenter('sos')" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Rescue SOS</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-bold); color: var(--ds-text-primary); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: var(--ds-space-5);">Intelligence</div>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: var(--ds-space-3);">
+            <li><a href="#capabilities" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Threat Detection</a></li>
+            <li><a href="#capabilities" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Marine Wildlife</a></li>
+            <li><a href="#capabilities" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Flood Modelling</a></li>
+            <li><a href="#capabilities" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Vessel Tracking</a></li>
+            <li><a href="#capabilities" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Alert System</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-bold); color: var(--ds-text-primary); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: var(--ds-space-5);">Response</div>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: var(--ds-space-3);">
+            <li><a href="#response" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Rescue Dispatch</a></li>
+            <li><a href="#response" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Evacuation Routes</a></li>
+            <li><a href="#response" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">SOS Integration</a></li>
+            <li><a href="#response" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Coast Guard API</a></li>
+            <li><a href="#response" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Protocols</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-bold); color: var(--ds-text-primary); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: var(--ds-space-5);">Organisation</div>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: var(--ds-space-3);">
+            <li><a href="#" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">About</a></li>
+            <li><a href="#" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Research</a></li>
+            <li><a href="#" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Partner Agencies</a></li>
+            <li><a href="#" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Careers</a></li>
+            <li><a href="#" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid var(--ds-border-subtle); padding-top: var(--ds-space-8); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--ds-space-4);">
+        <span style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-muted);">
+          © 2026 AquaShield Technologies. Midnight Navy · Distress Amber · Horizon Steel.
+        </span>
+        <div style="display: flex; gap: var(--ds-space-6);">
+          <a href="#" style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">Privacy Policy</a>
+          <a href="#" style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">Terms of Use</a>
+          <a href="#" style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">Security</a>
+          <a href="#" style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">Accessibility</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ====================================================================
+       INTEGRATED TACTICAL COMMAND CENTER (FULL INTERACTIVE HUD)
+       ==================================================================== -->
+  <div class="aq-command-overlay" id="command-overlay">
+    <div class="aq-command-modal">
+      <!-- HUD Topbar -->
+      <div class="aq-hud-topbar">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 32px; height: 32px; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-default); display: flex; align-items: center; justify-content: center; background: var(--ds-bg-raised);">
+            <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+              <path d="M11 2.5L19.5 6.5V12C19.5 16.5 11 20 11 20C11 20 2.5 16.5 2.5 12V6.5Z" stroke="var(--ds-color-brand)" stroke-width="1.6"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-base); font-weight: bold; color: var(--ds-text-primary); line-height: 1;">
+              AquaShield Sentinel · Operations Center
+            </div>
+            <div style="font-family: var(--ds-font-mono); font-size: 0.6rem; color: var(--ds-color-brand); letter-spacing: 0.08em;" id="hud-clock">
+              ACTIVE SECTOR // 12:45:00 UTC
             </div>
           </div>
-          <button class="btn primary" onclick="dispatchRescue(this, 'Ratnagiri Unit')">Dispatch Unit</button>
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;background:#08161c;padding:12px;border:1px solid #1a3843;border-radius:8px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:22px;">🐬</span>
-            <div>
-              <strong style="color:#fff;font-size:12px;">Indo-Pacific Humpback Dolphin</strong>
-              <div style="color:#78939c;font-size:10px;">Goa Estuary • Rescue En Route (ETA 8m)</div>
-            </div>
-          </div>
-          <span style="color:#42e6a4;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;">EN ROUTE</span>
+        <div class="aq-hud-tabs">
+          <button class="aq-hud-tab active" onclick="switchHudTab('overview')">◈ Overview</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('map')">◎ Tactical Map</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('reports')">📋 Field Reports</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('scanner')">◇ AI Threat Scanner</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('chat')">✦ Copilot Chat</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('evac')">↗ Evacuation</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('sos')" style="color: var(--ds-color-brand); font-weight: bold;">! Emergency SOS</button>
         </div>
+
+        <button class="aq-btn-ghost" style="padding: 6px 14px; font-size: var(--ds-text-xs);" onclick="closeCommandCenter()">
+          ✕ Close HUD
+        </button>
       </div>
 
-      <div class="modal-actions">
-        <button class="btn primary" style="width:100%" onclick="alert('✓ New Wildlife incident report logged and broadcasted to local NGO network.'); closeWildlife();">+ Report New Marine Stranding</button>
+      <!-- HUD Content Body -->
+      <div class="aq-hud-body">
+        <!-- 1. Overview Panel -->
+        <div class="aq-hud-panel active" id="panel-overview">
+          <div style="padding: 24px; width: 100%; display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+              <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-xl); padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                  <div>
+                    <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); letter-spacing: 0.1em; font-weight: bold;">LIVE RADAR TELEMETRY</div>
+                    <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: bold; color: var(--ds-text-primary);">West Sector Coastal Defense</h3>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-full); padding: 4px 12px;">
+                    <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-color-brand); box-shadow: 0 0 6px var(--ds-color-brand);"></span>
+                    <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-primary); font-weight: 500;">21 Buoys Linked</span>
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+                  <div style="background: var(--ds-bg-surface); padding: 14px; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-subtle);">
+                    <div style="font-family: var(--ds-font-mono); font-size: 0.7rem; color: var(--ds-text-muted);">AVG WAVE HEIGHT</div>
+                    <div style="font-family: var(--ds-font-display); font-size: 1.6rem; font-weight: bold; color: var(--ds-text-primary);">1.4 m</div>
+                    <div style="font-size: 0.75rem; color: var(--ds-text-secondary);">Normal Swell</div>
+                  </div>
+                  <div style="background: var(--ds-bg-surface); padding: 14px; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-subtle);">
+                    <div style="font-family: var(--ds-font-mono); font-size: 0.7rem; color: var(--ds-text-muted);">PEAK WIND SPEED</div>
+                    <div style="font-family: var(--ds-font-display); font-size: 1.6rem; font-weight: bold; color: var(--ds-color-brand);">24 kt</div>
+                    <div style="font-size: 0.75rem; color: var(--ds-color-brand-light);">Moderate Gusts</div>
+                  </div>
+                  <div style="background: var(--ds-bg-surface); padding: 14px; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-subtle);">
+                    <div style="font-family: var(--ds-font-mono); font-size: 0.7rem; color: var(--ds-text-muted);">MESH LATENCY</div>
+                    <div style="font-family: var(--ds-font-display); font-size: 1.6rem; font-weight: bold; color: var(--ds-text-primary);">32 ms</div>
+                    <div style="font-size: 0.75rem; color: var(--ds-text-secondary);">Optimal Fabric</div>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                  <button class="aq-btn-primary" onclick="switchHudTab('map')"
+                    style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-bold); color: var(--ds-bg-base); background: var(--ds-color-brand); padding: 8px 18px; border-radius: var(--ds-radius-md);">
+                    Open Tactical Map →
+                  </button>
+                  <button class="aq-btn-ghost" onclick="switchHudTab('reports')"
+                    style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-color-brand-light); border: 1px solid var(--ds-border-brand); padding: 8px 18px; border-radius: var(--ds-radius-md);">
+                    📋 View Field Reports
+                  </button>
+                  <button class="aq-btn-ghost" onclick="switchHudTab('scanner')"
+                    style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-primary); border: 1px solid var(--ds-border-default); padding: 8px 18px; border-radius: var(--ds-radius-md);">
+                    Launch AI Forensic Scanner
+                  </button>
+                </div>
+              </div>
+
+              <!-- Buoys Stream Table -->
+              <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-xl); padding: 20px;">
+                <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); letter-spacing: 0.12em; margin-bottom: 14px;">ACTIVE BUOY ROSTER</div>
+                <div style="display: flex; flex-direction: column; gap: 8px;" id="buoy-roster-list">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+              <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-brand); border-radius: var(--ds-radius-xl); padding: 20px; box-shadow: 0 4px 20px var(--ds-color-brand-glow);">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-color-brand); box-shadow: 0 0 8px var(--ds-color-brand);"></span>
+                  <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); font-weight: bold; letter-spacing: 0.08em;">EMERGENCY BEACON</span>
+                </div>
+                <h4 style="font-family: var(--ds-font-display); font-size: var(--ds-text-lg); font-weight: bold; color: var(--ds-text-primary); margin-bottom: 8px;">Direct Rescue Dispatch</h4>
+                <p style="font-size: var(--ds-text-sm); color: var(--ds-text-secondary); margin-bottom: 16px;">
+                  Broadcast instant distress telemetry to maritime coast guard cutters and alert civil disaster teams.
+                </p>
+                <button class="aq-btn-primary" style="background: var(--ds-color-brand); width: 100%; font-weight: bold; padding: 10px; border-radius: var(--ds-radius-md); color: var(--ds-bg-base);" onclick="switchHudTab('sos')">
+                  Initiate SOS Protocol
+                </button>
+              </div>
+
+              <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-xl); padding: 20px; flex: 1; display: flex; flex-direction: column;">
+                <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); letter-spacing: 0.1em; font-weight: bold; margin-bottom: 8px;">AI COPILOT ASSISTANT</div>
+                <p style="font-size: var(--ds-text-sm); color: var(--ds-text-secondary); margin-bottom: 14px;">
+                  Ask questions regarding cyclone pathing, buoy wave anomalies, or evacuation timing.
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; flex: 1;">
+                  <button class="aq-btn-ghost" style="text-align: left; font-size: var(--ds-text-xs); padding: 8px 12px; border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-sm); color: var(--ds-text-secondary);" onclick="quickAskCopilot('What is the current storm surge risk for Mumbai coast?')">
+                    ✦ What is the current storm threat status?
+                  </button>
+                  <button class="aq-btn-ghost" style="text-align: left; font-size: var(--ds-text-xs); padding: 8px 12px; border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-sm); color: var(--ds-text-secondary);" onclick="quickAskCopilot('Analyze wave anomalies on Buoy B-12')">
+                    ✦ Analyze wave anomalies on Buoy B-12
+                  </button>
+                  <button class="aq-btn-ghost" style="text-align: left; font-size: var(--ds-text-xs); padding: 8px 12px; border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-sm); color: var(--ds-text-secondary);" onclick="quickAskCopilot('Calculate optimal coastal evacuation corridor')">
+                    ✦ Calculate optimal evacuation corridors
+                  </button>
+                </div>
+                <button class="aq-btn-primary" onclick="switchHudTab('chat')"
+                  style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: bold; color: var(--ds-bg-base); background: var(--ds-color-brand); padding: 10px; border-radius: var(--ds-radius-md);">
+                  Open Chat Terminal →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Tactical GIS Map Panel -->
+        <div class="aq-hud-panel" id="panel-map">
+          <div style="position: relative; width: 100%; height: 100%;">
+            <div id="tactical-map-container"></div>
+            <div style="position: absolute; top: 16px; left: 16px; z-index: 400; background: rgba(7,17,30,0.92); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-lg); padding: 12px 18px; backdrop-filter: blur(10px);">
+              <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); font-weight: bold; margin-bottom: 4px;">TACTICAL RADAR GIS LAYER</div>
+              <div style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">Showing 21 Buoys · Active Eyewitness Reports · AIS Vessels</div>
+            </div>
+            <div style="position: absolute; bottom: 20px; right: 20px; z-index: 400; display: flex; gap: 10px;">
+              <button class="aq-btn-primary" style="font-size: var(--ds-text-xs); padding: 8px 14px; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 6px; font-weight: bold;" onclick="resetMapView()">
+                Recenter Sector View
+              </button>
+              <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 8px 14px; border: 1px solid var(--ds-border-default); border-radius: 6px; color: var(--ds-text-primary);" onclick="openReportModal()">
+                + Pin New Report
+              </button>
+              <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 8px 14px; border: 1px solid var(--ds-border-default); border-radius: 6px; color: var(--ds-text-primary);" onclick="simulateEmergencyMarker()">
+                Simulate Vessel Distress
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Field Reports Management Panel -->
+        <div class="aq-hud-panel" id="panel-reports">
+          <div style="padding: 24px; width: 100%; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+              <div>
+                <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); letter-spacing: 0.1em; font-weight: bold;">LIVE FIELD TELEMETRY & AI AUDIT</div>
+                <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-2xl); font-weight: bold; color: var(--ds-text-primary);">Community Field Incident Reports</h3>
+                <p style="font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">
+                  Verified field incident data analyzed via YOLOv11 + ViT forensic classifier and cross-referenced with coastal sensor buoys.
+                </p>
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <button class="aq-btn-ghost" onclick="loadReports()" style="font-size: var(--ds-text-xs); padding: 8px 14px; border: 1px solid var(--ds-border-default); border-radius: 6px; color: var(--ds-text-primary);">
+                  ↻ Refresh Feed
+                </button>
+                <button class="aq-btn-primary" onclick="openReportModal()" style="font-size: var(--ds-text-xs); padding: 8px 16px; background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 6px;">
+                  + Submit New Incident
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter chips -->
+            <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;" id="hud-report-filters">
+              <button class="aq-type-pill selected" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('all', this)">All Incidents</button>
+              <button class="aq-type-pill" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('flood', this)">🌊 Floods & Surge</button>
+              <button class="aq-type-pill" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('marine_animal', this)">🐢 Marine Stranding</button>
+              <button class="aq-type-pill" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('oil_spill', this)">🛢️ Oil Spills</button>
+              <button class="aq-type-pill" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('cyclone_damage', this)">🚨 Structural Hazards</button>
+            </div>
+
+            <!-- Reports List Table Container -->
+            <div id="hud-reports-list" style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- Dynamically populated from /api/reports -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. AI Threat Scanner Panel -->
+        <div class="aq-hud-panel" id="panel-scanner">
+          <div style="padding: 24px; width: 100%; max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+            <div>
+              <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); letter-spacing: 0.1em; font-weight: bold;">COMPUTER VISION & SPECTRAL ANALYSIS</div>
+              <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-2xl); font-weight: bold; color: var(--ds-text-primary);">AI Image Threat Forensic Scanner</h3>
+              <p style="font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">
+                Upload satellite images, drone feeds, or coast guard photos to immediately verify oil discharges, structural hazards, or unauthorized vessels.
+              </p>
+            </div>
+
+            <div class="aq-scanner-dropzone" id="scanner-dropzone" onclick="document.getElementById('scanner-file-input').click()">
+              <input type="file" id="scanner-file-input" accept="image/*" style="display: none;">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--ds-color-brand)" stroke-width="1.6" style="margin: 0 auto 12px;"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+              <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-lg); font-weight: 600; color: var(--ds-text-primary); margin-bottom: 4px;">
+                Drag & Drop Coastal Satellite or Drone Photo
+              </div>
+              <div style="font-size: var(--ds-text-xs); color: var(--ds-text-muted);">
+                Supports JPG, PNG, WEBP up to 25MB · Connected to <code style="color: var(--ds-color-brand)">/api/ai/verify-image</code>
+              </div>
+            </div>
+
+            <div id="scanner-results-card" style="display: none; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-brand); border-radius: var(--ds-radius-xl); padding: 20px;">
+              <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                <img id="scanner-preview-img" src="" alt="Scan preview" style="width: 180px; height: 130px; object-fit: cover; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-default);">
+                <div style="flex: 1;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <div id="scanner-status-tag" style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); font-weight: bold; color: var(--ds-color-brand-light);">
+                      ANALYSIS COMPLETE · 99.4% CONFIDENCE
+                    </div>
+                    <span id="scanner-time-tag" style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted);">34ms</span>
+                  </div>
+                  <h4 id="scanner-threat-title" style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: bold; color: var(--ds-text-primary); margin-bottom: 8px;">
+                    Toxic Hydrocarbon Slick Detected
+                  </h4>
+                  <p id="scanner-threat-desc" style="font-size: var(--ds-text-sm); color: var(--ds-text-secondary); line-height: 1.6; margin-bottom: 14px;">
+                    Satellite spectral analysis verifies fuel discharge approximately 4.2 km offshore. Drift vector indicates eastward trajectory toward coastal sanctuary in 6 hours.
+                  </p>
+                  <div style="display: flex; gap: 10px;">
+                    <button class="aq-btn-primary" style="font-size: var(--ds-text-xs); padding: 6px 14px; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 4px; font-weight: bold;" onclick="switchHudTab('sos')">
+                      Dispatch Containment Cutter
+                    </button>
+                    <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 6px 14px; border: 1px solid var(--ds-border-default); border-radius: 4px; color: var(--ds-text-primary);" onclick="resetScanner()">
+                      Scan Another Image
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Copilot Chat Panel -->
+        <div class="aq-hud-panel" id="panel-chat">
+          <div style="display: flex; flex-direction: column; height: 100%; width: 100%; background: var(--ds-bg-surface);">
+            <div id="chat-messages-container" style="flex: 1; overflow-y: auto; padding: var(--ds-space-6); display: flex; flex-direction: column; gap: var(--ds-space-4);">
+              <div class="aq-chat-msg bot">
+                <strong>AquaShield AI Copilot:</strong><br>
+                Welcome to Sentinel Command. I am linked to real-time ocean telemetry, buoy feeds, disaster forecasts, and response protocols. How can I assist your operations?
+              </div>
+            </div>
+            <div style="padding: 0 var(--ds-space-6) 10px; display: flex; gap: 8px; overflow-x: auto;">
+              <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 4px 10px; white-space: nowrap; border: 1px solid var(--ds-border-default); border-radius: 4px; color: var(--ds-text-secondary);" onclick="quickAskCopilot('What is the current storm surge risk for Mumbai coast?')">
+                Cyclone Surge Risk?
+              </button>
+              <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 4px 10px; white-space: nowrap; border: 1px solid var(--ds-border-default); border-radius: 4px; color: var(--ds-text-secondary);" onclick="quickAskCopilot('Check wave height on Buoy B-12')">
+                Buoy B-12 Status?
+              </button>
+              <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 4px 10px; white-space: nowrap; border: 1px solid var(--ds-border-default); border-radius: 4px; color: var(--ds-text-secondary);" onclick="quickAskCopilot('Explain emergency coastal evacuation protocols')">
+                Evacuation Protocols
+              </button>
+            </div>
+            <form id="chat-input-form" onsubmit="handleSendChat(event)" style="display: flex; gap: 10px; padding: 16px var(--ds-space-6); background: var(--ds-bg-raised); border-top: 1px solid var(--ds-border-subtle);">
+              <input type="text" id="chat-input-text" placeholder="Ask AI copilot regarding coastal hazards, telemetry, or dispatch..." style="flex: 1; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-md); padding: 10px 16px; color: var(--ds-text-primary); font-family: inherit; font-size: var(--ds-text-sm); outline: none;">
+              <button type="submit" class="aq-btn-primary" style="background: var(--ds-color-brand); color: var(--ds-bg-base); padding: 10px 20px; border-radius: var(--ds-radius-md); font-weight: bold;">
+                Send ↗
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- 6. Evacuation Panel -->
+        <div class="aq-hud-panel" id="panel-evac">
+          <div style="padding: 24px; width: 100%; max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+            <div>
+              <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); letter-spacing: 0.1em; font-weight: bold;">A* DYNAMIC PATHFINDING</div>
+              <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-2xl); font-weight: bold; color: var(--ds-text-primary);">Coastal Evacuation Route Engine</h3>
+              <p style="font-size: var(--ds-text-sm); color: var(--ds-text-secondary);">
+                Calculates safe inland transit routes dynamically avoiding low-lying flood inundation areas and compromised bridges.
+              </p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+              <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-lg); padding: 18px;">
+                <div style="font-family: var(--ds-font-mono); font-size: 0.7rem; color: var(--ds-text-primary); font-weight: bold;">ROUTE ALPHA · RECOMMENDED</div>
+                <h4 style="font-family: var(--ds-font-display); font-size: var(--ds-text-lg); font-weight: bold; color: var(--ds-text-primary); margin: 6px 0;">Highway 48 → Inland Shelter A</h4>
+                <div style="font-size: var(--ds-text-sm); color: var(--ds-text-secondary); margin-bottom: 12px;">Distance: 14.2 km · Est. Transit: 18 mins</div>
+                <div style="background: rgba(148, 163, 184, 0.12); color: var(--ds-text-primary); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-sm); padding: 6px 10px; font-size: var(--ds-text-xs);">
+                  ✓ Clear elevation (&gt;15m above sea level)
+                </div>
+              </div>
+              <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-brand); border-radius: var(--ds-radius-lg); padding: 18px;">
+                <div style="font-family: var(--ds-font-mono); font-size: 0.7rem; color: var(--ds-color-brand); font-weight: bold;">ROUTE BRAVO · CONGESTED</div>
+                <h4 style="font-family: var(--ds-font-display); font-size: var(--ds-text-lg); font-weight: bold; color: var(--ds-text-primary); margin: 6px 0;">East Bypass → Zone 2 Heights</h4>
+                <div style="font-size: var(--ds-text-sm); color: var(--ds-text-secondary); margin-bottom: 12px;">Distance: 19.5 km · Est. Transit: 34 mins</div>
+                <div style="background: rgba(245, 158, 11, 0.12); color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); border-radius: var(--ds-radius-sm); padding: 6px 10px; font-size: var(--ds-text-xs);">
+                  ⚠ Heavy traffic near bridge interchange
+                </div>
+              </div>
+              <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-lg); padding: 18px;">
+                <div style="font-family: var(--ds-font-mono); font-size: 0.7rem; color: var(--ds-text-muted); font-weight: bold;">ROUTE CHARLIE · IMPASSABLE</div>
+                <h4 style="font-family: var(--ds-font-display); font-size: var(--ds-text-lg); font-weight: bold; color: var(--ds-text-primary); margin: 6px 0;">Promenade → Shore Road</h4>
+                <div style="font-size: var(--ds-text-sm); color: var(--ds-text-secondary); margin-bottom: 12px;">Distance: 8.1 km · Est. Transit: BLOCKED</div>
+                <div style="background: rgba(7, 17, 30, 0.6); color: var(--ds-text-muted); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-sm); padding: 6px 10px; font-size: var(--ds-text-xs);">
+                  ✕ Flooded by 0.8m storm surge
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. Emergency Rescue SOS Panel -->
+        <div class="aq-hud-panel" id="panel-sos">
+          <div style="padding: 24px; width: 100%; max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 20px;">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(245, 158, 11, 0.15); border: 2px solid var(--ds-color-brand); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px var(--ds-color-brand-glow);">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--ds-color-brand)" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+            </div>
+            <div>
+              <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); font-weight: bold; letter-spacing: 0.14em;">EMERGENCY RESCUE DISPATCH</div>
+              <h3 style="font-family: var(--ds-font-display); font-size: 2.2rem; font-weight: 800; color: var(--ds-text-primary); margin: 6px 0;">Activate Coast Guard SOS</h3>
+              <p style="font-size: var(--ds-text-base); color: var(--ds-text-secondary); max-width: 520px; margin: 0 auto;">
+                Triggering SOS broadcasts encrypted distress telemetry to coastal guard centers, alerts offshore vessels via AIS, and launches emergency acoustic sirens.
+              </p>
+            </div>
+            <div style="width: 100%; max-width: 480px; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-lg); padding: 18px; text-align: left;">
+              <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted); margin-bottom: 8px;">INCIDENT DISPATCH COORDINATES</div>
+              <div style="font-size: var(--ds-text-sm); color: var(--ds-text-primary); font-family: var(--ds-font-mono);">
+                LAT: 18.9220° N // LON: 72.8347° E (Arabian Sea Sector 4)
+              </div>
+              <div style="font-size: var(--ds-text-xs); color: var(--ds-color-brand); margin-top: 6px; font-weight: 500;">
+                Nearest Rescue Asset: Indian Coast Guard Cutter ICGS Varuna (8.4 nm away)
+              </div>
+            </div>
+            <div style="display: flex; gap: 14px;">
+              <button class="aq-btn-primary" id="sos-trigger-btn" style="background: var(--ds-color-brand); border-color: var(--ds-color-brand-light); padding: 14px 36px; font-size: var(--ds-text-base); color: var(--ds-bg-base); font-weight: bold; border-radius: 6px;" onclick="triggerEmergencySOS()">
+                DISPATCH SOS NOW
+              </button>
+              <button class="aq-btn-ghost" style="border: 1px solid var(--ds-border-default); padding: 14px 24px; border-radius: 6px; color: var(--ds-text-secondary);" onclick="switchHudTab('overview')">
+                Cancel
+              </button>
+            </div>
+            <div id="sos-status-alert" style="display: none; width: 100%; max-width: 540px; background: rgba(245, 158, 11, 0.12); border: 1px solid var(--ds-color-brand); border-radius: var(--ds-radius-lg); padding: 16px; color: var(--ds-color-brand); font-size: var(--ds-text-sm); font-weight: 500;">
+              <strong>✓ SOS BROADCAST TRANSMITTED!</strong><br>
+              Coast Guard Cutter dispatched. ETA: 12 minutes. Real-time telemetry tracking live on GIS Radar.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<script>
-/* ─────────────────────────────────────────
-   CLOCK
-───────────────────────────────────────── */
-function updateClock(){
-  const now = new Date();
-  const time = new Intl.DateTimeFormat("en-IN",{
-    timeZone:"Asia/Kolkata",
-    hour:"2-digit",
-    minute:"2-digit",
-    second:"2-digit",
-    hour12:false
-  }).format(now);
+  <!-- ====================================================================
+       INTERACTIVE MODAL: SUBMIT INCIDENT REPORT
+       ==================================================================== -->
+  <div class="aq-dialog-overlay" id="report-modal">
+    <div class="aq-dialog-container">
+      <div class="aq-dialog-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--ds-color-brand); box-shadow: 0 0 10px var(--ds-color-brand);"></span>
+          <div>
+            <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-lg); font-weight: bold; color: var(--ds-text-primary);">
+              Submit Coastal Incident & Hazard Report
+            </h3>
+            <div style="font-family: var(--ds-font-mono); font-size: 0.65rem; color: var(--ds-text-muted);">
+              AI FORENSIC VERIFICATION & REAL-TIME DISPATCH QUEUE
+            </div>
+          </div>
+        </div>
+        <button class="aq-btn-ghost" style="padding: 4px 10px;" onclick="closeReportModal()">✕</button>
+      </div>
 
-  document.getElementById("clock").textContent = time + " IST";
-}
-updateClock();
-setInterval(updateClock, 1000);
+      <form id="report-submit-form" onsubmit="handleReportSubmit(event)" class="aq-dialog-body">
+        <!-- Incident Category Picker -->
+        <div class="aq-form-group">
+          <label class="aq-form-label">Incident Classification *</label>
+          <div class="aq-type-grid" id="report-type-selector">
+            <div class="aq-type-pill selected" data-type="flood" onclick="selectReportType('flood', this)">
+              <span style="font-size: 16px;">🌊</span>
+              <span>Flood / Surge</span>
+            </div>
+            <div class="aq-type-pill" data-type="marine_animal" onclick="selectReportType('marine_animal', this)">
+              <span style="font-size: 16px;">🐢</span>
+              <span>Marine Stranding</span>
+            </div>
+            <div class="aq-type-pill" data-type="oil_spill" onclick="selectReportType('oil_spill', this)">
+              <span style="font-size: 16px;">🛢️</span>
+              <span>Oil / Sheen Spill</span>
+            </div>
+            <div class="aq-type-pill" data-type="cyclone_damage" onclick="selectReportType('cyclone_damage', this)">
+              <span style="font-size: 16px;">🚨</span>
+              <span>Cyclone Damage</span>
+            </div>
+            <div class="aq-type-pill" data-type="road_blockage" onclick="selectReportType('road_blockage', this)">
+              <span style="font-size: 16px;">🚧</span>
+              <span>Road / Harbor Block</span>
+            </div>
+            <div class="aq-type-pill" data-type="missing_person" onclick="selectReportType('missing_person', this)">
+              <span style="font-size: 16px;">⚓</span>
+              <span>Vessel / SOS</span>
+            </div>
+          </div>
+          <input type="hidden" id="report-form-type" name="report_type" value="flood">
+        </div>
 
-/* ─────────────────────────────────────────
-   SIMULATED TELEMETRY
-───────────────────────────────────────── */
-function updateTelemetry(){
-  const wave = (2.5 + Math.random() * .7).toFixed(1);
-  const wind = Math.floor(59 + Math.random() * 12);
+        <!-- Incident Title -->
+        <div class="aq-form-group">
+          <label class="aq-form-label" for="report-form-title">Incident Title *</label>
+          <input type="text" id="report-form-title" name="title" class="aq-form-input" placeholder="e.g. Sea wall breach near Bandra Bandstand promenade" required>
+        </div>
 
-  document.getElementById("wave").textContent = wave;
-  document.getElementById("wind").textContent = wind;
-}
-setInterval(updateTelemetry, 5000);
+        <!-- Geolocation & Address -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="aq-form-group">
+            <label class="aq-form-label" for="report-form-lat">Latitude</label>
+            <input type="number" step="any" id="report-form-lat" name="latitude" class="aq-form-input" value="19.054" required>
+          </div>
+          <div class="aq-form-group">
+            <label class="aq-form-label" for="report-form-lng">Longitude</label>
+            <input type="number" step="any" id="report-form-lng" name="longitude" class="aq-form-input" value="72.822" required>
+          </div>
+        </div>
 
-/* ─────────────────────────────────────────
-   MAP SYNC
-───────────────────────────────────────── */
-let syncSeconds = 12;
-setInterval(()=>{
-  syncSeconds++;
-  if(syncSeconds > 59) syncSeconds = 1;
-  document.getElementById("sync").textContent = syncSeconds + " sec ago";
-}, 1000);
+        <div class="aq-form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="aq-form-label" for="report-form-address">Landmark / Sector Address *</label>
+            <button type="button" class="aq-btn-ghost" style="padding: 2px 8px; font-size: 0.68rem; color: var(--ds-color-brand);" onclick="autoDetectLocation()">
+              📍 Detect My GPS Coordinates
+            </button>
+          </div>
+          <input type="text" id="report-form-address" name="address" class="aq-form-input" placeholder="e.g. Bandra Promenade, Sector 4, Mumbai" required>
+        </div>
 
-/* ─────────────────────────────────────────
-   NAVIGATION
-───────────────────────────────────────── */
-function selectNav(button){
-  document.querySelectorAll(".nav button").forEach(btn=>{
-    btn.classList.remove("active");
-  });
-  button.classList.add("active");
+        <!-- Urgency Level Slider -->
+        <div class="aq-form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="aq-form-label">Urgency Assessment (Rank 1 - 10)</label>
+            <span id="urgency-badge" class="aq-user-badge" style="font-size: 0.7rem; color: var(--ds-color-brand-light);">
+              Rank 8 · HIGH SEVERITY
+            </span>
+          </div>
+          <input type="range" id="report-form-urgency" name="urgency_rank" class="aq-range-slider" min="1" max="10" value="8" oninput="updateUrgencyLabel(this.value)">
+        </div>
 
-  const label = button.textContent.trim();
-  if(label.includes("Tactical") || label.includes("Command")){
-    document.querySelector(".map-panel").scrollIntoView({
-      behavior:"smooth",
-      block:"center"
+        <!-- Detailed Description -->
+        <div class="aq-form-group">
+          <label class="aq-form-label" for="report-form-desc">Incident Observations & Hazards *</label>
+          <textarea id="report-form-desc" name="description" class="aq-form-textarea" placeholder="Detail the observed water height, structural impact, stranded animals, or vessel status..." required></textarea>
+        </div>
+
+        <!-- Image Upload with AI Pre-check -->
+        <div class="aq-form-group">
+          <label class="aq-form-label">Eyewitness Forensic Photo (Optional)</label>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <input type="file" id="report-form-file" name="file" accept="image/*" class="aq-form-input" style="padding: 8px;" onchange="handleReportPhotoSelect(this)">
+          </div>
+          <div id="report-photo-preview" style="display: none; margin-top: 8px; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-md); padding: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <img id="report-preview-img" src="" alt="Preview" style="width: 70px; height: 50px; object-fit: cover; border-radius: 4px;">
+              <div style="flex: 1;">
+                <div style="font-size: var(--ds-text-xs); color: var(--ds-color-brand-light); font-weight: 600;">✓ Ready for YOLOv11 & ViT Spectral Cross-Check</div>
+                <div style="font-size: 0.65rem; color: var(--ds-text-muted);">Optical signature cross-referenced with coastal IMD/INCOIS buoys</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reporter Metadata Tag -->
+        <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-md); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.65rem; color: var(--ds-text-muted); font-family: var(--ds-font-mono);">AUTHENTICATED REPORTER ID</div>
+            <div id="report-reporter-info" style="font-size: var(--ds-text-xs); color: var(--ds-text-primary); font-weight: 600;">
+              CITIZEN-1084 · Aarav Patil
+            </div>
+          </div>
+          <button type="button" class="aq-btn-ghost" style="font-size: 0.68rem; color: var(--ds-color-brand);" onclick="openAuthModal()">
+            Switch User ↗
+          </button>
+        </div>
+
+        <!-- Result / AI Banner -->
+        <div id="report-submit-result" style="display: none; background: rgba(245,158,11,0.12); border: 1px solid var(--ds-border-brand); border-radius: var(--ds-radius-md); padding: 14px; color: var(--ds-text-primary); font-size: var(--ds-text-sm);">
+        </div>
+
+        <!-- Submit Button -->
+        <div class="aq-dialog-footer" style="padding: 0; background: transparent; border: none; margin-top: 10px;">
+          <button type="button" class="aq-btn-ghost" onclick="closeReportModal()">Cancel</button>
+          <button type="submit" id="report-submit-btn" class="aq-btn-primary" style="background: var(--ds-color-brand); color: var(--ds-bg-base); padding: 10px 24px; font-weight: bold; border-radius: var(--ds-radius-md);">
+            Log & Verify Report ↗
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       INTERACTIVE MODAL: USER LOGIN & AUTHENTICATION PORTAL
+       ==================================================================== -->
+  <div class="aq-dialog-overlay" id="auth-modal">
+    <div class="aq-dialog-container">
+      <div class="aq-dialog-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 20px;">🔑</span>
+          <div>
+            <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-lg); font-weight: bold; color: var(--ds-text-primary);">
+              AquaShield Operator & Scout Access
+            </h3>
+            <div style="font-family: var(--ds-font-mono); font-size: 0.65rem; color: var(--ds-color-brand);">
+              SECURE CREDENTIALS & SATELLITE TELEMETRY ACCESS
+            </div>
+          </div>
+        </div>
+        <button class="aq-btn-ghost" style="padding: 4px 10px;" onclick="closeAuthModal()">✕</button>
+      </div>
+
+      <div class="aq-dialog-body">
+        <!-- Auth Tabs -->
+        <div style="display: flex; gap: 8px; background: var(--ds-bg-raised); padding: 4px; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-subtle);">
+          <button class="aq-hud-tab active" id="tab-btn-login" style="flex: 1; text-align: center;" onclick="switchAuthTab('login')">🔑 Sign In</button>
+          <button class="aq-hud-tab" id="tab-btn-register" style="flex: 1; text-align: center;" onclick="switchAuthTab('register')">📝 Register Scout</button>
+          <button class="aq-hud-tab" id="tab-btn-demo" style="flex: 1; text-align: center;" onclick="switchAuthTab('demo')">⚡ Instant Demo Accounts</button>
+        </div>
+
+        <!-- 1. Sign In Form -->
+        <form id="auth-login-form" onsubmit="handleLoginSubmit(event)" style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="aq-form-group">
+            <label class="aq-form-label" for="login-identifier">Login ID or Email *</label>
+            <input type="text" id="login-identifier" class="aq-form-input" placeholder="e.g. SENTINEL-7049 or commander@aquashield.marine" required>
+            <span style="font-size: 0.68rem; color: var(--ds-text-muted);">You can log in using your Badge Login ID or registered email address.</span>
+          </div>
+
+          <div class="aq-form-group">
+            <label class="aq-form-label" for="login-password">Password *</label>
+            <input type="password" id="login-password" class="aq-form-input" placeholder="••••••••" required>
+          </div>
+
+          <button type="submit" id="login-submit-btn" class="aq-btn-primary" style="background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; padding: 12px; border-radius: var(--ds-radius-md); margin-top: 8px;">
+            Authorize & Access Terminal ↗
+          </button>
+        </form>
+
+        <!-- 2. Register Form -->
+        <form id="auth-register-form" onsubmit="handleRegisterSubmit(event)" style="display: none; flex-direction: column; gap: 14px;">
+          <div class="aq-form-group">
+            <label class="aq-form-label" for="reg-name">Full Name *</label>
+            <input type="text" id="reg-name" class="aq-form-input" placeholder="e.g. Captain Meera Nair" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="aq-form-group">
+              <label class="aq-form-label" for="reg-email">Email Address *</label>
+              <input type="email" id="reg-email" class="aq-form-input" placeholder="meera@aquashield.marine" required>
+            </div>
+            <div class="aq-form-group">
+              <label class="aq-form-label" for="reg-phone">Phone / Satellite SMS</label>
+              <input type="text" id="reg-phone" class="aq-form-input" placeholder="+91-98200-00000">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="aq-form-group">
+              <label class="aq-form-label" for="reg-role">Designation Role</label>
+              <select id="reg-role" class="aq-form-select">
+                <option value="citizen">Citizen Coastal Observer</option>
+                <option value="authority">Coast Guard / Defense Commander</option>
+                <option value="ngo">Marine Wildlife NGO Specialist</option>
+                <option value="rescue_team">NDMA Rapid Response Tactical Lead</option>
+              </select>
+            </div>
+            <div class="aq-form-group">
+              <label class="aq-form-label" for="reg-region">Assigned Sector</label>
+              <input type="text" id="reg-region" class="aq-form-input" placeholder="e.g. Mumbai West Coast">
+            </div>
+          </div>
+
+          <div class="aq-form-group">
+            <label class="aq-form-label" for="reg-password">Create Password *</label>
+            <input type="password" id="reg-password" class="aq-form-input" placeholder="Minimum 6 characters" required>
+          </div>
+
+          <button type="submit" id="register-submit-btn" class="aq-btn-primary" style="background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; padding: 12px; border-radius: var(--ds-radius-md); margin-top: 6px;">
+            Register & Generate Login Badge ↗
+          </button>
+        </form>
+
+        <!-- 3. Instant Demo Accounts Tab -->
+        <div id="auth-demo-section" style="display: none; flex-direction: column; gap: 12px;">
+          <div style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary); margin-bottom: 4px;">
+            Select any preset operator or scout identity for 1-click authentication:
+          </div>
+
+          <!-- Account 1: Commander -->
+          <div style="background: var(--ds-bg-card); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-lg); padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="aq-user-badge">SENTINEL-7049</span>
+                <strong style="color: var(--ds-text-primary); font-size: var(--ds-text-sm);">Commander Rajesh Varma</strong>
+              </div>
+              <div style="font-size: 0.72rem; color: var(--ds-text-secondary); margin-top: 4px;">
+                Role: <strong>Coastal Defense Commander</strong> · Pass: <code style="color: var(--ds-color-brand);">Sentinel@2026</code>
+              </div>
+            </div>
+            <button class="aq-btn-primary" style="padding: 6px 14px; font-size: var(--ds-text-xs); background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 4px;" onclick="instantDemoLogin('SENTINEL-7049', 'Sentinel@2026')">
+              ⚡ 1-Click Login
+            </button>
+          </div>
+
+          <!-- Account 2: Marine Biologist -->
+          <div style="background: var(--ds-bg-card); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-lg); padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="aq-user-badge">RESCUE-9012</span>
+                <strong style="color: var(--ds-text-primary); font-size: var(--ds-text-sm);">Dr. Ananya Iyer</strong>
+              </div>
+              <div style="font-size: 0.72rem; color: var(--ds-text-secondary); margin-top: 4px;">
+                Role: <strong>Marine Biologist (NGO)</strong> · Pass: <code style="color: var(--ds-color-brand);">Rescue@2026</code>
+              </div>
+            </div>
+            <button class="aq-btn-primary" style="padding: 6px 14px; font-size: var(--ds-text-xs); background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 4px;" onclick="instantDemoLogin('RESCUE-9012', 'Rescue@2026')">
+              ⚡ 1-Click Login
+            </button>
+          </div>
+
+          <!-- Account 3: NDMA Responder -->
+          <div style="background: var(--ds-bg-card); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-lg); padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="aq-user-badge">NDMA-3301</span>
+                <strong style="color: var(--ds-text-primary); font-size: var(--ds-text-sm);">Lt. Vikram Singh</strong>
+              </div>
+              <div style="font-size: 0.72rem; color: var(--ds-text-secondary); margin-top: 4px;">
+                Role: <strong>NDMA Tactical Response Lead</strong> · Pass: <code style="color: var(--ds-color-brand);">Ndma@2026</code>
+              </div>
+            </div>
+            <button class="aq-btn-primary" style="padding: 6px 14px; font-size: var(--ds-text-xs); background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 4px;" onclick="instantDemoLogin('NDMA-3301', 'Ndma@2026')">
+              ⚡ 1-Click Login
+            </button>
+          </div>
+
+          <!-- Account 4: Citizen Scout -->
+          <div style="background: var(--ds-bg-card); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-lg); padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="aq-user-badge">CITIZEN-1084</span>
+                <strong style="color: var(--ds-text-primary); font-size: var(--ds-text-sm);">Aarav Patil</strong>
+              </div>
+              <div style="font-size: 0.72rem; color: var(--ds-text-secondary); margin-top: 4px;">
+                Role: <strong>Citizen Field Observer</strong> · Pass: <code style="color: var(--ds-color-brand);">Citizen@2026</code>
+              </div>
+            </div>
+            <button class="aq-btn-primary" style="padding: 6px 14px; font-size: var(--ds-text-xs); background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 4px;" onclick="instantDemoLogin('CITIZEN-1084', 'Citizen@2026')">
+              ⚡ 1-Click Login
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic Toast Container -->
+  <div id="aq-toast-container"></div>
+
+  <!-- Leaflet JS for Tactical Map -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Platform Controller JS -->
+  <script src="app.js?v=4.3"></script>
+
+  <script>
+    // Reveal animation observer on load
+    document.addEventListener('DOMContentLoaded', () => {
+      const items = document.querySelectorAll('.aq-reveal, .aq-reveal-left, .aq-reveal-right');
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('aq-revealed');
+            obs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.05 });
+      items.forEach(el => obs.observe(el));
+
+      setTimeout(() => {
+        document.querySelectorAll('#hero .aq-reveal, #hero .aq-reveal-left, #hero .aq-reveal-right').forEach(el => {
+          el.classList.add('aq-revealed');
+        });
+      }, 50);
     });
-  } else if(label.includes("Evacuation")){
-    document.querySelector(".route-summary").scrollIntoView({
-      behavior:"smooth",
-      block:"center"
-    });
-  }
-}
-
-/* ─────────────────────────────────────────
-   REFRESH
-───────────────────────────────────────── */
-function refreshData(){
-  const button = event.currentTarget;
-  const old = button.textContent;
-  button.textContent = "↻ Syncing...";
-  button.disabled = true;
-  syncSeconds = 0;
-
-  setTimeout(()=>{
-    updateTelemetry();
-    button.textContent = "✓ Updated";
-  }, 600);
-
-  setTimeout(()=>{
-    button.textContent = old;
-    button.disabled = false;
-  }, 1500);
-}
-
-/* ─────────────────────────────────────────
-   MODALS: FORENSIC AI, COPILOT & WILDLIFE
-───────────────────────────────────────── */
-function showAI(){
-  document.getElementById("aiModal").classList.add("show");
-}
-function closeAI(){
-  document.getElementById("aiModal").classList.remove("show");
-}
-
-function showCopilot(){
-  document.getElementById("copilotModal").classList.add("show");
-}
-function closeCopilot(){
-  document.getElementById("copilotModal").classList.remove("show");
-}
-
-function showWildlife(){
-  document.getElementById("wildlifeModal").classList.add("show");
-}
-function closeWildlife(){
-  document.getElementById("wildlifeModal").classList.remove("show");
-}
-
-function queryCopilot(){
-  const prompt = document.getElementById("copilotPrompt").value;
-  const res = document.getElementById("copilotResponse");
-  if(!prompt) return;
-  res.style.display = "block";
-  res.textContent = "⚡ AI synthesizing NDMA guidelines for: \"" + prompt + "\"...";
-  setTimeout(()=>{
-    res.innerHTML = "✓ <strong style='color:#42e6a4'>NDMA Guideline Protocol:</strong> Deploy barrier booms along vulnerable shoreline. Direct non-essential personnel to Sector 4 elevated muster stations. Notify Regional Maritime Rescue Coordination Center (MRCC).";
-  }, 800);
-}
-
-function dispatchRescue(btn, unitName){
-  btn.textContent = "✓ Dispatched";
-  btn.style.background = "#123c31";
-  btn.style.borderColor = "#42e6a4";
-  btn.style.color = "#42e6a4";
-  btn.disabled = true;
-}
-
-function runImageScan(input){
-  if(input.files && input.files[0]){
-    const resultBox = document.getElementById("aiScanResult");
-    resultBox.innerHTML = `
-      <div style="color:#39d9ff;margin-bottom:4px;">⚡ Running YOLOv11 & ViT forensic analysis...</div>
-      <div style="color:#42e6a4;">✓ Object Detection: Flood surge & partially submerged structures identified</div>
-      <div style="color:#42e6a4;">✓ EfficientNet Severity: Level HIGH (Estimated depth 1.75m)</div>
-      <div style="color:#42e6a4;">✓ ViT Forensics: 98.6% Authentic (No generative AI/deepfake artifacts)</div>
-    `;
-  }
-}
-
-/* ─────────────────────────────────────────
-   SOS
-───────────────────────────────────────── */
-function triggerSOS(){
-  document.getElementById("sosModal").classList.add("show");
-}
-function closeSOS(){
-  document.getElementById("sosModal").classList.remove("show");
-}
-function simulateSOS(){
-  const button = document.querySelector(".modal .danger");
-  button.textContent = "TRANSMITTING DISTRESS...";
-  setTimeout(()=>{
-    button.textContent = "✓ DISTRESS SIGNAL TRANSMITTED";
-    button.style.color = "#42e6a4";
-    button.style.borderColor = "#2b765b";
-    button.style.background = "#102a22";
-  }, 1200);
-
-  setTimeout(()=>{
-    closeSOS();
-    button.textContent = "Transmitting SOS";
-    button.style = "";
-  }, 2800);
-}
-
-/* ─────────────────────────────────────────
-   CLOSE MODAL WITH ESC KEY
-───────────────────────────────────────── */
-document.addEventListener("keydown", e=>{
-  if(e.key === "Escape"){
-    closeSOS();
-    closeAI();
-    closeCopilot();
-    closeWildlife();
-  }
-});
-</script>
+  </script>
 </body>
 </html>
+

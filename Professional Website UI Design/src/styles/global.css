@@ -1,0 +1,205 @@
+/* ==========================================================================
+   AquaShield Design System
+   Coastal Tactical Intelligence Platform
+   ========================================================================== */
+
+:root {
+  /* ── Backgrounds ────────────────────────────────────────────────────── */
+  --ds-bg-base:        #020609;
+  --ds-bg-surface:     #060d14;
+  --ds-bg-raised:      #0b1822;
+  --ds-bg-overlay:     #101f2c;
+  --ds-bg-card:        #0d1e2b;
+
+  /* ── Brand — Tactical Cyan (used sparingly as accent only) ───────────── */
+  --ds-color-brand:        #2ab8d8;
+  --ds-color-brand-light:  #3fcde8;
+  --ds-color-brand-dark:   #1a8fa8;
+
+  /* ── Status Colors ──────────────────────────────────────────────────── */
+  --ds-color-green:    #36c98e;
+  --ds-color-amber:    #d4a017;
+  --ds-color-coral:    #d94f5c;
+  --ds-color-violet:   #8b7cf8;
+
+  /* ── Text ───────────────────────────────────────────────────────────── */
+  --ds-text-primary:   #e8f0f4;
+  --ds-text-secondary: #5e8494;
+  --ds-text-muted:     #2d4452;
+  --ds-text-inverse:   #020609;
+
+  /* ── Borders — white-alpha, no cyan tinting ──────────────────────────── */
+  --ds-border-subtle:  rgba(255, 255, 255, 0.05);
+  --ds-border-default: rgba(255, 255, 255, 0.09);
+  --ds-border-strong:  rgba(255, 255, 255, 0.16);
+  --ds-border-brand:   rgba(42, 184, 216, 0.30);
+
+  /* ── Typography ─────────────────────────────────────────────────────── */
+  --ds-font-display: 'Outfit', sans-serif;
+  --ds-font-body:    'Inter', sans-serif;
+  --ds-font-mono:    'JetBrains Mono', monospace;
+
+  /* ── Font Sizes ─────────────────────────────────────────────────────── */
+  --ds-text-xs:   0.6875rem;
+  --ds-text-sm:   0.8125rem;
+  --ds-text-base: 0.9375rem;
+  --ds-text-lg:   1.0625rem;
+  --ds-text-xl:   1.25rem;
+  --ds-text-2xl:  1.5rem;
+  --ds-text-3xl:  1.875rem;
+  --ds-text-4xl:  2.375rem;
+  --ds-text-5xl:  3rem;
+  --ds-text-6xl:  3.75rem;
+  --ds-text-7xl:  4.75rem;
+
+  /* ── Font Weights ───────────────────────────────────────────────────── */
+  --ds-weight-regular:   400;
+  --ds-weight-medium:    500;
+  --ds-weight-semibold:  600;
+  --ds-weight-bold:      700;
+  --ds-weight-extrabold: 800;
+
+  /* ── Line Heights ───────────────────────────────────────────────────── */
+  --ds-leading-tight:   1.15;
+  --ds-leading-snug:    1.35;
+  --ds-leading-normal:  1.6;
+  --ds-leading-relaxed: 1.75;
+
+  /* ── Spacing ────────────────────────────────────────────────────────── */
+  --ds-space-1:  0.25rem;
+  --ds-space-2:  0.5rem;
+  --ds-space-3:  0.75rem;
+  --ds-space-4:  1rem;
+  --ds-space-5:  1.25rem;
+  --ds-space-6:  1.5rem;
+  --ds-space-8:  2rem;
+  --ds-space-10: 2.5rem;
+  --ds-space-12: 3rem;
+  --ds-space-16: 4rem;
+  --ds-space-20: 5rem;
+  --ds-space-24: 6rem;
+
+  /* ── Border Radius ──────────────────────────────────────────────────── */
+  --ds-radius-xs:   2px;
+  --ds-radius-sm:   4px;
+  --ds-radius-md:   6px;
+  --ds-radius-lg:   10px;
+  --ds-radius-xl:   14px;
+  --ds-radius-2xl:  20px;
+  --ds-radius-full: 9999px;
+
+  /* ── Shadows — depth only, no color ─────────────────────────────────── */
+  --ds-shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.5);
+  --ds-shadow-md:  0 4px 16px rgba(0, 0, 0, 0.45);
+  --ds-shadow-lg:  0 8px 32px rgba(0, 0, 0, 0.55);
+  --ds-shadow-xl:  0 20px 60px rgba(0, 0, 0, 0.65);
+
+  /* ── Transitions ────────────────────────────────────────────────────── */
+  --ds-transition-fast: 140ms ease;
+  --ds-transition-base: 280ms ease;
+  --ds-transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Layout ─────────────────────────────────────────────────────────── */
+  --ds-max-width:  1280px;
+  --ds-nav-height: 62px;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; text-size-adjust: 100%; }
+
+body {
+  background-color: var(--ds-bg-base);
+  color: var(--ds-text-primary);
+  font-family: var(--ds-font-body);
+  font-size: var(--ds-text-base);
+  line-height: var(--ds-leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--ds-bg-base); }
+::-webkit-scrollbar-thumb { background: var(--ds-border-default); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ds-border-strong); }
+
+:focus-visible { outline: 2px solid var(--ds-color-brand); outline-offset: 3px; }
+
+::selection { background: rgba(42, 184, 216, 0.2); color: var(--ds-text-primary); }
+
+/* ==========================================================================
+   Scroll-reveal base state
+   (JS adds .aq-revealed to trigger transition)
+   ========================================================================== */
+
+.aq-reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.aq-reveal.aq-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Slide in from left */
+.aq-reveal-left {
+  opacity: 0;
+  transform: translateX(-32px);
+  transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.aq-reveal-left.aq-revealed { opacity: 1; transform: translateX(0); }
+
+/* Slide in from right */
+.aq-reveal-right {
+  opacity: 0;
+  transform: translateX(32px);
+  transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.aq-reveal-right.aq-revealed { opacity: 1; transform: translateX(0); }
+
+/* Scale reveal for images */
+.aq-reveal-scale {
+  opacity: 0;
+  transform: scale(0.97);
+  transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.aq-reveal-scale.aq-revealed { opacity: 1; transform: scale(1); }
+
+/* ==========================================================================
+   Boot animation — runs once on first load
+   ========================================================================== */
+
+@keyframes aq-nav-in {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+@keyframes aq-page-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Radar sweep — functional, not decorative */
+@keyframes aq-radar-sweep {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Ticker scroll */
+@keyframes aq-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}

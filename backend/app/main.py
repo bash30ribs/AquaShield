@@ -18,6 +18,7 @@ from app.routers import (
     chat_router,
     sms_router,
     broadcast_router,
+    auth_router,
 )
 
 @asynccontextmanager
@@ -49,13 +50,19 @@ app.include_router(sos_router)
 app.include_router(chat_router)
 app.include_router(sms_router)
 app.include_router(broadcast_router)
+app.include_router(auth_router)
+
 
 @app.get("/api/health")
 def health_check():
     return {"status": "online", "system": settings.app_name, "version": settings.app_version}
 
 # Serve root HTML & Static Assets
+from fastapi.staticfiles import StaticFiles
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+assets_dir = os.path.join(ROOT_DIR, "assets")
+if os.path.exists(assets_dir):
+    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
 @app.get("/")
 @app.get("/index.html")
