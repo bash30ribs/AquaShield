@@ -38,9 +38,14 @@ class ReportJSONRequest(BaseModel):
     image_url: Optional[str] = None
 
 @router.post("/ai/verify-image")
-async def verify_image(file: UploadFile = File(None)):
-    filename = file.filename if file else ""
-    return AIService.analyze_disaster_image(filename)
+async def verify_image(file: Optional[UploadFile] = File(None)):
+    if file and file.filename:
+        try:
+            content = await file.read()
+            return AIService.analyze_image_bytes(content, file.filename)
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
+    return AIService.analyze_disaster_image("sample_camera_capture.jpg")
 
 @router.post("/reports")
 async def submit_community_report(
@@ -60,6 +65,7 @@ async def submit_community_report(
 ):
     saved_image_url = image_url
     filename = ""
+    ai_analysis = None
 
     # Process file upload if provided
     if file and file.filename:
@@ -72,13 +78,16 @@ async def submit_community_report(
             with open(filepath, "wb") as f:
                 f.write(content)
             saved_image_url = f"/assets/uploads/{unique_name}"
+            # Run real ML forensic inspection on the uploaded image bytes
+            ai_analysis = AIService.analyze_image_bytes(content, filename, latitude or 18.94, longitude or 72.82)
         except Exception:
             saved_image_url = None
 
-    # Run AI Forensic Verification on Image & Metadata
-    ai_analysis = AIService.analyze_disaster_image(filename or saved_image_url or description)
+    if not ai_analysis:
+        ai_analysis = AIService.analyze_disaster_image(filename or saved_image_url or description)
+
     is_verified = (ai_analysis.get("status") == "verified")
-    ai_confidence = 96.4 if is_verified else 18.2
+    ai_confidence = float(ai_analysis.get("authenticity_score", 94.0 if is_verified else 35.0))
     
     # Map report_type enum
     try:
