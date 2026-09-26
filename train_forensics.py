@@ -209,7 +209,7 @@ def train_model(
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
-    scaler = torch.cuda.amp.GradScaler(enabled=(device.type == "cuda"))
+    scaler = torch.amp.GradScaler('cuda', enabled=(device.type == "cuda"))
 
     best_val_acc = 0.0
     os.makedirs(os.path.dirname(export_path), exist_ok=True)
@@ -231,7 +231,7 @@ def train_model(
             ela = ela.to(device, non_blocking=True)
             labels = labels.to(device, non_blocking=True)
 
-            with torch.cuda.amp.autocast(enabled=(device.type == "cuda")):
+            with torch.amp.autocast('cuda', enabled=(device.type == "cuda")):
                 outputs = model(rgb, ela)
                 loss = criterion(outputs, labels) / accum_steps
 
@@ -262,7 +262,7 @@ def train_model(
                 ela = ela.to(device, non_blocking=True)
                 labels = labels.to(device, non_blocking=True)
 
-                with torch.cuda.amp.autocast(enabled=(device.type == "cuda")):
+                with torch.amp.autocast('cuda', enabled=(device.type == "cuda")):
                     outputs = model(rgb, ela)
                     loss = criterion(outputs, labels)
 
