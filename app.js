@@ -141,12 +141,22 @@ function initBuoyRoster() {
 }
 
 // ── Command HUD Modal Controller ─────────────────────────────────────────
+let chatWelcomeShown = false;
 function openCommandCenter(tab = 'overview') {
   const overlay = document.getElementById('command-overlay');
   if (overlay) {
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
     switchHudTab(tab);
+    // Inject styled welcome message once
+    if (!chatWelcomeShown) {
+      chatWelcomeShown = true;
+      appendChatMessage(
+        "Welcome to **Sentinel Command.**\n\nI am linked to real-time ocean telemetry, buoy feeds, disaster alerts, and emergency response protocols.\n\n**How I can help:**\n• **Report an Incident** — Describe what you saw and I will file an official structured report\n• **Buoy Telemetry** — Ask about wave heights, water temps, and buoy status\n• **Emergency Helplines** — Coast Guard, Police, NDMA contacts\n• **Storm Surge & Cyclone Risk** — Live threat assessments\n• **AI Photo Forensics** — How the Dual-Stream scanner works\n• **Evacuation Routes** — A* pathfinding corridor status",
+        'bot',
+        ['AquaShield Sensor Array', 'INCOIS/NDMA Grid']
+      );
+    }
   }
 }
 
@@ -1886,7 +1896,8 @@ function quickAskCopilot(prompt) {
   const input = document.getElementById('chat-input-text');
   if (input) {
     input.value = prompt;
-    handleSendChat();
+    // Small delay to let HUD panel render before firing
+    setTimeout(() => handleSendChat(), 80);
   }
 }
 
@@ -1963,7 +1974,7 @@ function submitGuidedComplaint(encodedDraft, buttonEl) {
           buttonEl.innerHTML = `<span>✓ REPORT FILED (${data.report_id}) — DISPATCH NOTIFIED</span>`;
         }
         showToast(`✓ Incident ${data.report_id} verified and dispatched to Coast Guard!`);
-        if (typeof loadCommunityReports === 'function') loadCommunityReports();
+        loadReports();
       } else {
         throw new Error(data.message || 'Submission failed');
       }

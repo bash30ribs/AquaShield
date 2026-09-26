@@ -272,12 +272,25 @@ class ChatService:
             return {"reply": reply, "sources": sources, "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()}
 
         # 3. DETECT IF USER IS REPORTING AN INCIDENT / OBSERVATION
-        is_reporting_intent = any(w in low for w in [
-            "i saw", "i see", "there is", "there are", "water is", "oil on", "turtle stranded", "fish dying", "dead fish",
+        # Broad pattern: observation phrases + hazard keyword presence
+        _observation_phrases = [
+            "i saw", "i see", "i can see", "i noticed", "i spotted", "i found", "we saw", "we see",
+            "there is", "there are", "there's", "water is", "oil on", "turtle stranded", "fish dying", "dead fish",
             "spill on", "wave crashing", "road blocked", "jetty broken", "flood near", "flooding at", "water rising",
             "smells like fuel", "black water", "dirty water", "tar balls", "help my", "complaint", "i want to report",
-            "filing a report", "broken boat", "animal injured"
-        ])
+            "filing a report", "broken boat", "animal injured", "stranded animal", "oil slick", "i observed",
+            "emergency at", "incident at", "issue at", "problem at", "water level rising", "flooding here"
+        ]
+        _hazard_signals = [
+            "flood", "oil", "spill", "turtle", "dolphin", "whale", "cyclone", "road block", "debris",
+            "water", "wave", "surge", "chemical", "slick", "fish", "animal", "injured", "stranded"
+        ]
+        is_reporting_intent = any(w in low for w in _observation_phrases) or (
+            # Catch "flooding water near X" type phrases with no observation prefix
+            any(h in low for h in _hazard_signals) and any(loc in low for loc in [
+                "near", "at", "in", "around", "along", "beach", "road", "drive", "street", "bay", "coast", "shore"
+            ]) and len(msg.split()) >= 5
+        )
         
         if is_reporting_intent and len(msg.split()) >= 3:
             structured = cls.extract_complaint_structure(msg)

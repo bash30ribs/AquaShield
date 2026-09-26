@@ -2,8 +2,13 @@
 AquaShield AI — Application Configuration
 Loads settings from environment variables or defaults
 """
+import os
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+# Resolve the project root (two levels up from this file: backend/app/config.py -> root)
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_DB_PATH = os.path.join(_PROJECT_ROOT, "aquashield.db")
 
 class Settings(BaseSettings):
     app_name: str = "AquaShield AI"
@@ -14,8 +19,8 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440
 
-    database_url: str = "sqlite+aiosqlite:///./aquashield.db"
-    database_url_sync: str = "sqlite:///./aquashield.db"
+    database_url: str = f"sqlite+aiosqlite:///{_DB_PATH}"
+    database_url_sync: str = f"sqlite:///{_DB_PATH}"
 
     upload_dir: str = "uploads"
     max_file_size_mb: int = 50
