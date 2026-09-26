@@ -3,7 +3,7 @@
    Always fetches fresh assets when online, falls back to cache when offline
    ============================================================ */
 
-const CACHE_NAME = 'aquashield-v4.5-gis';
+const CACHE_NAME = 'aquashield-v5.0-maplibre';
 const OFFLINE_ASSETS = [
   '/',
   '/index.html',
@@ -13,8 +13,8 @@ const OFFLINE_ASSETS = [
   '/manifest.json',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap',
   'https://cdn.jsdelivr.net/npm/chart.js',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+  'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css',
+  'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js',
 ];
 
 // Install — Force immediate activation

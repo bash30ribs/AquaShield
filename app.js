@@ -220,162 +220,225 @@ function switchHudTab(tabName) {
   if (tabName === 'map') {
     setTimeout(() => {
       initTacticalMap();
-      if (tacticalMap) tacticalMap.invalidateSize();
+      if (tacticalMap) tacticalMap.resize();
     }, 150);
   } else if (tabName === 'reports') {
     loadReports();
   }
 }
 
-// ── Global Leaflet Tactical Map Engine ────────────────────────────────────
-const GLOBAL_MAP_LAYERS = {
+// ── MapLibre GL Tactical Multi-Layer Basemap Styles (100% Free & Open) ─────
+const MAPLIBRE_STYLES = {
   dark: {
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    options: { maxZoom: 19, subdomains: 'abcd', attribution: '© OpenStreetMap, © CARTO' }
+    version: 8,
+    sources: {
+      'carto-dark': {
+        type: 'raster',
+        tiles: [
+          'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+          'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+          'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'
+        ],
+        tileSize: 256,
+        attribution: '© OpenStreetMap, © CARTO'
+      }
+    },
+    layers: [{ id: 'carto-dark-layer', type: 'raster', source: 'carto-dark', minzoom: 0, maxzoom: 20 }]
   },
   satellite: {
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    options: { maxZoom: 19, attribution: 'Tiles © Esri, Earthstar Geographics' }
+    version: 8,
+    sources: {
+      'esri-satellite': {
+        type: 'raster',
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+        tileSize: 256,
+        attribution: 'Tiles © Esri, Earthstar Geographics'
+      }
+    },
+    layers: [{ id: 'esri-satellite-layer', type: 'raster', source: 'esri-satellite', minzoom: 0, maxzoom: 20 }]
   },
   nautical: {
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    options: { maxZoom: 19, subdomains: 'abcd', attribution: '© OpenStreetMap, © OpenSeaMap' }
+    version: 8,
+    sources: {
+      'carto-voyager': {
+        type: 'raster',
+        tiles: [
+          'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+          'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'
+        ],
+        tileSize: 256,
+        attribution: '© OpenStreetMap, © CARTO'
+      },
+      'openseamap': {
+        type: 'raster',
+        tiles: ['https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        attribution: '© OpenSeaMap contributors'
+      }
+    },
+    layers: [
+      { id: 'voyager-base', type: 'raster', source: 'carto-voyager', minzoom: 0, maxzoom: 20 },
+      { id: 'seamark-overlay', type: 'raster', source: 'openseamap', minzoom: 0, maxzoom: 18 }
+    ]
   },
   street: {
-    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    options: { maxZoom: 19, subdomains: 'abcd', attribution: '© OpenStreetMap, © CARTO' }
+    version: 8,
+    sources: {
+      'carto-positron': {
+        type: 'raster',
+        tiles: [
+          'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+          'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png'
+        ],
+        tileSize: 256,
+        attribution: '© OpenStreetMap, © CARTO'
+      }
+    },
+    layers: [{ id: 'carto-positron-layer', type: 'raster', source: 'carto-positron', minzoom: 0, maxzoom: 20 }]
   }
 };
 
-// ── Homepage Interactive Tactical Map Engine ──────────────────────────
+let homepageBuoyMarkers = [];
+let homepageVesselMarkers = [];
+let modalBuoyMarkers = [];
+let modalVesselMarkers = [];
+
+// ── Homepage Interactive MapLibre GL 3D Map Engine ────────────────────────
 function initHomepageMap() {
   if (homepageMapInitialized) return;
   const container = document.getElementById('homepage-map-container');
   if (!container) return;
 
-  if (typeof L === 'undefined') {
-    console.warn('[AquaShield Map] Leaflet library still loading, retrying in 150ms...');
+  if (typeof maplibregl === 'undefined') {
+    console.warn('[AquaShield MapLibre] Engine still loading, retrying in 150ms...');
     setTimeout(initHomepageMap, 150);
     return;
   }
 
-  // Initialize Map Centered on Mumbai Coastal Defense Sector (18.96, 72.82)
-  homepageTacticalMap = L.map('homepage-map-container', {
-    zoomControl: true,
-    attributionControl: false,
-    worldCopyJump: true
-  }).setView([18.96, 72.82], 11);
+  // Initialize MapLibre GL 3D Map Centered on Mumbai (72.82, 18.96)
+  homepageTacticalMap = new maplibregl.Map({
+    container: 'homepage-map-container',
+    style: MAPLIBRE_STYLES.dark,
+    center: [72.82, 18.96],
+    zoom: 11,
+    pitch: 32,
+    bearing: -6,
+    attributionControl: false
+  });
 
-  // Set default Tactical Dark Base Layer
-  homepageActiveBaseLayer = L.tileLayer(GLOBAL_MAP_LAYERS.dark.url, GLOBAL_MAP_LAYERS.dark.options).addTo(homepageTacticalMap);
+  // 3D Navigation Controls
+  homepageTacticalMap.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
 
-  // Coordinates Telemetry on Mouse Move
+  // Coordinates Telemetry HUD
   homepageTacticalMap.on('mousemove', (e) => {
     const hud = document.getElementById('homepage-map-coords-hud');
     if (hud) {
-      const lat = e.latlng.lat.toFixed(4);
-      const lng = e.latlng.lng.toFixed(4);
+      const lat = e.lngLat.lat.toFixed(4);
+      const lng = e.lngLat.lng.toFixed(4);
       const latCard = lat >= 0 ? `${lat}° N` : `${Math.abs(lat)}° S`;
       const lngCard = lng >= 0 ? `${lng}° E` : `${Math.abs(lng)}° W`;
-      hud.textContent = `CURSOR TELEMETRY // LAT: ${latCard} | LON: ${lngCard} | ZOOM: ${homepageTacticalMap.getZoom()}`;
+      hud.textContent = `CURSOR TELEMETRY // LAT: ${latCard} | LON: ${lngCard} | ZOOM: ${homepageTacticalMap.getZoom().toFixed(1)}`;
     }
   });
 
   // Map Click to drop incident pin
   homepageTacticalMap.on('click', (e) => {
-    const lat = parseFloat(e.latlng.lat.toFixed(4));
-    const lng = parseFloat(e.latlng.lng.toFixed(4));
+    const lng = parseFloat(e.lngLat.lng.toFixed(4));
+    const lat = parseFloat(e.lngLat.lat.toFixed(4));
 
-    L.popup()
-      .setLatLng(e.latlng)
-      .setContent(`
-        <div style="background:#07111e; color:#f1f5f9; padding:10px; min-width:200px; border-radius:6px; border:1px solid rgba(245,158,11,0.4);">
+    new maplibregl.Popup({ offset: 14 })
+      .setLngLat([lng, lat])
+      .setHTML(`
+        <div style="background:#07111e; color:#f1f5f9; padding:8px; min-width:200px; font-family:var(--ds-font-body);">
           <div style="font-size:10px; font-family:var(--ds-font-mono); color:#f59e0b; font-weight:bold; letter-spacing:0.06em;">SELECTED PIN POINT</div>
           <div style="font-size:13px; font-weight:600; margin:4px 0; color:#f1f5f9;">${lat}° N, ${lng}° E</div>
-          <p style="font-size:11px; color:#94a3b8; margin-bottom:8px;">Drop an emergency report at this exact geolocation.</p>
+          <p style="font-size:11px; color:#94a3b8; margin-bottom:8px;">Drop an emergency report at this exact GPS position.</p>
           <button class="aq-btn-primary" style="padding:6px 12px; font-size:11px; background:#f59e0b; color:#07111e; font-weight:bold; border-radius:4px; width:100%; border:none; cursor:pointer;" onclick="openReportModalWithCoords(${lat}, ${lng})">
             + Log Incident at This Pin ↗
           </button>
         </div>
       `)
-      .openOn(homepageTacticalMap);
+      .addTo(homepageTacticalMap);
   });
 
-  // Plot Global Buoys on Homepage Map
-  const buoyIcon = L.divIcon({
-    className: 'custom-buoy-icon',
-    html: `<div style="width: 14px; height: 14px; background: #f59e0b; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);"></div>`,
-    iconSize: [14, 14],
-    iconAnchor: [7, 7]
+  homepageTacticalMap.on('load', () => {
+    renderHomepageStaticLayers();
+    plotReportsOnMap(allReportsData);
   });
 
+  homepageMapInitialized = true;
+  setTimeout(() => {
+    if (homepageTacticalMap) homepageTacticalMap.resize();
+  }, 300);
+}
+
+function renderHomepageStaticLayers() {
+  if (!homepageTacticalMap) return;
+
+  // Clear previous static markers
+  homepageBuoyMarkers.forEach(m => m.remove());
+  homepageBuoyMarkers = [];
+  homepageVesselMarkers.forEach(m => m.remove());
+  homepageVesselMarkers = [];
+
+  // 1. Plot Smart Buoys
   BUOYS_DATA.forEach(b => {
-    const marker = L.marker([b.lat, b.lng], { icon: buoyIcon }).addTo(homepageTacticalMap);
-    marker.bindPopup(`
-      <div style="font-family: var(--ds-font-body); padding: 6px; background: #07111e; color: #f1f5f9; border-radius: 4px; border: 1px solid rgba(245,158,11,0.3);">
+    const el = document.createElement('div');
+    el.className = 'maplibre-buoy-marker';
+    el.title = `${b.id} - ${b.name}`;
+
+    const popup = new maplibregl.Popup({ offset: 12 }).setHTML(`
+      <div style="font-family: var(--ds-font-body); padding: 4px; background:#07111e; color:#f1f5f9;">
         <strong style="color: #f59e0b; font-size: 13px;">${b.id} — ${b.name}</strong><br>
         <span style="font-size: 11px; color: #94a3b8;">Status: ${b.status.toUpperCase()}</span><br>
         <span style="font-size: 12px; font-weight: bold; color: #f1f5f9;">Wave Height: ${b.wave}</span><br>
         <span style="font-size: 11px; color: #94a3b8;">Surface Temp: ${b.temp}</span>
       </div>
     `);
+
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([b.lng, b.lat])
+      .setPopup(popup)
+      .addTo(homepageTacticalMap);
+    homepageBuoyMarkers.push(marker);
   });
 
-  // Coastal Flood Hazard Zone Polygon
-  L.circle([18.91, 72.81], {
-    color: '#f59e0b',
-    fillColor: '#f59e0b',
-    fillOpacity: 0.16,
-    radius: 3200,
-    weight: 1.5,
-    dashArray: '4, 4'
-  }).addTo(homepageTacticalMap).bindPopup('<div style="background:#07111e;color:#f1f5f9;padding:4px;"><strong style="color:#f59e0b;">Warning Sector 1:</strong> Storm Surge Inundation Watch</div>');
+  // 2. Plot AIS Vessels
+  const vessels = [
+    { name: 'ICGS Varuna (Coast Guard)', lng: 72.86, lat: 18.99, speed: '18.4 kt', heading: '240° SW' },
+    { name: 'M/V Pacific (Merchant Cargo)', lng: 72.74, lat: 18.93, speed: '12.1 kt', heading: '180° S' }
+  ];
 
-  // Vessel AIS Tracks
-  const vesselIcon = L.divIcon({
-    className: 'custom-vessel-icon',
-    html: `<div style="color: #f59e0b; font-size: 16px; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6)); font-weight: bold;">▲</div>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9]
+  vessels.forEach(v => {
+    const el = document.createElement('div');
+    el.className = 'maplibre-vessel-marker';
+    el.textContent = '▲';
+    el.title = v.name;
+
+    const popup = new maplibregl.Popup({ offset: 12 }).setHTML(`
+      <div style="background:#07111e;color:#f1f5f9;padding:4px;">
+        <strong style="color:#f59e0b;">${v.name}</strong><br>
+        <span style="color:#94a3b8;font-size:11px;">Speed: ${v.speed} · Heading: ${v.heading}</span>
+      </div>
+    `);
+
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([v.lng, v.lat])
+      .setPopup(popup)
+      .addTo(homepageTacticalMap);
+    homepageVesselMarkers.push(marker);
   });
-
-  L.marker([18.99, 72.86], { icon: vesselIcon }).addTo(homepageTacticalMap)
-    .bindPopup('<div style="background:#07111e;color:#f1f5f9;padding:4px;"><strong style="color:#f59e0b;">ICGS Varuna (Coast Guard)</strong><br><span style="color:#94a3b8;font-size:11px;">Speed: 18.4 kt · Heading: 240° SW</span></div>');
-
-  L.marker([18.93, 72.74], { icon: vesselIcon }).addTo(homepageTacticalMap)
-    .bindPopup('<div style="background:#07111e;color:#f1f5f9;padding:4px;"><strong style="color:#f1f5f9;">M/V Pacific (Merchant Cargo)</strong><br><span style="color:#94a3b8;font-size:11px;">Speed: 12.1 kt · Heading: 180° S</span></div>');
-
-  homepageMapInitialized = true;
-  plotReportsOnMap(allReportsData);
-
-  // Invalidate size after layout settles
-  setTimeout(() => {
-    if (homepageTacticalMap) homepageTacticalMap.invalidateSize();
-  }, 300);
 }
 
 function switchHomepageBaseLayer(layerName) {
-  if (!homepageTacticalMap || !GLOBAL_MAP_LAYERS[layerName]) return;
+  if (!homepageTacticalMap || !MAPLIBRE_STYLES[layerName]) return;
 
-  if (homepageActiveBaseLayer) {
-    homepageTacticalMap.removeLayer(homepageActiveBaseLayer);
-  }
-  if (homepageNauticalOverlay) {
-    homepageTacticalMap.removeLayer(homepageNauticalOverlay);
-    homepageNauticalOverlay = null;
-  }
+  homepageTacticalMap.setStyle(MAPLIBRE_STYLES[layerName]);
+  homepageTacticalMap.once('styledata', () => {
+    renderHomepageStaticLayers();
+    plotReportsOnMap(allReportsData);
+  });
 
-  const config = GLOBAL_MAP_LAYERS[layerName];
-  homepageActiveBaseLayer = L.tileLayer(config.url, config.options).addTo(homepageTacticalMap);
-
-  if (layerName === 'nautical') {
-    homepageNauticalOverlay = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: 'Map data © OpenSeaMap contributors'
-    }).addTo(homepageTacticalMap);
-  }
-
-  // Update button active state
   ['dark', 'sat', 'nautical', 'street'].forEach(k => {
     const btn = document.getElementById(`hp-layer-${k}`);
     if (btn) btn.classList.remove('active');
@@ -384,7 +447,7 @@ function switchHomepageBaseLayer(layerName) {
   const activeBtn = document.getElementById(`hp-layer-${mapKey}`);
   if (activeBtn) activeBtn.classList.add('active');
 
-  showToast('🗺️ Layer Updated', `Switched to ${layerName.toUpperCase()} tile layer.`, 'info');
+  showToast('🗺️ Layer Updated', `Switched to MapLibre ${layerName.toUpperCase()} vector/raster layer.`, 'info');
 }
 
 function homepageJumpSector(sector, btn) {
@@ -396,16 +459,22 @@ function homepageJumpSector(sector, btn) {
   if (!homepageTacticalMap) return;
 
   const sectors = {
-    world: { lat: 20, lng: 0, zoom: 2 },
-    mumbai: { lat: 18.96, lng: 72.82, zoom: 11 },
-    bengal: { lat: 13.08, lng: 80.27, zoom: 10 },
-    florida: { lat: 25.76, lng: -80.19, zoom: 10 },
-    singapore: { lat: 1.29, lng: 103.85, zoom: 11 },
-    mediterranean: { lat: 36.14, lng: -5.35, zoom: 9 }
+    world: { lat: 20, lng: 0, zoom: 2, pitch: 0, bearing: 0 },
+    mumbai: { lat: 18.96, lng: 72.82, zoom: 11, pitch: 35, bearing: -6 },
+    bengal: { lat: 13.08, lng: 80.27, zoom: 10, pitch: 25, bearing: 0 },
+    florida: { lat: 25.76, lng: -80.19, zoom: 10, pitch: 30, bearing: 10 },
+    singapore: { lat: 1.29, lng: 103.85, zoom: 11, pitch: 30, bearing: -15 },
+    mediterranean: { lat: 36.14, lng: -5.35, zoom: 9, pitch: 30, bearing: 0 }
   };
 
   const target = sectors[sector] || sectors.mumbai;
-  homepageTacticalMap.flyTo([target.lat, target.lng], target.zoom, { duration: 1.2 });
+  homepageTacticalMap.flyTo({
+    center: [target.lng, target.lat],
+    zoom: target.zoom,
+    pitch: target.pitch,
+    bearing: target.bearing,
+    duration: 1600
+  });
 }
 
 let homepageSearchDebounce = null;
@@ -467,12 +536,17 @@ function selectHomepageSearchResult(lat, lon, escapedName, zoom = 12) {
   if (searchInput) searchInput.value = name.split(',')[0];
 
   if (homepageTacticalMap) {
-    homepageTacticalMap.flyTo([lat, lon], zoom, { duration: 1.5 });
-    
-    L.popup()
-      .setLatLng([lat, lon])
-      .setContent(`
-        <div style="background:#07111e; color:#f1f5f9; padding:8px; border-radius:4px; border:1px solid rgba(245,158,11,0.3);">
+    homepageTacticalMap.flyTo({
+      center: [lon, lat],
+      zoom: zoom,
+      pitch: 35,
+      duration: 1600
+    });
+
+    new maplibregl.Popup({ offset: 14 })
+      .setLngLat([lon, lat])
+      .setHTML(`
+        <div style="background:#07111e; color:#f1f5f9; padding:8px; border-radius:4px; font-family:var(--ds-font-body);">
           <div style="font-size:10px; font-family:var(--ds-font-mono); color:#f59e0b; font-weight:bold;">SEARCHED SECTOR</div>
           <strong style="font-size:13px; color:#f1f5f9;">${name.split(',')[0]}</strong>
           <div style="font-size:11px; color:#94a3b8; margin:4px 0;">${name.slice(0, 90)}</div>
@@ -481,44 +555,53 @@ function selectHomepageSearchResult(lat, lon, escapedName, zoom = 12) {
           </button>
         </div>
       `)
-      .openOn(homepageTacticalMap);
+      .addTo(homepageTacticalMap);
   }
 }
 
-// ── Modal Fullscreen Tactical GIS Map ────────────────────────────────────
+// ── Modal Fullscreen MapLibre Tactical HUD Map ───────────────────────────
 function initTacticalMap() {
   if (mapInitialized) return;
   const container = document.getElementById('tactical-map-container');
   if (!container) return;
 
-  tacticalMap = L.map('tactical-map-container', {
-    zoomControl: false,
-    attributionControl: false,
-    worldCopyJump: true
-  }).setView([18.96, 72.82], 11);
+  if (typeof maplibregl === 'undefined') {
+    setTimeout(initTacticalMap, 150);
+    return;
+  }
 
-  activeBaseLayer = L.tileLayer(GLOBAL_MAP_LAYERS.dark.url, GLOBAL_MAP_LAYERS.dark.options).addTo(tacticalMap);
-  L.control.zoom({ position: 'topright' }).addTo(tacticalMap);
+  tacticalMap = new maplibregl.Map({
+    container: 'tactical-map-container',
+    style: MAPLIBRE_STYLES.dark,
+    center: [72.82, 18.96],
+    zoom: 11,
+    pitch: 35,
+    bearing: -8,
+    attributionControl: false
+  });
+
+  tacticalMap.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+  tacticalMap.addControl(new maplibregl.FullscreenControl(), 'top-right');
 
   tacticalMap.on('mousemove', (e) => {
     const hud = document.getElementById('map-coords-hud');
     if (hud) {
-      const lat = e.latlng.lat.toFixed(4);
-      const lng = e.latlng.lng.toFixed(4);
+      const lat = e.lngLat.lat.toFixed(4);
+      const lng = e.lngLat.lng.toFixed(4);
       const latCard = lat >= 0 ? `${lat}° N` : `${Math.abs(lat)}° S`;
       const lngCard = lng >= 0 ? `${lng}° E` : `${Math.abs(lng)}° W`;
-      hud.textContent = `CURSOR TELEMETRY // LAT: ${latCard} | LON: ${lngCard} | ZOOM: ${tacticalMap.getZoom()}`;
+      hud.textContent = `CURSOR TELEMETRY // LAT: ${latCard} | LON: ${lngCard} | ZOOM: ${tacticalMap.getZoom().toFixed(1)}`;
     }
   });
 
   tacticalMap.on('click', (e) => {
-    const lat = parseFloat(e.latlng.lat.toFixed(4));
-    const lng = parseFloat(e.latlng.lng.toFixed(4));
+    const lng = parseFloat(e.lngLat.lng.toFixed(4));
+    const lat = parseFloat(e.lngLat.lat.toFixed(4));
 
-    L.popup()
-      .setLatLng(e.latlng)
-      .setContent(`
-        <div style="background:#07111e; color:#f1f5f9; padding:8px;">
+    new maplibregl.Popup({ offset: 14 })
+      .setLngLat([lng, lat])
+      .setHTML(`
+        <div style="background:#07111e; color:#f1f5f9; padding:8px; font-family:var(--ds-font-body);">
           <div style="font-size:10px; font-family:var(--ds-font-mono); color:#f59e0b; font-weight:bold;">SELECTED COORDINATES</div>
           <div style="font-size:12px; margin:4px 0; color:#f1f5f9;">${lat}° N, ${lng}° E</div>
           <button class="aq-btn-primary" style="padding:4px 10px; font-size:11px; background:#f59e0b; color:#07111e; font-weight:bold; border-radius:4px; width:100%; margin-top:4px;" onclick="openReportModalWithCoords(${lat}, ${lng})">
@@ -526,83 +609,85 @@ function initTacticalMap() {
           </button>
         </div>
       `)
-      .openOn(tacticalMap);
+      .addTo(tacticalMap);
   });
 
-  // Plot Buoys on Modal Map
-  const buoyIcon = L.divIcon({
-    className: 'custom-buoy-icon',
-    html: `<div style="width: 14px; height: 14px; background: #f59e0b; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);"></div>`,
-    iconSize: [14, 14],
-    iconAnchor: [7, 7]
+  tacticalMap.on('load', () => {
+    renderModalStaticLayers();
+    plotReportsOnMap(allReportsData);
   });
+
+  mapInitialized = true;
+}
+
+function renderModalStaticLayers() {
+  if (!tacticalMap) return;
+
+  modalBuoyMarkers.forEach(m => m.remove());
+  modalBuoyMarkers = [];
+  modalVesselMarkers.forEach(m => m.remove());
+  modalVesselMarkers = [];
 
   BUOYS_DATA.forEach(b => {
-    const marker = L.marker([b.lat, b.lng], { icon: buoyIcon }).addTo(tacticalMap);
-    marker.bindPopup(`
-      <div style="font-family: var(--ds-font-body); padding: 6px; background: #07111e; color: #f1f5f9; border-radius: 4px; border: 1px solid rgba(245,158,11,0.3);">
+    const el = document.createElement('div');
+    el.className = 'maplibre-buoy-marker';
+    el.title = `${b.id} - ${b.name}`;
+
+    const popup = new maplibregl.Popup({ offset: 12 }).setHTML(`
+      <div style="font-family: var(--ds-font-body); padding: 6px; background: #07111e; color: #f1f5f9;">
         <strong style="color: #f59e0b; font-size: 13px;">${b.id} — ${b.name}</strong><br>
         <span style="font-size: 11px; color: #94a3b8;">Status: ${b.status.toUpperCase()}</span><br>
         <span style="font-size: 12px; font-weight: bold; color: #f1f5f9;">Wave Height: ${b.wave}</span><br>
         <span style="font-size: 11px; color: #94a3b8;">Surface Temp: ${b.temp}</span>
       </div>
     `);
+
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([b.lng, b.lat])
+      .setPopup(popup)
+      .addTo(tacticalMap);
+    modalBuoyMarkers.push(marker);
   });
 
-  L.circle([18.91, 72.81], {
-    color: '#f59e0b',
-    fillColor: '#f59e0b',
-    fillOpacity: 0.16,
-    radius: 3200,
-    weight: 1.5,
-    dashArray: '4, 4'
-  }).addTo(tacticalMap).bindPopup('<div style="background:#07111e;color:#f1f5f9;padding:4px;"><strong style="color:#f59e0b;">Warning Sector 1:</strong> Storm Surge Inundation Watch</div>');
+  const vessels = [
+    { name: 'ICGS Varuna (Coast Guard)', lng: 72.86, lat: 18.99, speed: '18.4 kt', heading: '240° SW' },
+    { name: 'M/V Pacific (Merchant Cargo)', lng: 72.74, lat: 18.93, speed: '12.1 kt', heading: '180° S' }
+  ];
 
-  const vesselIcon = L.divIcon({
-    className: 'custom-vessel-icon',
-    html: `<div style="color: #f59e0b; font-size: 16px; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6)); font-weight: bold;">▲</div>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9]
+  vessels.forEach(v => {
+    const el = document.createElement('div');
+    el.className = 'maplibre-vessel-marker';
+    el.textContent = '▲';
+
+    const popup = new maplibregl.Popup({ offset: 12 }).setHTML(`
+      <div style="background:#07111e;color:#f1f5f9;padding:4px;">
+        <strong style="color:#f59e0b;">${v.name}</strong><br>
+        <span style="color:#94a3b8;font-size:11px;">Speed: ${v.speed} · Heading: ${v.heading}</span>
+      </div>
+    `);
+
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([v.lng, v.lat])
+      .setPopup(popup)
+      .addTo(tacticalMap);
+    modalVesselMarkers.push(marker);
   });
-
-  L.marker([18.99, 72.86], { icon: vesselIcon }).addTo(tacticalMap)
-    .bindPopup('<div style="background:#07111e;color:#f1f5f9;padding:4px;"><strong style="color:#f59e0b;">ICGS Varuna (Coast Guard)</strong><br><span style="color:#94a3b8;font-size:11px;">Speed: 18.4 kt · Heading: 240° SW</span></div>');
-
-  L.marker([18.93, 72.74], { icon: vesselIcon }).addTo(tacticalMap)
-    .bindPopup('<div style="background:#07111e;color:#f1f5f9;padding:4px;"><strong style="color:#f1f5f9;">M/V Pacific (Merchant Cargo)</strong><br><span style="color:#94a3b8;font-size:11px;">Speed: 12.1 kt · Heading: 180° S</span></div>');
-
-  mapInitialized = true;
-  plotReportsOnMap(allReportsData);
 }
 
 function switchMapBaseLayer(layerName) {
-  if (!tacticalMap || !GLOBAL_MAP_LAYERS[layerName]) return;
+  if (!tacticalMap || !MAPLIBRE_STYLES[layerName]) return;
 
-  currentBaseLayerName = layerName;
-
-  if (activeBaseLayer) {
-    tacticalMap.removeLayer(activeBaseLayer);
-  }
-  if (nauticalOverlayLayer) {
-    tacticalMap.removeLayer(nauticalOverlayLayer);
-    nauticalOverlayLayer = null;
-  }
-
-  const config = GLOBAL_MAP_LAYERS[layerName];
-  activeBaseLayer = L.tileLayer(config.url, config.options).addTo(tacticalMap);
-
-  if (layerName === 'nautical') {
-    nauticalOverlayLayer = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: 'Map data © OpenSeaMap contributors'
-    }).addTo(tacticalMap);
-  }
+  tacticalMap.setStyle(MAPLIBRE_STYLES[layerName]);
+  tacticalMap.once('styledata', () => {
+    renderModalStaticLayers();
+    plotReportsOnMap(allReportsData);
+  });
 
   document.querySelectorAll('.aq-map-layer-btn').forEach(btn => btn.classList.remove('active'));
   const activeBtn = document.getElementById(`layer-btn-${layerName}`);
   if (activeBtn) activeBtn.classList.add('active');
 
-  showToast('🗺️ Map Layer Changed', `Switched view to ${layerName.toUpperCase()} layer.`, 'info');
+  showToast('🗺️ Map Layer Changed', `Switched view to MapLibre ${layerName.toUpperCase()} layer.`, 'info');
 }
 
 let searchDebounceTimer = null;
@@ -665,11 +750,16 @@ function selectSearchResult(lat, lon, escapedName, zoom = 12) {
   if (searchInput) searchInput.value = name.split(',')[0];
 
   if (tacticalMap) {
-    tacticalMap.flyTo([lat, lon], zoom, { duration: 1.5 });
+    tacticalMap.flyTo({
+      center: [lon, lat],
+      zoom: zoom,
+      pitch: 35,
+      duration: 1600
+    });
     
-    L.popup()
-      .setLatLng([lat, lon])
-      .setContent(`
+    new maplibregl.Popup({ offset: 14 })
+      .setLngLat([lon, lat])
+      .setHTML(`
         <div style="background:#07111e; color:#f1f5f9; padding:8px;">
           <div style="font-size:10px; font-family:var(--ds-font-mono); color:#f59e0b; font-weight:bold;">SEARCHED LOCATION</div>
           <strong style="font-size:13px; color:#f1f5f9;">${name.split(',')[0]}</strong>
@@ -679,7 +769,7 @@ function selectSearchResult(lat, lon, escapedName, zoom = 12) {
           </button>
         </div>
       `)
-      .openOn(tacticalMap);
+      .addTo(tacticalMap);
   }
 }
 
@@ -690,37 +780,42 @@ function jumpMapSector(sector, btn) {
   if (!tacticalMap) return;
 
   const sectors = {
-    world: { lat: 20, lng: 0, zoom: 2 },
-    mumbai: { lat: 18.96, lng: 72.82, zoom: 11 },
-    bengal: { lat: 13.08, lng: 80.27, zoom: 10 },
-    florida: { lat: 25.76, lng: -80.19, zoom: 10 },
-    singapore: { lat: 1.29, lng: 103.85, zoom: 11 },
-    mediterranean: { lat: 36.14, lng: -5.35, zoom: 9 },
-    tokyo: { lat: 35.68, lng: 139.76, zoom: 11 }
+    world: { lat: 20, lng: 0, zoom: 2, pitch: 0, bearing: 0 },
+    mumbai: { lat: 18.96, lng: 72.82, zoom: 11, pitch: 35, bearing: -8 },
+    bengal: { lat: 13.08, lng: 80.27, zoom: 10, pitch: 25, bearing: 0 },
+    florida: { lat: 25.76, lng: -80.19, zoom: 10, pitch: 30, bearing: 10 },
+    singapore: { lat: 1.29, lng: 103.85, zoom: 11, pitch: 30, bearing: -15 },
+    mediterranean: { lat: 36.14, lng: -5.35, zoom: 9, pitch: 30, bearing: 0 },
+    tokyo: { lat: 35.68, lng: 139.76, zoom: 11, pitch: 35, bearing: 10 }
   };
 
   const target = sectors[sector] || sectors.mumbai;
-  tacticalMap.flyTo([target.lat, target.lng], target.zoom, { duration: 1.2 });
+  tacticalMap.flyTo({
+    center: [target.lng, target.lat],
+    zoom: target.zoom,
+    pitch: target.pitch,
+    bearing: target.bearing,
+    duration: 1500
+  });
 }
 
 function resetMapView() {
   if (tacticalMap) {
-    tacticalMap.flyTo([18.96, 72.82], 11, { duration: 1 });
+    tacticalMap.flyTo({ center: [72.82, 18.96], zoom: 11, pitch: 35, bearing: -8, duration: 1200 });
   }
 }
 
 function focusBuoyOnMap(lat, lng, id) {
-  // If on landing page, scroll to homepage radar map
   const hpMapEl = document.getElementById('radar-map');
   if (hpMapEl && homepageTacticalMap) {
     hpMapEl.scrollIntoView({ behavior: 'smooth' });
-    homepageTacticalMap.flyTo([lat, lng], 13, { duration: 1 });
+    homepageTacticalMap.flyTo({ center: [lng, lat], zoom: 13, pitch: 40, duration: 1200 });
     return;
   }
   openCommandCenter('map');
   setTimeout(() => {
     if (tacticalMap) {
-      tacticalMap.flyTo([lat, lng], 13, { duration: 1 });
+      tacticalMap.flyTo({ center: [lng, lat], zoom: 13, pitch: 40, duration: 1200 });
     }
   }, 200);
 }
@@ -729,43 +824,44 @@ function focusReportOnMap(lat, lng, id) {
   const hpMapEl = document.getElementById('radar-map');
   if (hpMapEl && homepageTacticalMap) {
     hpMapEl.scrollIntoView({ behavior: 'smooth' });
-    homepageTacticalMap.flyTo([lat, lng], 14, { duration: 1 });
+    homepageTacticalMap.flyTo({ center: [lng, lat], zoom: 14, pitch: 35, duration: 1200 });
     const markerObj = homepageReportMarkers.find(m => m.id === id);
-    if (markerObj) markerObj.marker.openPopup();
+    if (markerObj && markerObj.marker.getPopup()) markerObj.marker.togglePopup();
     return;
   }
   openCommandCenter('map');
   setTimeout(() => {
     if (tacticalMap) {
-      tacticalMap.flyTo([lat, lng], 14, { duration: 1 });
+      tacticalMap.flyTo({ center: [lng, lat], zoom: 14, pitch: 35, duration: 1200 });
       const markerObj = reportMarkers.find(m => m.id === id);
-      if (markerObj) markerObj.marker.openPopup();
+      if (markerObj && markerObj.marker.getPopup()) markerObj.marker.togglePopup();
     }
   }, 200);
 }
 
 function simulateEmergencyMarker() {
   if (!tacticalMap) return;
-  if (distressMarker) tacticalMap.removeLayer(distressMarker);
+  if (distressMarker) distressMarker.remove();
 
-  const distressIcon = L.divIcon({
-    className: 'custom-sos-icon',
-    html: `<div style="width: 22px; height: 22px; background: #ff3366; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 18px #ff3366;"></div>`,
-    iconSize: [22, 22],
-    iconAnchor: [11, 11]
-  });
+  const el = document.createElement('div');
+  el.style.cssText = 'width: 22px; height: 22px; background: #ef4444; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 18px #ef4444; animation: pulse 1.5s infinite; cursor:pointer;';
 
-  distressMarker = L.marker([18.94, 72.76], { icon: distressIcon }).addTo(tacticalMap);
-  distressMarker.bindPopup(`
-    <div style="background:#07111e;color:#f1f5f9;padding:6px;border:1px solid #ff3366;">
-      <strong style="color: #ff3366;">⚠ EMERGENCY DISTRESS BEACON</strong><br>
+  const popup = new maplibregl.Popup({ offset: 14 }).setHTML(`
+    <div style="background:#07111e;color:#f1f5f9;padding:6px;border:1px solid #ef4444;">
+      <strong style="color: #ef4444;">⚠ EMERGENCY DISTRESS BEACON</strong><br>
       <span style="font-size:12px;">Vessel: Fishing Trawler 'Sagar 4'</span><br>
       <span style="font-size:11px;color:#94a3b8;">Nature: Engine Failure & Heavy Swell</span><br>
       <span style="font-size:11px;color:#fbbf24;">Coast Guard Cutter Intercepting.</span>
     </div>
-  `).openPopup();
+  `);
 
-  tacticalMap.setView([18.94, 72.76], 12);
+  distressMarker = new maplibregl.Marker({ element: el })
+    .setLngLat([72.76, 18.94])
+    .setPopup(popup)
+    .addTo(tacticalMap);
+
+  distressMarker.togglePopup();
+  tacticalMap.flyTo({ center: [72.76, 18.94], zoom: 12, pitch: 45, duration: 1400 });
 }
 
 function plotReportsOnMap(reports) {
@@ -780,26 +876,20 @@ function plotReportsOnMap(reports) {
 
   // Plot on Homepage Map
   if (homepageTacticalMap) {
-    homepageReportMarkers.forEach(m => homepageTacticalMap.removeLayer(m.marker));
+    homepageReportMarkers.forEach(m => m.marker.remove());
     homepageReportMarkers = [];
 
     reports.forEach(r => {
       if (!r.latitude || !r.longitude) return;
       const emoji = icons[r.type] || '⚠';
-      const reportIcon = L.divIcon({
-        className: 'report-map-icon',
-        html: `
-          <div style="background: rgba(12, 24, 39, 0.95); border: 2px solid ${r.ai_verified ? '#f59e0b' : '#94a3b8'}; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 0 12px ${r.ai_verified ? 'rgba(245,158,11,0.6)' : 'rgba(148,163,184,0.4)'};">
-            ${emoji}
-          </div>
-        `,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
-      });
 
-      const marker = L.marker([r.latitude, r.longitude], { icon: reportIcon }).addTo(homepageTacticalMap);
-      marker.bindPopup(`
-        <div style="background:#07111e; color:#f1f5f9; padding:8px; min-width: 200px; border-radius:4px; border:1px solid rgba(245,158,11,0.3);">
+      const el = document.createElement('div');
+      el.className = 'maplibre-report-marker';
+      el.innerHTML = emoji;
+      el.style.borderColor = r.ai_verified ? '#f59e0b' : '#94a3b8';
+
+      const popup = new maplibregl.Popup({ offset: 14 }).setHTML(`
+        <div style="background:#07111e; color:#f1f5f9; padding:8px; min-width: 200px; border-radius:4px; font-family:var(--ds-font-body);">
           <div style="font-size: 10px; font-family: var(--ds-font-mono); color: #f59e0b; font-weight: bold; margin-bottom: 2px;">
             ${r.id} · ${r.ai_verified ? '✓ AI VERIFIED' : 'PENDING AUDIT'}
           </div>
@@ -808,32 +898,32 @@ function plotReportsOnMap(reports) {
           <div style="font-size: 10px; color: #fbbf24;">Reporter: ${r.reporter_name} (${r.reporter_badge || 'CITIZEN'})</div>
         </div>
       `);
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([r.longitude, r.latitude])
+        .setPopup(popup)
+        .addTo(homepageTacticalMap);
+
       homepageReportMarkers.push({ id: r.id, marker });
     });
   }
 
   // Plot on Modal Tactical Map
   if (tacticalMap) {
-    reportMarkers.forEach(m => tacticalMap.removeLayer(m.marker));
+    reportMarkers.forEach(m => m.marker.remove());
     reportMarkers = [];
 
     reports.forEach(r => {
       if (!r.latitude || !r.longitude) return;
       const emoji = icons[r.type] || '⚠';
-      const reportIcon = L.divIcon({
-        className: 'report-map-icon',
-        html: `
-          <div style="background: rgba(12, 24, 39, 0.95); border: 2px solid ${r.ai_verified ? '#f59e0b' : '#94a3b8'}; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 0 12px ${r.ai_verified ? 'rgba(245,158,11,0.6)' : 'rgba(148,163,184,0.4)'};">
-            ${emoji}
-          </div>
-        `,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
-      });
 
-      const marker = L.marker([r.latitude, r.longitude], { icon: reportIcon }).addTo(tacticalMap);
-      marker.bindPopup(`
-        <div style="background:#07111e; color:#f1f5f9; padding:8px; min-width: 200px;">
+      const el = document.createElement('div');
+      el.className = 'maplibre-report-marker';
+      el.innerHTML = emoji;
+      el.style.borderColor = r.ai_verified ? '#f59e0b' : '#94a3b8';
+
+      const popup = new maplibregl.Popup({ offset: 14 }).setHTML(`
+        <div style="background:#07111e; color:#f1f5f9; padding:8px; min-width: 200px; font-family:var(--ds-font-body);">
           <div style="font-size: 10px; font-family: var(--ds-font-mono); color: #f59e0b; font-weight: bold; margin-bottom: 2px;">
             ${r.id} · ${r.ai_verified ? '✓ AI VERIFIED' : 'PENDING AUDIT'}
           </div>
@@ -842,56 +932,70 @@ function plotReportsOnMap(reports) {
           <div style="font-size: 10px; color: #fbbf24;">Reporter: ${r.reporter_name} (${r.reporter_badge || 'CITIZEN'})</div>
         </div>
       `);
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([r.longitude, r.latitude])
+        .setPopup(popup)
+        .addTo(tacticalMap);
+
       reportMarkers.push({ id: r.id, marker });
     });
   }
 }
 
-// ── Interactive Precision Location Picker Modal Map ───────────────────────
+// ── Interactive Precision Location Picker Modal Map (MapLibre GL) ───────────
 function initReportPickerMap(initialLat = 19.054, initialLng = 72.822) {
   const container = document.getElementById('report-picker-map');
   if (!container) return;
 
+  if (typeof maplibregl === 'undefined') {
+    setTimeout(() => initReportPickerMap(initialLat, initialLng), 150);
+    return;
+  }
+
   if (reportPickerMap) {
-    reportPickerMap.invalidateSize();
-    reportPickerMap.setView([initialLat, initialLng], 12);
+    reportPickerMap.resize();
+    reportPickerMap.setCenter([initialLng, initialLat]);
+    reportPickerMap.setZoom(12);
     if (reportPickerMarker) {
-      reportPickerMarker.setLatLng([initialLat, initialLng]);
+      reportPickerMarker.setLngLat([initialLng, initialLat]);
     }
     updatePickerCoordsDisplay(initialLat, initialLng);
     return;
   }
 
-  reportPickerMap = L.map('report-picker-map', {
-    zoomControl: true,
-    attributionControl: false,
-    worldCopyJump: true
-  }).setView([initialLat, initialLng], 12);
-
-  // Use crisp Dark Matter for mini picker
-  L.tileLayer(GLOBAL_MAP_LAYERS.dark.url, GLOBAL_MAP_LAYERS.dark.options).addTo(reportPickerMap);
-
-  const pickerIcon = L.divIcon({
-    className: 'picker-pin-icon',
-    html: `<div style="width: 20px; height: 20px; background: #f59e0b; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 14px #f59e0b; display:flex; align-items:center; justify-content:center; color:#07111e; font-size:10px; font-weight:bold;">📍</div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
+  reportPickerMap = new maplibregl.Map({
+    container: 'report-picker-map',
+    style: MAPLIBRE_STYLES.dark,
+    center: [initialLng, initialLat],
+    zoom: 12,
+    pitch: 0,
+    attributionControl: false
   });
 
-  reportPickerMarker = L.marker([initialLat, initialLng], {
-    icon: pickerIcon,
-    draggable: true
-  }).addTo(reportPickerMap);
+  reportPickerMap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 
-  // Update on drag
-  reportPickerMarker.on('dragend', (e) => {
-    const pos = e.target.getLatLng();
+  // Draggable Amber Marker
+  const el = document.createElement('div');
+  el.style.cssText = 'width: 22px; height: 22px; background: #f59e0b; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 14px #f59e0b; display:flex; align-items:center; justify-content:center; color:#07111e; font-size:11px; font-weight:bold; cursor:grab;';
+  el.innerHTML = '📍';
+
+  reportPickerMarker = new maplibregl.Marker({
+    element: el,
+    draggable: true
+  })
+    .setLngLat([initialLng, initialLat])
+    .addTo(reportPickerMap);
+
+  // Drag Listener
+  reportPickerMarker.on('dragend', () => {
+    const pos = reportPickerMarker.getLngLat();
     setReportPickerCoords(pos.lat, pos.lng);
   });
 
-  // Update on map click
+  // Click Listener
   reportPickerMap.on('click', (e) => {
-    setReportPickerCoords(e.latlng.lat, e.latlng.lng);
+    setReportPickerCoords(e.lngLat.lat, e.lngLat.lng);
   });
 
   updatePickerCoordsDisplay(initialLat, initialLng);
@@ -908,10 +1012,10 @@ function setReportPickerCoords(lat, lng) {
   if (lngInput) lngInput.value = roundLng;
 
   if (reportPickerMarker) {
-    reportPickerMarker.setLatLng([roundLat, roundLng]);
+    reportPickerMarker.setLngLat([roundLng, roundLat]);
   }
   if (reportPickerMap) {
-    reportPickerMap.panTo([roundLat, roundLng]);
+    reportPickerMap.panTo([roundLng, roundLat]);
   }
 
   updatePickerCoordsDisplay(roundLat, roundLng);

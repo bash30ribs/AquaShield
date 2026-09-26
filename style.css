@@ -577,3 +577,92 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   position: relative;
   margin-top: 6px;
 }
+
+/* ── MapLibre GL Tactical Customization ────────────────────────────── */
+.maplibregl-popup {
+  z-index: 1000 !important;
+}
+.maplibregl-popup-content {
+  background: var(--ds-bg-surface) !important;
+  color: var(--ds-text-primary) !important;
+  border: 1px solid var(--ds-border-default) !important;
+  border-radius: var(--ds-radius-md) !important;
+  padding: 12px 14px !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8) !important;
+  font-family: var(--ds-font-body) !important;
+}
+.maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: var(--ds-bg-surface) !important; }
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--ds-bg-surface) !important; }
+.maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: var(--ds-bg-surface) !important; }
+.maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: var(--ds-bg-surface) !important; }
+.maplibregl-popup-close-button {
+  color: var(--ds-text-muted) !important;
+  padding: 4px 8px !important;
+  font-size: 16px !important;
+  outline: none !important;
+}
+.maplibregl-popup-close-button:hover {
+  color: var(--ds-color-brand) !important;
+  background: transparent !important;
+}
+
+.maplibregl-ctrl-group {
+  background: rgba(7, 17, 30, 0.92) !important;
+  border: 1px solid var(--ds-border-default) !important;
+  border-radius: var(--ds-radius-md) !important;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+}
+.maplibregl-ctrl-group button {
+  border-bottom: 1px solid var(--ds-border-subtle) !important;
+}
+.maplibregl-ctrl-group button:last-child {
+  border-bottom: none !important;
+}
+.maplibregl-ctrl-icon {
+  filter: invert(1) brightness(0.85);
+}
+
+.maplibre-buoy-marker {
+  width: 14px;
+  height: 14px;
+  background: var(--ds-color-brand);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+  cursor: pointer;
+  transition: transform 180ms ease;
+}
+.maplibre-buoy-marker:hover {
+  transform: scale(1.35);
+}
+
+.maplibre-vessel-marker {
+  color: var(--ds-color-brand);
+  font-size: 16px;
+  font-weight: bold;
+  filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.7));
+  cursor: pointer;
+  transition: transform 180ms ease;
+}
+.maplibre-vessel-marker:hover {
+  transform: scale(1.4);
+}
+
+.maplibre-report-marker {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(12, 24, 39, 0.95);
+  border: 2px solid var(--ds-color-brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+  cursor: pointer;
+  transition: transform 180ms ease;
+}
+.maplibre-report-marker:hover {
+  transform: scale(1.25);
+}
