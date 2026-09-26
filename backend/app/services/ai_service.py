@@ -124,7 +124,7 @@ class AIService:
             if any(s in sw_lower for s in suspicious_software):
                 metadata_tamper_flag = True
 
-        # ── 2. 2D Artwork / Anime / Cartoon / Drawing Detection Filter ───────
+        # ── 2. 2D Artwork / Anime / Cartoon / Pixel Art Detection Filter ─────
         rgb_img = image.convert('RGB')
         rgb_arr = np.asarray(rgb_img, dtype=np.float32)
         h, w, _ = rgb_arr.shape
@@ -133,36 +133,40 @@ class AIService:
         small_img = rgb_img.resize((160, 120))
         small_arr = np.asarray(small_img, dtype=np.float32)
         
-        # Metric A: Color Quantization Ratio (Cel-shading & Anime has very few discrete color clusters)
-        quantized = small_img.quantize(colors=32)
+        # Metric A: Color Quantization Ratio (Cel-shading, Pixel Art & Anime has limited distinct color clusters)
+        quantized = small_img.quantize(colors=48)
         quant_arr = np.asarray(quantized)
         unique_colors = len(np.unique(quant_arr))
         
-        # Metric B: Edge-to-Fill Variance (Anime has crisp black/dark outlines with flat solid fills)
+        # Metric B: Edge-to-Fill Variance (Anime & Pixel art has sharp discrete grid/contours with flat fills)
         gray_small = np.asarray(small_img.convert('L'), dtype=np.float32)
         laplacian_small = (
             np.roll(gray_small, 1, axis=0) + np.roll(gray_small, -1, axis=0) +
             np.roll(gray_small, 1, axis=1) + np.roll(gray_small, -1, axis=1) - 4 * gray_small
         )
-        edge_mask = np.abs(laplacian_small) > 35.0
-        fill_mask = np.abs(laplacian_small) < 6.0
-        fill_ratio = float(np.mean(fill_mask))
-        edge_ratio = float(np.mean(edge_mask))
+        fill_ratio = float(np.mean(np.abs(laplacian_small) < 6.0))
+        edge_ratio = float(np.mean(np.abs(laplacian_small) > 28.0))
 
-        # Metric C: Smooth Gradient Flatness (Digital art has large uniform gradient patches with zero photon noise)
+        # Metric C: Smooth Gradient Flatness (Zero camera photon noise)
         patch_var = np.var(small_arr.reshape(-1, 3), axis=1)
-        flat_patch_ratio = float(np.mean(patch_var < 15.0))
+        flat_patch_ratio = float(np.mean(patch_var < 18.0))
+
+        # Metric D: Pixel Art & Grid Stepping Detection (Discrete repeated color step jumps)
+        diff_x = np.abs(np.diff(rgb_arr, axis=1))
+        diff_y = np.abs(np.diff(rgb_arr, axis=0))
+        zero_delta_x = float(np.mean(diff_x < 1.0))
+        zero_delta_y = float(np.mean(diff_y < 1.0))
+        is_pixel_art = (zero_delta_x > 0.40 and zero_delta_y > 0.40 and not has_exif)
 
         is_artwork = False
         art_reason = ""
-        
-        # Artwork & Cartoon Discriminator:
-        # Optical camera sensors have continuous grain (fill_ratio < 0.35).
-        # Anime, cartoons, paintings, and 2D digital art have huge flat fill regions (fill_ratio > 0.50) without sensor noise.
-        if (fill_ratio > 0.45 and not has_exif) or (flat_patch_ratio > 0.25 and not has_exif):
+        if is_pixel_art:
+            is_artwork = True
+            art_reason = "2D Pixel Art / Digital Retro Game Graphics"
+        elif (fill_ratio > 0.42 and not has_exif) or (flat_patch_ratio > 0.22 and not has_exif):
             is_artwork = True
             art_reason = "2D Cel-Shaded Artwork / Digital Illustration"
-        elif unique_colors < 18 and not has_exif:
+        elif unique_colors < 22 and not has_exif:
             is_artwork = True
             art_reason = "Vector / Cartoon Art (Quantized Color Palette)"
 

@@ -1770,10 +1770,17 @@ function executeManualScannerRun() {
   .catch((err) => {
     const elapsed = Math.round(performance.now() - startTime);
     timeTag.textContent = `${elapsed}ms`;
-    statusTag.textContent = 'OPTICAL FORENSIC COMPLETE · 94.8% AUTHENTICITY';
-    statusTag.style.color = 'var(--ds-color-brand)';
-    titleEl.textContent = 'Hydrocarbon Surface Slick & Coastal Debris';
-    descEl.textContent = 'Multi-spectral ELA analysis confirms genuine field capture.';
+    statusTag.textContent = 'SERVER CONNECTION ERROR // SCAN FAILED';
+    statusTag.style.background = 'rgba(239, 68, 68, 0.2)';
+    statusTag.style.color = '#ef4444';
+    statusTag.style.border = '1px solid #ef4444';
+    titleEl.textContent = 'Forensic Backend Unavailable';
+    descEl.innerHTML = `
+      <div style="margin-top: 8px; font-size: 12px; color: #ef4444; line-height: 1.6;">
+        <strong>Error Details:</strong> ${err.message || 'Network request failed'}<br>
+        <span style="color: var(--ds-text-secondary);">Please ensure the AquaShield Python backend is running on port 8000.</span>
+      </div>
+    `;
   })
   .finally(() => {
     if (runBtn) {
