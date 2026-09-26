@@ -1119,23 +1119,63 @@
         <div class="aq-hud-panel" id="panel-map">
           <div style="position: relative; width: 100%; height: 100%;">
             <div id="tactical-map-container"></div>
-            <div style="position: absolute; top: 16px; left: 16px; z-index: 400; background: rgba(7,17,30,0.92); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-lg); padding: 12px 18px; backdrop-filter: blur(10px);">
-              <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); font-weight: bold; margin-bottom: 4px;">TACTICAL RADAR GIS LAYER</div>
-              <div style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">Showing 21 Buoys · Active Eyewitness Reports · AIS Vessels</div>
+
+            <!-- Top Left: Global Search & Telemetry Bar -->
+            <div class="aq-map-control-bar">
+              <div class="aq-map-search-box">
+                <span style="font-size: 14px; margin-right: 8px; color: var(--ds-color-brand);">🔍</span>
+                <input type="text" id="global-map-search" class="aq-map-search-input" placeholder="Search any city, coastal sector, port, or coordinates worldwide..." oninput="handleMapSearch(this.value)" autocomplete="off">
+                <div class="aq-search-results-dropdown" id="map-search-results"></div>
+              </div>
+
+              <!-- Quick Sector Jumps -->
+              <div class="aq-sector-pills-bar">
+                <button class="aq-type-pill selected" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('world', this)">🌐 Global View</button>
+                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('mumbai', this)">🇮🇳 Mumbai / Arabian Sea</button>
+                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('bengal', this)">🌊 Bay of Bengal</button>
+                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('florida', this)">🇺🇸 Florida / Caribbean</button>
+                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('singapore', this)">🏝️ Malacca Strait</button>
+                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('mediterranean', this)">🇪🇺 Mediterranean</button>
+                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('tokyo', this)">🗾 Tokyo Bay</button>
+              </div>
             </div>
-            <div style="position: absolute; bottom: 20px; right: 20px; z-index: 400; display: flex; gap: 10px;">
-              <button class="aq-btn-primary" style="font-size: var(--ds-text-xs); padding: 8px 14px; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 6px; font-weight: bold;" onclick="resetMapView()">
-                Recenter Sector View
+
+            <!-- Top Right: Global Map Layer Switcher -->
+            <div class="aq-map-layer-dock">
+              <button class="aq-map-layer-btn active" id="layer-btn-dark" onclick="switchMapBaseLayer('dark')">
+                🌙 Tactical Dark
               </button>
-              <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 8px 14px; border: 1px solid var(--ds-border-default); border-radius: 6px; color: var(--ds-text-primary);" onclick="openReportModal()">
-                + Pin New Report
+              <button class="aq-map-layer-btn" id="layer-btn-sat" onclick="switchMapBaseLayer('satellite')">
+                🛰️ Satellite
+              </button>
+              <button class="aq-map-layer-btn" id="layer-btn-nautical" onclick="switchMapBaseLayer('nautical')">
+                ⚓ Nautical Bathymetry
+              </button>
+              <button class="aq-map-layer-btn" id="layer-btn-street" onclick="switchMapBaseLayer('street')">
+                🗺️ Daylight
+              </button>
+            </div>
+
+            <!-- Bottom Left: Live Cursor Coordinates Telemetry HUD -->
+            <div class="aq-coords-hud" id="map-coords-hud">
+              CURSOR TELEMETRY // LAT: 18.9600° N | LON: 72.8200° E | ELEV: SEA LEVEL
+            </div>
+
+            <!-- Bottom Right: Action Controls -->
+            <div style="position: absolute; bottom: 20px; right: 20px; z-index: 500; display: flex; gap: 10px;">
+              <button class="aq-btn-primary" style="font-size: var(--ds-text-xs); padding: 8px 14px; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 6px; font-weight: bold;" onclick="resetMapView()">
+                Recenter Sector
+              </button>
+              <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 8px 14px; border: 1px solid var(--ds-border-brand); background: rgba(245,158,11,0.1); border-radius: 6px; color: var(--ds-color-brand-light);" onclick="openReportModal()">
+                + Pin Incident Anywhere
               </button>
               <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 8px 14px; border: 1px solid var(--ds-border-default); border-radius: 6px; color: var(--ds-text-primary);" onclick="simulateEmergencyMarker()">
-                Simulate Vessel Distress
+                Simulate Distress SOS
               </button>
             </div>
           </div>
         </div>
+
 
         <!-- 3. Field Reports Management Panel -->
         <div class="aq-hud-panel" id="panel-reports">
@@ -1393,27 +1433,37 @@
           <input type="text" id="report-form-title" name="title" class="aq-form-input" placeholder="e.g. Sea wall breach near Bandra Bandstand promenade" required>
         </div>
 
-        <!-- Geolocation & Address -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="aq-form-group">
-            <label class="aq-form-label" for="report-form-lat">Latitude</label>
-            <input type="number" step="any" id="report-form-lat" name="latitude" class="aq-form-input" value="19.054" required>
+        <!-- Precision Global Map Location Picker -->
+        <div class="aq-form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+            <label class="aq-form-label">Incident Geolocation (Click anywhere on map to pin)</label>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="aq-btn-ghost" style="padding: 2px 8px; font-size: 0.68rem; color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); border-radius: 4px;" onclick="autoDetectLocation()">
+                📍 Auto-Detect GPS
+              </button>
+            </div>
           </div>
-          <div class="aq-form-group">
-            <label class="aq-form-label" for="report-form-lng">Longitude</label>
-            <input type="number" step="any" id="report-form-lng" name="longitude" class="aq-form-input" value="72.822" required>
+
+          <!-- Interactive Mini Map -->
+          <div id="report-picker-map"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+            <span style="font-size: 0.65rem; color: var(--ds-text-muted); font-family: var(--ds-font-mono);">
+              TIP: Click on any coast or ocean worldwide to drop pin
+            </span>
+            <span id="picker-coords-text" style="font-size: 0.68rem; color: var(--ds-color-brand-light); font-family: var(--ds-font-mono); font-weight: bold;">
+              LAT: 19.0540° N | LON: 72.8220° E
+            </span>
           </div>
+
+          <input type="hidden" id="report-form-lat" name="latitude" value="19.054">
+          <input type="hidden" id="report-form-lng" name="longitude" value="72.822">
         </div>
 
         <div class="aq-form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label class="aq-form-label" for="report-form-address">Landmark / Sector Address *</label>
-            <button type="button" class="aq-btn-ghost" style="padding: 2px 8px; font-size: 0.68rem; color: var(--ds-color-brand);" onclick="autoDetectLocation()">
-              📍 Detect My GPS Coordinates
-            </button>
-          </div>
+          <label class="aq-form-label" for="report-form-address">Landmark / Sector Address *</label>
           <input type="text" id="report-form-address" name="address" class="aq-form-input" placeholder="e.g. Bandra Promenade, Sector 4, Mumbai" required>
         </div>
+
 
         <!-- Urgency Level Slider -->
         <div class="aq-form-group">

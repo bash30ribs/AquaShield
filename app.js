@@ -1,6 +1,6 @@
 /**
  * AquaShield Sentinel — Platform & Tactical HUD Controller
- * Supports Professional Website Frontend, User Authentication, and Live Field Report Submissions
+ * Global Production Map Engine, Precision Geocoding, User Auth & Field Incident Submissions
  */
 
 // ── State & Configuration ────────────────────────────────────────────────
@@ -11,10 +11,20 @@ let reportMarkers = [];
 let allReportsData = [];
 let activeReportFilter = 'all';
 
+// Active Base Map Layer Tracker
+let currentBaseLayerName = 'dark';
+let activeBaseLayer = null;
+let nauticalOverlayLayer = null;
+
+// Modal Mini Location Picker Map State
+let reportPickerMap = null;
+let reportPickerMarker = null;
+let pickerMapInitialized = false;
+
 // Active User State (Persisted in localStorage)
 let currentUser = null;
 
-// Buoy Telemetry Data
+// Global Buoy Telemetry Network
 const BUOYS_DATA = [
   { id: 'B-01', name: 'Colaba Point', lat: 18.898, lng: 72.812, wave: '1.2 m', temp: '28.4°C', status: 'nominal' },
   { id: 'B-02', name: 'Prongs Reef', lat: 18.882, lng: 72.801, wave: '1.4 m', temp: '28.2°C', status: 'nominal' },
@@ -22,6 +32,24 @@ const BUOYS_DATA = [
   { id: 'B-04', name: 'Back Bay Shoal', lat: 18.922, lng: 72.815, wave: '1.2 m', temp: '28.3°C', status: 'nominal' },
   { id: 'B-07', name: 'Bandra Deep', lat: 19.045, lng: 72.788, wave: '1.8 m', temp: '27.9°C', status: 'nominal' },
   { id: 'B-12', name: 'Offshore Trench', lat: 18.985, lng: 72.720, wave: '3.4 m', temp: '26.8°C', status: 'warning' },
+  { id: 'B-18', name: 'Bay of Bengal Deep', lat: 13.0827, lng: 80.2707, wave: '2.1 m', temp: '29.1°C', status: 'nominal' },
+  { id: 'B-24', name: 'Malacca Strait Gate', lat: 1.29027, lng: 103.851959, wave: '0.9 m', temp: '29.8°C', status: 'nominal' },
+  { id: 'B-31', name: 'Miami Coastal Ridge', lat: 25.7617, lng: -80.1918, wave: '1.6 m', temp: '27.2°C', status: 'nominal' },
+  { id: 'B-40', name: 'Gibraltar Channel', lat: 36.1408, lng: -5.3536, wave: '2.4 m', temp: '19.8°C', status: 'nominal' }
+];
+
+// Pre-cached Global Maritime Hotspots
+const GLOBAL_HOTSPOTS = [
+  { name: "Mumbai & Arabian Sea, India", lat: 18.96, lon: 72.82, zoom: 11 },
+  { name: "Bay of Bengal & Chennai, India", lat: 13.08, lon: 80.27, zoom: 11 },
+  { name: "Strait of Malacca & Singapore", lat: 1.29, lon: 103.85, zoom: 11 },
+  { name: "Florida Coast & Gulf of Mexico, USA", lat: 25.76, lon: -80.19, zoom: 10 },
+  { name: "Suez Canal & Red Sea Entrance, Egypt", lat: 29.97, lon: 32.55, zoom: 11 },
+  { name: "Strait of Gibraltar, Mediterranean", lat: 36.14, lon: -5.35, zoom: 11 },
+  { name: "Tokyo Bay & Pacific Coast, Japan", lat: 35.68, lon: 139.76, zoom: 11 },
+  { name: "Sydney Harbour & Coral Sea, Australia", lat: -33.86, lon: 151.20, zoom: 11 },
+  { name: "English Channel & Dover Strait, UK", lat: 51.12, lon: 1.31, zoom: 11 },
+  { name: "Panama Canal & Pacific Gate", lat: 8.98, lon: -79.52, zoom: 11 }
 ];
 
 // ── DOM Initialization ───────────────────────────────────────────────────
@@ -157,25 +185,75 @@ function switchHudTab(tabName) {
   }
 }
 
-// ── Leaflet Tactical Map ─────────────────────────────────────────────────
+// ── Global Leaflet Tactical Map Engine ────────────────────────────────────
+const GLOBAL_MAP_LAYERS = {
+  dark: {
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    options: { maxZoom: 19, subdomains: 'abcd', attribution: '© OpenStreetMap, © CARTO' }
+  },
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    options: { maxZoom: 19, attribution: 'Tiles © Esri, Earthstar Geographics' }
+  },
+  nautical: {
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    options: { maxZoom: 19, subdomains: 'abcd', attribution: '© OpenStreetMap, © OpenSeaMap' }
+  },
+  street: {
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    options: { maxZoom: 19, subdomains: 'abcd', attribution: '© OpenStreetMap, © CARTO' }
+  }
+};
+
 function initTacticalMap() {
   if (mapInitialized) return;
   const container = document.getElementById('tactical-map-container');
   if (!container) return;
 
+  // Initialize Map on Global Centered View with smooth pan
   tacticalMap = L.map('tactical-map-container', {
     zoomControl: false,
-    attributionControl: false
+    attributionControl: false,
+    worldCopyJump: true
   }).setView([18.96, 72.82], 11);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    subdomains: 'abcd',
-  }).addTo(tacticalMap);
+  // Set default Tactical Dark Base Layer
+  activeBaseLayer = L.tileLayer(GLOBAL_MAP_LAYERS.dark.url, GLOBAL_MAP_LAYERS.dark.options).addTo(tacticalMap);
 
   L.control.zoom({ position: 'topright' }).addTo(tacticalMap);
 
-  // Buoy Icons
+  // Coordinates Telemetry on Mouse Move
+  tacticalMap.on('mousemove', (e) => {
+    const hud = document.getElementById('map-coords-hud');
+    if (hud) {
+      const lat = e.latlng.lat.toFixed(4);
+      const lng = e.latlng.lng.toFixed(4);
+      const latCard = lat >= 0 ? `${lat}° N` : `${Math.abs(lat)}° S`;
+      const lngCard = lng >= 0 ? `${lng}° E` : `${Math.abs(lng)}° W`;
+      hud.textContent = `CURSOR TELEMETRY // LAT: ${latCard} | LON: ${lngCard} | ZOOM: ${tacticalMap.getZoom()}`;
+    }
+  });
+
+  // Map Click to drop incident marker directly
+  tacticalMap.on('click', (e) => {
+    const lat = parseFloat(e.latlng.lat.toFixed(4));
+    const lng = parseFloat(e.latlng.lng.toFixed(4));
+
+    L.popup()
+      .setLatLng(e.latlng)
+      .setContent(`
+        <div style="background:#07111e; color:#f1f5f9; padding:8px;">
+          <div style="font-size:10px; font-family:var(--ds-font-mono); color:#f59e0b; font-weight:bold;">SELECTED COORDINATES</div>
+          <div style="font-size:12px; margin:4px 0; color:#f1f5f9;">${lat}° N, ${lng}° E</div>
+          <button class="aq-btn-primary" style="padding:4px 10px; font-size:11px; background:#f59e0b; color:#07111e; font-weight:bold; border-radius:4px; width:100%; margin-top:4px;" onclick="openReportModalWithCoords(${lat}, ${lng})">
+            + Log Incident at This Location
+          </button>
+        </div>
+      `)
+      .openOn(tacticalMap);
+  });
+
+  // Plot Global Buoys
   const buoyIcon = L.divIcon({
     className: 'custom-buoy-icon',
     html: `<div style="width: 14px; height: 14px; background: #f59e0b; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);"></div>`,
@@ -223,9 +301,145 @@ function initTacticalMap() {
   plotReportsOnMap(allReportsData);
 }
 
+function switchMapBaseLayer(layerName) {
+  if (!tacticalMap || !GLOBAL_MAP_LAYERS[layerName]) return;
+
+  currentBaseLayerName = layerName;
+
+  // Remove existing base layer
+  if (activeBaseLayer) {
+    tacticalMap.removeLayer(activeBaseLayer);
+  }
+  if (nauticalOverlayLayer) {
+    tacticalMap.removeLayer(nauticalOverlayLayer);
+    nauticalOverlayLayer = null;
+  }
+
+  // Add new layer
+  const config = GLOBAL_MAP_LAYERS[layerName];
+  activeBaseLayer = L.tileLayer(config.url, config.options).addTo(tacticalMap);
+
+  // If Nautical, add OpenSeaMap overlay
+  if (layerName === 'nautical') {
+    nauticalOverlayLayer = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: 'Map data © OpenSeaMap contributors'
+    }).addTo(tacticalMap);
+  }
+
+  // Update UI dock buttons
+  document.querySelectorAll('.aq-map-layer-btn').forEach(btn => btn.classList.remove('active'));
+  const activeBtn = document.getElementById(`layer-btn-${layerName}`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  showToast('🗺️ Map Layer Changed', `Switched view to ${layerName.toUpperCase()} layer.`, 'info');
+}
+
+let searchDebounceTimer = null;
+function handleMapSearch(query) {
+  clearTimeout(searchDebounceTimer);
+  const resultsContainer = document.getElementById('map-search-results');
+  if (!resultsContainer) return;
+
+  const q = query.trim().toLowerCase();
+  if (q.length < 2) {
+    resultsContainer.style.display = 'none';
+    return;
+  }
+
+  // 1. Instant match against curated global maritime hotspots
+  const localMatches = GLOBAL_HOTSPOTS.filter(h => h.name.toLowerCase().includes(q));
+  
+  // Render local matches immediately
+  renderSearchResults(localMatches, resultsContainer);
+
+  // 2. Query OpenStreetMap Nominatim for full worldwide coverage
+  searchDebounceTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`);
+      if (res.ok) {
+        const osmData = await res.json();
+        const osmMatches = osmData.map(item => ({
+          name: item.display_name,
+          lat: parseFloat(item.lat),
+          lon: parseFloat(item.lon),
+          zoom: 12
+        }));
+
+        const combined = [...localMatches, ...osmMatches].slice(0, 7);
+        renderSearchResults(combined, resultsContainer);
+      }
+    } catch (e) {
+      // Fallback gracefully on local matches
+    }
+  }, 350);
+}
+
+function renderSearchResults(results, container) {
+  if (results.length === 0) {
+    container.innerHTML = `<div style="padding:8px 12px; font-size:11px; color:#94a3b8;">No global location found.</div>`;
+    container.style.display = 'flex';
+    return;
+  }
+
+  container.innerHTML = results.map(r => `
+    <div class="aq-search-result-item" onclick="selectSearchResult(${r.lat}, ${r.lon}, '${escape(r.name)}', ${r.zoom || 12})">
+      <strong style="color:#f1f5f9; font-size:12px;">📍 ${r.name.split(',')[0]}</strong>
+      <span style="color:#94a3b8; font-size:10px;">${r.name.split(',').slice(1, 4).join(',')} (${r.lat.toFixed(2)}°, ${r.lon.toFixed(2)}°)</span>
+    </div>
+  `).join('');
+  container.style.display = 'flex';
+}
+
+function selectSearchResult(lat, lon, escapedName, zoom = 12) {
+  const name = unescape(escapedName);
+  const dropdown = document.getElementById('map-search-results');
+  const searchInput = document.getElementById('global-map-search');
+  if (dropdown) dropdown.style.display = 'none';
+  if (searchInput) searchInput.value = name.split(',')[0];
+
+  if (tacticalMap) {
+    tacticalMap.flyTo([lat, lon], zoom, { duration: 1.5 });
+    
+    L.popup()
+      .setLatLng([lat, lon])
+      .setContent(`
+        <div style="background:#07111e; color:#f1f5f9; padding:8px;">
+          <div style="font-size:10px; font-family:var(--ds-font-mono); color:#f59e0b; font-weight:bold;">SEARCHED LOCATION</div>
+          <strong style="font-size:13px; color:#f1f5f9;">${name.split(',')[0]}</strong>
+          <div style="font-size:11px; color:#94a3b8; margin:4px 0;">${name.slice(0, 90)}</div>
+          <button class="aq-btn-primary" style="padding:4px 10px; font-size:11px; background:#f59e0b; color:#07111e; font-weight:bold; border-radius:4px; width:100%;" onclick="openReportModalWithCoords(${lat}, ${lon}, '${escape(name.split(',')[0])}')">
+            + Pin Incident Here
+          </button>
+        </div>
+      `)
+      .openOn(tacticalMap);
+  }
+}
+
+function jumpMapSector(sector, btn) {
+  document.querySelectorAll('.aq-sector-pills-bar .aq-type-pill').forEach(b => b.classList.remove('selected'));
+  if (btn) btn.classList.add('selected');
+
+  if (!tacticalMap) return;
+
+  const sectors = {
+    world: { lat: 20, lng: 0, zoom: 2 },
+    mumbai: { lat: 18.96, lng: 72.82, zoom: 11 },
+    bengal: { lat: 13.08, lng: 80.27, zoom: 10 },
+    florida: { lat: 25.76, lng: -80.19, zoom: 10 },
+    singapore: { lat: 1.29, lng: 103.85, zoom: 11 },
+    mediterranean: { lat: 36.14, lng: -5.35, zoom: 9 },
+    tokyo: { lat: 35.68, lng: 139.76, zoom: 11 }
+  };
+
+  const target = sectors[sector] || sectors.mumbai;
+  tacticalMap.flyTo([target.lat, target.lng], target.zoom, { duration: 1.2 });
+}
+
 function resetMapView() {
   if (tacticalMap) {
-    tacticalMap.setView([18.96, 72.82], 11);
+    tacticalMap.flyTo([18.96, 72.82], 11, { duration: 1 });
   }
 }
 
@@ -233,7 +447,7 @@ function focusBuoyOnMap(lat, lng, id) {
   openCommandCenter('map');
   setTimeout(() => {
     if (tacticalMap) {
-      tacticalMap.setView([lat, lng], 13);
+      tacticalMap.flyTo([lat, lng], 13, { duration: 1 });
     }
   }, 200);
 }
@@ -242,7 +456,7 @@ function focusReportOnMap(lat, lng, id) {
   openCommandCenter('map');
   setTimeout(() => {
     if (tacticalMap) {
-      tacticalMap.setView([lat, lng], 14);
+      tacticalMap.flyTo([lat, lng], 14, { duration: 1 });
       const markerObj = reportMarkers.find(m => m.id === id);
       if (markerObj) markerObj.marker.openPopup();
     }
@@ -319,6 +533,107 @@ function plotReportsOnMap(reports) {
   });
 }
 
+// ── Interactive Precision Location Picker Modal Map ───────────────────────
+function initReportPickerMap(initialLat = 19.054, initialLng = 72.822) {
+  const container = document.getElementById('report-picker-map');
+  if (!container) return;
+
+  if (reportPickerMap) {
+    reportPickerMap.invalidateSize();
+    reportPickerMap.setView([initialLat, initialLng], 12);
+    if (reportPickerMarker) {
+      reportPickerMarker.setLatLng([initialLat, initialLng]);
+    }
+    updatePickerCoordsDisplay(initialLat, initialLng);
+    return;
+  }
+
+  reportPickerMap = L.map('report-picker-map', {
+    zoomControl: true,
+    attributionControl: false,
+    worldCopyJump: true
+  }).setView([initialLat, initialLng], 12);
+
+  // Use crisp Dark Matter for mini picker
+  L.tileLayer(GLOBAL_MAP_LAYERS.dark.url, GLOBAL_MAP_LAYERS.dark.options).addTo(reportPickerMap);
+
+  const pickerIcon = L.divIcon({
+    className: 'picker-pin-icon',
+    html: `<div style="width: 20px; height: 20px; background: #f59e0b; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 14px #f59e0b; display:flex; align-items:center; justify-content:center; color:#07111e; font-size:10px; font-weight:bold;">📍</div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+
+  reportPickerMarker = L.marker([initialLat, initialLng], {
+    icon: pickerIcon,
+    draggable: true
+  }).addTo(reportPickerMap);
+
+  // Update on drag
+  reportPickerMarker.on('dragend', (e) => {
+    const pos = e.target.getLatLng();
+    setReportPickerCoords(pos.lat, pos.lng);
+  });
+
+  // Update on map click
+  reportPickerMap.on('click', (e) => {
+    setReportPickerCoords(e.latlng.lat, e.latlng.lng);
+  });
+
+  updatePickerCoordsDisplay(initialLat, initialLng);
+  pickerMapInitialized = true;
+}
+
+function setReportPickerCoords(lat, lng) {
+  const roundLat = parseFloat(lat.toFixed(6));
+  const roundLng = parseFloat(lng.toFixed(6));
+
+  const latInput = document.getElementById('report-form-lat');
+  const lngInput = document.getElementById('report-form-lng');
+  if (latInput) latInput.value = roundLat;
+  if (lngInput) lngInput.value = roundLng;
+
+  if (reportPickerMarker) {
+    reportPickerMarker.setLatLng([roundLat, roundLng]);
+  }
+  if (reportPickerMap) {
+    reportPickerMap.panTo([roundLat, roundLng]);
+  }
+
+  updatePickerCoordsDisplay(roundLat, roundLng);
+  fetchReverseGeocode(roundLat, roundLng);
+}
+
+function updatePickerCoordsDisplay(lat, lng) {
+  const textEl = document.getElementById('picker-coords-text');
+  if (textEl) {
+    const latCard = lat >= 0 ? `${lat.toFixed(4)}° N` : `${Math.abs(lat).toFixed(4)}° S`;
+    const lngCard = lng >= 0 ? `${lng.toFixed(4)}° E` : `${Math.abs(lng).toFixed(4)}° W`;
+    textEl.textContent = `LAT: ${latCard} | LON: ${lngCard}`;
+  }
+}
+
+async function fetchReverseGeocode(lat, lng) {
+  const addrInput = document.getElementById('report-form-address');
+  if (!addrInput) return;
+
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.display_name) {
+        const parts = data.display_name.split(',');
+        addrInput.value = parts.slice(0, 4).join(',').trim();
+      }
+    }
+  } catch (err) {
+    // Graceful offline fallback
+    if (!addrInput.value) {
+      addrInput.value = `Sector (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
+    }
+  }
+}
+
 // ── User Authentication & Profile System ──────────────────────────────────
 function initAuthSession() {
   const savedUser = localStorage.getItem('aquashield_user');
@@ -329,7 +644,6 @@ function initAuthSession() {
       currentUser = null;
     }
   } else {
-    // Default demo scout if first time
     currentUser = {
       id: "demo-user-1",
       badge_id: "SENTINEL-7049",
@@ -349,14 +663,6 @@ function renderUserNav() {
   if (!container) return;
 
   if (currentUser) {
-    const roleBadges = {
-      authority: "🛡️ COMMANDER",
-      ngo: "🐢 BIOLOGIST",
-      rescue_team: "🚨 NDMA LEAD",
-      citizen: "🌊 SCOUT"
-    };
-    const badgeLabel = roleBadges[currentUser.role] || "SCOUT";
-
     container.innerHTML = `
       <div style="display: flex; align-items: center; gap: 8px; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-brand); border-radius: var(--ds-radius-full); padding: 3px 12px; cursor: pointer;" onclick="openAuthModal()">
         <span class="aq-user-badge" style="font-size: 0.65rem; padding: 2px 6px; background: rgba(245,158,11,0.2);">${currentUser.badge_id || 'ID'}</span>
@@ -520,14 +826,6 @@ async function instantDemoLogin(identifier, password) {
   }
 }
 
-function handleLogout() {
-  localStorage.removeItem('aquashield_user');
-  currentUser = null;
-  renderUserNav();
-  updateReportModalReporterInfo();
-  showToast('Logged Out', 'User session cleared.', 'info');
-}
-
 // ── Community Field Report Submission ─────────────────────────────────────
 function openReportModal() {
   const modal = document.getElementById('report-modal');
@@ -535,7 +833,25 @@ function openReportModal() {
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
     updateReportModalReporterInfo();
+
+    const latVal = parseFloat(document.getElementById('report-form-lat')?.value) || 19.054;
+    const lngVal = parseFloat(document.getElementById('report-form-lng')?.value) || 72.822;
+
+    setTimeout(() => {
+      initReportPickerMap(latVal, lngVal);
+    }, 180);
   }
+}
+
+function openReportModalWithCoords(lat, lng, addressName = '') {
+  openReportModal();
+  setTimeout(() => {
+    setReportPickerCoords(lat, lng);
+    if (addressName) {
+      const addrInput = document.getElementById('report-form-address');
+      if (addrInput) addrInput.value = addressName;
+    }
+  }, 220);
 }
 
 function closeReportModal() {
@@ -570,21 +886,13 @@ function updateUrgencyLabel(val) {
 }
 
 function autoDetectLocation() {
-  const latInput = document.getElementById('report-form-lat');
-  const lngInput = document.getElementById('report-form-lng');
-  const addrInput = document.getElementById('report-form-address');
-
   if ('geolocation' in navigator) {
     showToast('📍 Detecting GPS', 'Querying browser geolocation sensor...', 'info');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const lat = parseFloat(pos.coords.latitude.toFixed(4));
-        const lng = parseFloat(pos.coords.longitude.toFixed(4));
-        if (latInput) latInput.value = lat;
-        if (lngInput) lngInput.value = lng;
-        if (addrInput && !addrInput.value) {
-          addrInput.value = `Sector (${lat} N, ${lng} E)`;
-        }
+        const lat = parseFloat(pos.coords.latitude.toFixed(6));
+        const lng = parseFloat(pos.coords.longitude.toFixed(6));
+        setReportPickerCoords(lat, lng);
         showToast('✓ GPS Location Locked', `Coordinates: ${lat}, ${lng}`, 'success');
       },
       (err) => {
@@ -593,7 +901,7 @@ function autoDetectLocation() {
       { timeout: 5000 }
     );
   } else {
-    showToast('GPS Sensor', 'Geolocation unavailable, please specify manually.', 'warning');
+    showToast('GPS Sensor', 'Geolocation unavailable, please click on map.', 'warning');
   }
 }
 
@@ -658,15 +966,15 @@ async function handleReportSubmit(e) {
           AI Spectral Confidence: ${rep.ai_confidence}% · Status: ${rep.status.toUpperCase()}
         </span><br>
         <span style="font-size: 11px; color: var(--ds-text-secondary);">
-          Eyewitness incident successfully broadcast to coastal radar and rescue teams.
+          Eyewitness incident successfully broadcast to global radar and rescue dispatch.
         </span>
       `;
       resultBox.style.display = 'block';
     }
 
-    showToast('🚨 Incident Report Broadcasted', `Report ${rep.id} verified and added to Tactical Radar`, 'success');
+    showToast('🚨 Incident Report Broadcasted', `Report ${rep.id} verified and added to Global Tactical Map`, 'success');
 
-    // Reload reports and close modal after brief confirmation
+    // Reload reports and close modal
     loadReports();
     setTimeout(() => {
       closeReportModal();
@@ -696,7 +1004,6 @@ async function loadReports() {
     renderLandingFieldReports(allReportsData);
     plotReportsOnMap(allReportsData);
   } catch (err) {
-    // Fallback data if offline
     if (allReportsData.length === 0) {
       allReportsData = [
         {
