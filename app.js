@@ -253,6 +253,12 @@ function initHomepageMap() {
   const container = document.getElementById('homepage-map-container');
   if (!container) return;
 
+  if (typeof L === 'undefined') {
+    console.warn('[AquaShield Map] Leaflet library still loading, retrying in 150ms...');
+    setTimeout(initHomepageMap, 150);
+    return;
+  }
+
   // Initialize Map Centered on Mumbai Coastal Defense Sector (18.96, 72.82)
   homepageTacticalMap = L.map('homepage-map-container', {
     zoomControl: true,

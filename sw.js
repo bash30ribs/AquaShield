@@ -3,7 +3,7 @@
    Always fetches fresh assets when online, falls back to cache when offline
    ============================================================ */
 
-const CACHE_NAME = 'aquashield-v2.0-tactical';
+const CACHE_NAME = 'aquashield-v4.5-gis';
 const OFFLINE_ASSETS = [
   '/',
   '/index.html',
