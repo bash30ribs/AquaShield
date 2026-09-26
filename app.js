@@ -11,6 +11,13 @@ let reportMarkers = [];
 let allReportsData = [];
 let activeReportFilter = 'all';
 
+// Homepage Live Map State
+let homepageTacticalMap = null;
+let homepageMapInitialized = false;
+let homepageActiveBaseLayer = null;
+let homepageNauticalOverlay = null;
+let homepageReportMarkers = [];
+
 // Active Base Map Layer Tracker
 let currentBaseLayerName = 'dark';
 let activeBaseLayer = null;
@@ -60,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initClock();
   initScannerDropzone();
   initAuthSession();
+  initHomepageMap();
   loadReports();
 });
 
@@ -205,24 +213,253 @@ const GLOBAL_MAP_LAYERS = {
   }
 };
 
+// ── Homepage Interactive Tactical Map Engine ──────────────────────────
+function initHomepageMap() {
+  if (homepageMapInitialized) return;
+  const container = document.getElementById('homepage-map-container');
+  if (!container) return;
+
+  // Initialize Map Centered on Mumbai Coastal Defense Sector (18.96, 72.82)
+  homepageTacticalMap = L.map('homepage-map-container', {
+    zoomControl: true,
+    attributionControl: false,
+    worldCopyJump: true
+  }).setView([18.96, 72.82], 11);
+
+  // Set default Tactical Dark Base Layer
+  homepageActiveBaseLayer = L.tileLayer(GLOBAL_MAP_LAYERS.dark.url, GLOBAL_MAP_LAYERS.dark.options).addTo(homepageTacticalMap);
+
+  // Coordinates Telemetry on Mouse Move
+  homepageTacticalMap.on('mousemove', (e) => {
+    const hud = document.getElementById('homepage-map-coords-hud');
+    if (hud) {
+      const lat = e.latlng.lat.toFixed(4);
+      const lng = e.latlng.lng.toFixed(4);
+      const latCard = lat >= 0 ? `${lat}° N` : `${Math.abs(lat)}° S`;
+      const lngCard = lng >= 0 ? `${lng}° E` : `${Math.abs(lng)}° W`;
+      hud.textContent = `CURSOR TELEMETRY // LAT: ${latCard} | LON: ${lngCard} | ZOOM: ${homepageTacticalMap.getZoom()}`;
+    }
+  });
+
+  // Map Click to drop incident pin
+  homepageTacticalMap.on('click', (e) => {
+    const lat = parseFloat(e.latlng.lat.toFixed(4));
+    const lng = parseFloat(e.latlng.lng.toFixed(4));
+
+    L.popup()
+      .setLatLng(e.latlng)
+      .setContent(`
+        <div style="background:#07111e; color:#f1f5f9; padding:10px; min-width:200px; border-radius:6px; border:1px solid rgba(245,158,11,0.4);">
+          <div style="font-size:10px; font-family:var(--ds-font-mono); color:#f59e0b; font-weight:bold; letter-spacing:0.06em;">SELECTED PIN POINT</div>
+          <div style="font-size:13px; font-weight:600; margin:4px 0; color:#f1f5f9;">${lat}° N, ${lng}° E</div>
+          <p style="font-size:11px; color:#94a3b8; margin-bottom:8px;">Drop an emergency report at this exact geolocation.</p>
+          <button class="aq-btn-primary" style="padding:6px 12px; font-size:11px; background:#f59e0b; color:#07111e; font-weight:bold; border-radius:4px; width:100%; border:none; cursor:pointer;" onclick="openReportModalWithCoords(${lat}, ${lng})">
+            + Log Incident at This Pin ↗
+          </button>
+        </div>
+      `)
+      .openOn(homepageTacticalMap);
+  });
+
+  // Plot Global Buoys on Homepage Map
+  const buoyIcon = L.divIcon({
+    className: 'custom-buoy-icon',
+    html: `<div style="width: 14px; height: 14px; background: #f59e0b; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);"></div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+  });
+
+  BUOYS_DATA.forEach(b => {
+    const marker = L.marker([b.lat, b.lng], { icon: buoyIcon }).addTo(homepageTacticalMap);
+    marker.bindPopup(`
+      <div style="font-family: var(--ds-font-body); padding: 6px; background: #07111e; color: #f1f5f9; border-radius: 4px; border: 1px solid rgba(245,158,11,0.3);">
+        <strong style="color: #f59e0b; font-size: 13px;">${b.id} — ${b.name}</strong><br>
+        <span style="font-size: 11px; color: #94a3b8;">Status: ${b.status.toUpperCase()}</span><br>
+        <span style="font-size: 12px; font-weight: bold; color: #f1f5f9;">Wave Height: ${b.wave}</span><br>
+        <span style="font-size: 11px; color: #94a3b8;">Surface Temp: ${b.temp}</span>
+      </div>
+    `);
+  });
+
+  // Coastal Flood Hazard Zone Polygon
+  L.circle([18.91, 72.81], {
+    color: '#f59e0b',
+    fillColor: '#f59e0b',
+    fillOpacity: 0.16,
+    radius: 3200,
+    weight: 1.5,
+    dashArray: '4, 4'
+  }).addTo(homepageTacticalMap).bindPopup('<div style="background:#07111e;color:#f1f5f9;padding:4px;"><strong style="color:#f59e0b;">Warning Sector 1:</strong> Storm Surge Inundation Watch</div>');
+
+  // Vessel AIS Tracks
+  const vesselIcon = L.divIcon({
+    className: 'custom-vessel-icon',
+    html: `<div style="color: #f59e0b; font-size: 16px; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6)); font-weight: bold;">▲</div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+  });
+
+  L.marker([18.99, 72.86], { icon: vesselIcon }).addTo(homepageTacticalMap)
+    .bindPopup('<div style="background:#07111e;color:#f1f5f9;padding:4px;"><strong style="color:#f59e0b;">ICGS Varuna (Coast Guard)</strong><br><span style="color:#94a3b8;font-size:11px;">Speed: 18.4 kt · Heading: 240° SW</span></div>');
+
+  L.marker([18.93, 72.74], { icon: vesselIcon }).addTo(homepageTacticalMap)
+    .bindPopup('<div style="background:#07111e;color:#f1f5f9;padding:4px;"><strong style="color:#f1f5f9;">M/V Pacific (Merchant Cargo)</strong><br><span style="color:#94a3b8;font-size:11px;">Speed: 12.1 kt · Heading: 180° S</span></div>');
+
+  homepageMapInitialized = true;
+  plotReportsOnMap(allReportsData);
+
+  // Invalidate size after layout settles
+  setTimeout(() => {
+    if (homepageTacticalMap) homepageTacticalMap.invalidateSize();
+  }, 300);
+}
+
+function switchHomepageBaseLayer(layerName) {
+  if (!homepageTacticalMap || !GLOBAL_MAP_LAYERS[layerName]) return;
+
+  if (homepageActiveBaseLayer) {
+    homepageTacticalMap.removeLayer(homepageActiveBaseLayer);
+  }
+  if (homepageNauticalOverlay) {
+    homepageTacticalMap.removeLayer(homepageNauticalOverlay);
+    homepageNauticalOverlay = null;
+  }
+
+  const config = GLOBAL_MAP_LAYERS[layerName];
+  homepageActiveBaseLayer = L.tileLayer(config.url, config.options).addTo(homepageTacticalMap);
+
+  if (layerName === 'nautical') {
+    homepageNauticalOverlay = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: 'Map data © OpenSeaMap contributors'
+    }).addTo(homepageTacticalMap);
+  }
+
+  // Update button active state
+  ['dark', 'sat', 'nautical', 'street'].forEach(k => {
+    const btn = document.getElementById(`hp-layer-${k}`);
+    if (btn) btn.classList.remove('active');
+  });
+  const mapKey = layerName === 'satellite' ? 'sat' : layerName;
+  const activeBtn = document.getElementById(`hp-layer-${mapKey}`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  showToast('🗺️ Layer Updated', `Switched to ${layerName.toUpperCase()} tile layer.`, 'info');
+}
+
+function homepageJumpSector(sector, btn) {
+  if (btn) {
+    btn.parentElement.querySelectorAll('.aq-type-pill').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  if (!homepageTacticalMap) return;
+
+  const sectors = {
+    world: { lat: 20, lng: 0, zoom: 2 },
+    mumbai: { lat: 18.96, lng: 72.82, zoom: 11 },
+    bengal: { lat: 13.08, lng: 80.27, zoom: 10 },
+    florida: { lat: 25.76, lng: -80.19, zoom: 10 },
+    singapore: { lat: 1.29, lng: 103.85, zoom: 11 },
+    mediterranean: { lat: 36.14, lng: -5.35, zoom: 9 }
+  };
+
+  const target = sectors[sector] || sectors.mumbai;
+  homepageTacticalMap.flyTo([target.lat, target.lng], target.zoom, { duration: 1.2 });
+}
+
+let homepageSearchDebounce = null;
+function handleHomepageMapSearch(query) {
+  clearTimeout(homepageSearchDebounce);
+  const container = document.getElementById('homepage-map-search-results');
+  if (!container) return;
+
+  const q = query.trim().toLowerCase();
+  if (q.length < 2) {
+    container.style.display = 'none';
+    return;
+  }
+
+  const localMatches = GLOBAL_HOTSPOTS.filter(h => h.name.toLowerCase().includes(q));
+  renderHomepageSearchResults(localMatches, container);
+
+  homepageSearchDebounce = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`);
+      if (res.ok) {
+        const osmData = await res.json();
+        const osmMatches = osmData.map(item => ({
+          name: item.display_name,
+          lat: parseFloat(item.lat),
+          lon: parseFloat(item.lon),
+          zoom: 12
+        }));
+        const combined = [...localMatches, ...osmMatches].slice(0, 7);
+        renderHomepageSearchResults(combined, container);
+      }
+    } catch (e) {
+      // Graceful fallback
+    }
+  }, 350);
+}
+
+function renderHomepageSearchResults(results, container) {
+  if (results.length === 0) {
+    container.innerHTML = `<div style="padding:8px 12px; font-size:11px; color:#94a3b8;">No global location found.</div>`;
+    container.style.display = 'block';
+    return;
+  }
+
+  container.innerHTML = results.map(r => `
+    <div class="aq-search-result-item" onclick="selectHomepageSearchResult(${r.lat}, ${r.lon}, '${escape(r.name)}', ${r.zoom || 12})" style="padding:8px 12px; border-bottom:1px solid rgba(148,163,184,0.1); cursor:pointer;">
+      <strong style="color:#f1f5f9; font-size:12px; display:block;">📍 ${r.name.split(',')[0]}</strong>
+      <span style="color:#94a3b8; font-size:10px;">${r.name.split(',').slice(1, 4).join(',')} (${r.lat.toFixed(2)}°, ${r.lon.toFixed(2)}°)</span>
+    </div>
+  `).join('');
+  container.style.display = 'block';
+}
+
+function selectHomepageSearchResult(lat, lon, escapedName, zoom = 12) {
+  const name = unescape(escapedName);
+  const dropdown = document.getElementById('homepage-map-search-results');
+  const searchInput = document.getElementById('homepage-map-search');
+  if (dropdown) dropdown.style.display = 'none';
+  if (searchInput) searchInput.value = name.split(',')[0];
+
+  if (homepageTacticalMap) {
+    homepageTacticalMap.flyTo([lat, lon], zoom, { duration: 1.5 });
+    
+    L.popup()
+      .setLatLng([lat, lon])
+      .setContent(`
+        <div style="background:#07111e; color:#f1f5f9; padding:8px; border-radius:4px; border:1px solid rgba(245,158,11,0.3);">
+          <div style="font-size:10px; font-family:var(--ds-font-mono); color:#f59e0b; font-weight:bold;">SEARCHED SECTOR</div>
+          <strong style="font-size:13px; color:#f1f5f9;">${name.split(',')[0]}</strong>
+          <div style="font-size:11px; color:#94a3b8; margin:4px 0;">${name.slice(0, 90)}</div>
+          <button class="aq-btn-primary" style="padding:4px 10px; font-size:11px; background:#f59e0b; color:#07111e; font-weight:bold; border-radius:4px; width:100%; border:none; cursor:pointer;" onclick="openReportModalWithCoords(${lat}, ${lon}, '${escape(name.split(',')[0])}')">
+            + Pin Incident Here
+          </button>
+        </div>
+      `)
+      .openOn(homepageTacticalMap);
+  }
+}
+
+// ── Modal Fullscreen Tactical GIS Map ────────────────────────────────────
 function initTacticalMap() {
   if (mapInitialized) return;
   const container = document.getElementById('tactical-map-container');
   if (!container) return;
 
-  // Initialize Map on Global Centered View with smooth pan
   tacticalMap = L.map('tactical-map-container', {
     zoomControl: false,
     attributionControl: false,
     worldCopyJump: true
   }).setView([18.96, 72.82], 11);
 
-  // Set default Tactical Dark Base Layer
   activeBaseLayer = L.tileLayer(GLOBAL_MAP_LAYERS.dark.url, GLOBAL_MAP_LAYERS.dark.options).addTo(tacticalMap);
-
   L.control.zoom({ position: 'topright' }).addTo(tacticalMap);
 
-  // Coordinates Telemetry on Mouse Move
   tacticalMap.on('mousemove', (e) => {
     const hud = document.getElementById('map-coords-hud');
     if (hud) {
@@ -234,7 +471,6 @@ function initTacticalMap() {
     }
   });
 
-  // Map Click to drop incident marker directly
   tacticalMap.on('click', (e) => {
     const lat = parseFloat(e.latlng.lat.toFixed(4));
     const lng = parseFloat(e.latlng.lng.toFixed(4));
@@ -253,7 +489,7 @@ function initTacticalMap() {
       .openOn(tacticalMap);
   });
 
-  // Plot Global Buoys
+  // Plot Buoys on Modal Map
   const buoyIcon = L.divIcon({
     className: 'custom-buoy-icon',
     html: `<div style="width: 14px; height: 14px; background: #f59e0b; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);"></div>`,
@@ -273,7 +509,6 @@ function initTacticalMap() {
     `);
   });
 
-  // Coastal Flood Hazard Zone
   L.circle([18.91, 72.81], {
     color: '#f59e0b',
     fillColor: '#f59e0b',
@@ -283,7 +518,6 @@ function initTacticalMap() {
     dashArray: '4, 4'
   }).addTo(tacticalMap).bindPopup('<div style="background:#07111e;color:#f1f5f9;padding:4px;"><strong style="color:#f59e0b;">Warning Sector 1:</strong> Storm Surge Inundation Watch</div>');
 
-  // Vessel AIS Tracks
   const vesselIcon = L.divIcon({
     className: 'custom-vessel-icon',
     html: `<div style="color: #f59e0b; font-size: 16px; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6)); font-weight: bold;">▲</div>`,
@@ -306,7 +540,6 @@ function switchMapBaseLayer(layerName) {
 
   currentBaseLayerName = layerName;
 
-  // Remove existing base layer
   if (activeBaseLayer) {
     tacticalMap.removeLayer(activeBaseLayer);
   }
@@ -315,11 +548,9 @@ function switchMapBaseLayer(layerName) {
     nauticalOverlayLayer = null;
   }
 
-  // Add new layer
   const config = GLOBAL_MAP_LAYERS[layerName];
   activeBaseLayer = L.tileLayer(config.url, config.options).addTo(tacticalMap);
 
-  // If Nautical, add OpenSeaMap overlay
   if (layerName === 'nautical') {
     nauticalOverlayLayer = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
       maxZoom: 18,
@@ -327,7 +558,6 @@ function switchMapBaseLayer(layerName) {
     }).addTo(tacticalMap);
   }
 
-  // Update UI dock buttons
   document.querySelectorAll('.aq-map-layer-btn').forEach(btn => btn.classList.remove('active'));
   const activeBtn = document.getElementById(`layer-btn-${layerName}`);
   if (activeBtn) activeBtn.classList.add('active');
@@ -347,13 +577,9 @@ function handleMapSearch(query) {
     return;
   }
 
-  // 1. Instant match against curated global maritime hotspots
   const localMatches = GLOBAL_HOTSPOTS.filter(h => h.name.toLowerCase().includes(q));
-  
-  // Render local matches immediately
   renderSearchResults(localMatches, resultsContainer);
 
-  // 2. Query OpenStreetMap Nominatim for full worldwide coverage
   searchDebounceTimer = setTimeout(async () => {
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`);
@@ -370,7 +596,7 @@ function handleMapSearch(query) {
         renderSearchResults(combined, resultsContainer);
       }
     } catch (e) {
-      // Fallback gracefully on local matches
+      // Fallback
     }
   }, 350);
 }
@@ -444,6 +670,13 @@ function resetMapView() {
 }
 
 function focusBuoyOnMap(lat, lng, id) {
+  // If on landing page, scroll to homepage radar map
+  const hpMapEl = document.getElementById('radar-map');
+  if (hpMapEl && homepageTacticalMap) {
+    hpMapEl.scrollIntoView({ behavior: 'smooth' });
+    homepageTacticalMap.flyTo([lat, lng], 13, { duration: 1 });
+    return;
+  }
   openCommandCenter('map');
   setTimeout(() => {
     if (tacticalMap) {
@@ -453,6 +686,14 @@ function focusBuoyOnMap(lat, lng, id) {
 }
 
 function focusReportOnMap(lat, lng, id) {
+  const hpMapEl = document.getElementById('radar-map');
+  if (hpMapEl && homepageTacticalMap) {
+    hpMapEl.scrollIntoView({ behavior: 'smooth' });
+    homepageTacticalMap.flyTo([lat, lng], 14, { duration: 1 });
+    const markerObj = homepageReportMarkers.find(m => m.id === id);
+    if (markerObj) markerObj.marker.openPopup();
+    return;
+  }
   openCommandCenter('map');
   setTimeout(() => {
     if (tacticalMap) {
@@ -488,11 +729,6 @@ function simulateEmergencyMarker() {
 }
 
 function plotReportsOnMap(reports) {
-  if (!tacticalMap) return;
-
-  reportMarkers.forEach(m => tacticalMap.removeLayer(m.marker));
-  reportMarkers = [];
-
   const icons = {
     flood: '🌊',
     marine_animal: '🐢',
@@ -502,35 +738,73 @@ function plotReportsOnMap(reports) {
     missing_person: '⚓'
   };
 
-  reports.forEach(r => {
-    if (!r.latitude || !r.longitude) return;
+  // Plot on Homepage Map
+  if (homepageTacticalMap) {
+    homepageReportMarkers.forEach(m => homepageTacticalMap.removeLayer(m.marker));
+    homepageReportMarkers = [];
 
-    const emoji = icons[r.type] || '⚠';
-    const reportIcon = L.divIcon({
-      className: 'report-map-icon',
-      html: `
-        <div style="background: rgba(12, 24, 39, 0.95); border: 2px solid ${r.ai_verified ? '#f59e0b' : '#94a3b8'}; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 0 12px ${r.ai_verified ? 'rgba(245,158,11,0.6)' : 'rgba(148,163,184,0.4)'};">
-          ${emoji}
+    reports.forEach(r => {
+      if (!r.latitude || !r.longitude) return;
+      const emoji = icons[r.type] || '⚠';
+      const reportIcon = L.divIcon({
+        className: 'report-map-icon',
+        html: `
+          <div style="background: rgba(12, 24, 39, 0.95); border: 2px solid ${r.ai_verified ? '#f59e0b' : '#94a3b8'}; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 0 12px ${r.ai_verified ? 'rgba(245,158,11,0.6)' : 'rgba(148,163,184,0.4)'};">
+            ${emoji}
+          </div>
+        `,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+
+      const marker = L.marker([r.latitude, r.longitude], { icon: reportIcon }).addTo(homepageTacticalMap);
+      marker.bindPopup(`
+        <div style="background:#07111e; color:#f1f5f9; padding:8px; min-width: 200px; border-radius:4px; border:1px solid rgba(245,158,11,0.3);">
+          <div style="font-size: 10px; font-family: var(--ds-font-mono); color: #f59e0b; font-weight: bold; margin-bottom: 2px;">
+            ${r.id} · ${r.ai_verified ? '✓ AI VERIFIED' : 'PENDING AUDIT'}
+          </div>
+          <strong style="color: #f1f5f9; font-size: 13px;">${r.title}</strong>
+          <p style="font-size: 11px; color: #94a3b8; margin: 4px 0;">${r.description.slice(0, 110)}...</p>
+          <div style="font-size: 10px; color: #fbbf24;">Reporter: ${r.reporter_name} (${r.reporter_badge || 'CITIZEN'})</div>
         </div>
-      `,
-      iconSize: [28, 28],
-      iconAnchor: [14, 14]
+      `);
+      homepageReportMarkers.push({ id: r.id, marker });
     });
+  }
 
-    const marker = L.marker([r.latitude, r.longitude], { icon: reportIcon }).addTo(tacticalMap);
-    marker.bindPopup(`
-      <div style="background:#07111e; color:#f1f5f9; padding:8px; min-width: 200px;">
-        <div style="font-size: 10px; font-family: var(--ds-font-mono); color: #f59e0b; font-weight: bold; margin-bottom: 2px;">
-          ${r.id} · ${r.ai_verified ? '✓ AI VERIFIED' : 'PENDING AUDIT'}
+  // Plot on Modal Tactical Map
+  if (tacticalMap) {
+    reportMarkers.forEach(m => tacticalMap.removeLayer(m.marker));
+    reportMarkers = [];
+
+    reports.forEach(r => {
+      if (!r.latitude || !r.longitude) return;
+      const emoji = icons[r.type] || '⚠';
+      const reportIcon = L.divIcon({
+        className: 'report-map-icon',
+        html: `
+          <div style="background: rgba(12, 24, 39, 0.95); border: 2px solid ${r.ai_verified ? '#f59e0b' : '#94a3b8'}; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 0 12px ${r.ai_verified ? 'rgba(245,158,11,0.6)' : 'rgba(148,163,184,0.4)'};">
+            ${emoji}
+          </div>
+        `,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+
+      const marker = L.marker([r.latitude, r.longitude], { icon: reportIcon }).addTo(tacticalMap);
+      marker.bindPopup(`
+        <div style="background:#07111e; color:#f1f5f9; padding:8px; min-width: 200px;">
+          <div style="font-size: 10px; font-family: var(--ds-font-mono); color: #f59e0b; font-weight: bold; margin-bottom: 2px;">
+            ${r.id} · ${r.ai_verified ? '✓ AI VERIFIED' : 'PENDING AUDIT'}
+          </div>
+          <strong style="color: #f1f5f9; font-size: 13px;">${r.title}</strong>
+          <p style="font-size: 11px; color: #94a3b8; margin: 4px 0;">${r.description.slice(0, 110)}...</p>
+          <div style="font-size: 10px; color: #fbbf24;">Reporter: ${r.reporter_name} (${r.reporter_badge || 'CITIZEN'})</div>
         </div>
-        <strong style="color: #f1f5f9; font-size: 13px;">${r.title}</strong>
-        <p style="font-size: 11px; color: #94a3b8; margin: 4px 0;">${r.description.slice(0, 110)}...</p>
-        <div style="font-size: 10px; color: #fbbf24;">Reporter: ${r.reporter_name} (${r.reporter_badge || 'CITIZEN'})</div>
-      </div>
-    `);
-
-    reportMarkers.push({ id: r.id, marker });
-  });
+      `);
+      reportMarkers.push({ id: r.id, marker });
+    });
+  }
 }
 
 // ── Interactive Precision Location Picker Modal Map ───────────────────────

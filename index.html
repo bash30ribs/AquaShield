@@ -344,11 +344,12 @@
       </a>
 
       <nav class="aq-nav-links" style="flex: 1; align-items: center; gap: 2px;">
+        <a href="#radar-map" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-color-brand-light); padding: 8px 13px; border-radius: var(--ds-radius-md);">◎ Live Radar Map</a>
         <a href="#platform" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 13px; border-radius: var(--ds-radius-md);">Platform</a>
         <a href="#capabilities" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 13px; border-radius: var(--ds-radius-md);">Intelligence</a>
         <a href="#tech" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 13px; border-radius: var(--ds-radius-md);">Architecture</a>
+        <a href="#field-reports-section" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 13px; border-radius: var(--ds-radius-md);">Reports</a>
         <a href="#response" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 13px; border-radius: var(--ds-radius-md);">Response</a>
-        <a href="#enterprise" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 13px; border-radius: var(--ds-radius-md);">Enterprise</a>
       </nav>
 
       <div class="aq-nav-right" style="align-items: center; gap: var(--ds-space-3); flex-shrink: 0;">
@@ -550,12 +551,118 @@
           <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-4xl); font-weight: var(--ds-weight-extrabold); letter-spacing: -0.03em; color: var(--ds-color-brand); line-height: 1; margin-bottom: var(--ds-space-1);">0</div>
           <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-muted); font-weight: var(--ds-weight-medium);">Active Critical Threats</div>
         </div>
-        <div style="padding: var(--ds-space-8);">
-          <div style="font-family: var(--ds-font-display); font-size: var(--ds-text-4xl); font-weight: var(--ds-weight-extrabold); letter-spacing: -0.03em; color: var(--ds-text-primary); line-height: 1; margin-bottom: var(--ds-space-1);">38 ms</div>
-          <div style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-muted); font-weight: var(--ds-weight-medium);">AI Response Time</div>
-        </div>
       </div>
     </div>
+
+    <!-- 3.5. Live Global Coastal Radar & GIS Intelligence Engine (NO API KEY REQUIRED) -->
+    <section id="radar-map" style="background: var(--ds-bg-base); padding: var(--ds-space-20) var(--ds-space-6); border-bottom: 1px solid var(--ds-border-subtle); position: relative;">
+      <div style="max-width: var(--ds-max-width); margin: 0 auto;">
+        
+        <!-- Section Header -->
+        <div class="aq-reveal" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: var(--ds-space-8); flex-wrap: wrap; gap: var(--ds-space-4);">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: var(--ds-space-3);">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; animation: pulse 2s infinite;"></span>
+              <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: #10b981; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700;">LIVE PLANETARY GIS · NO API KEY REQUIRED</span>
+            </div>
+            <h2 style="font-family: var(--ds-font-display); font-size: clamp(var(--ds-text-3xl), 4vw, var(--ds-text-5xl)); font-weight: var(--ds-weight-bold); letter-spacing: -0.04em; line-height: var(--ds-leading-tight); color: var(--ds-text-primary);">
+              Global Coastal Radar & Live Telemetry
+            </h2>
+            <p style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); color: var(--ds-text-secondary); max-width: 680px; margin-top: 8px;">
+              Direct satellite and open-source geospatial infrastructure tracking 21 smart ocean buoys, live AIS vessel movements, hazard flood sectors, and verified community incident logs worldwide.
+            </p>
+          </div>
+          
+          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <button class="aq-btn-primary" onclick="openReportModal()"
+              style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-bold); color: var(--ds-bg-base); background: var(--ds-color-brand); padding: 9px 18px; border-radius: var(--ds-radius-md); display: flex; align-items: center; gap: 6px;">
+              <span>+</span> Pin & Report Incident
+            </button>
+            <button onclick="openCommandCenter('map')" class="aq-btn-ghost"
+              style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); padding: 9px 16px; border-radius: var(--ds-radius-md); font-weight: var(--ds-weight-semibold);">
+              Launch Fullscreen HUD ↗
+            </button>
+          </div>
+        </div>
+
+        <!-- Embedded Interactive Map Card -->
+        <div class="aq-reveal" style="background: var(--ds-bg-surface); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-2xl); overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.6); position: relative;">
+          
+          <!-- Top Control & Search Bar -->
+          <div style="padding: 12px 16px; background: var(--ds-bg-raised); border-bottom: 1px solid var(--ds-border-subtle); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; position: relative; z-index: 10;">
+            
+            <!-- Global Geocoder Search -->
+            <div style="position: relative; flex: 1; min-width: 280px; max-width: 480px;">
+              <input type="text" id="homepage-map-search" 
+                placeholder="🔍 Search any coastal city, harbor, port, or coordinates..." 
+                oninput="handleHomepageMapSearch(this.value)" 
+                autocomplete="off"
+                style="width: 100%; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-md); padding: 8px 14px; font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-primary); outline: none;" />
+              <div id="homepage-map-search-results" class="aq-search-results-dropdown" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-brand); border-radius: var(--ds-radius-md); max-height: 220px; overflow-y: auto; z-index: 1000; box-shadow: 0 12px 30px rgba(0,0,0,0.8);"></div>
+            </div>
+
+            <!-- Sector Jump Pills -->
+            <div style="display: flex; gap: 6px; overflow-x: auto; max-width: 100%; padding-bottom: 2px;">
+              <button class="aq-type-pill selected" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('world', this)">🌐 Global</button>
+              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('mumbai', this)">🇮🇳 Mumbai</button>
+              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('bengal', this)">🌊 Bay of Bengal</button>
+              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('florida', this)">🇺🇸 Florida</button>
+              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('singapore', this)">🏝️ Singapore</button>
+              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('mediterranean', this)">🇪🇺 Gibraltar</button>
+            </div>
+
+            <!-- Base Layer Switcher Dock -->
+            <div style="display: flex; gap: 4px; background: var(--ds-bg-surface); padding: 3px; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-subtle);">
+              <button class="aq-map-layer-btn active" id="hp-layer-dark" onclick="switchHomepageBaseLayer('dark')" title="Tactical Dark Radar" style="padding: 5px 10px; font-size: 11px;">🌑 Dark</button>
+              <button class="aq-map-layer-btn" id="hp-layer-sat" onclick="switchHomepageBaseLayer('satellite')" title="Esri World Satellite" style="padding: 5px 10px; font-size: 11px;">🛰️ Satellite</button>
+              <button class="aq-map-layer-btn" id="hp-layer-nautical" onclick="switchHomepageBaseLayer('nautical')" title="OpenSea Nautical" style="padding: 5px 10px; font-size: 11px;">⚓ Nautical</button>
+              <button class="aq-map-layer-btn" id="hp-layer-street" onclick="switchHomepageBaseLayer('street')" title="Daylight Recon" style="padding: 5px 10px; font-size: 11px;">☀️ Daylight</button>
+            </div>
+          </div>
+
+          <!-- Main Interactive Map Canvas Container -->
+          <div style="position: relative; width: 100%; height: 560px;">
+            <div id="homepage-map-container" style="width: 100%; height: 100%; background: #07111e; z-index: 1;"></div>
+            
+            <!-- Map Legend (Bottom Left) -->
+            <div style="position: absolute; bottom: 16px; left: 16px; z-index: 500; background: rgba(7, 17, 30, 0.90); backdrop-filter: blur(8px); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-md); padding: 8px 12px; display: flex; flex-direction: column; gap: 5px; pointer-events: auto;">
+              <div style="font-family: var(--ds-font-mono); font-size: 10px; color: var(--ds-text-muted); letter-spacing: 0.08em; text-transform: uppercase;">TACTICAL LEGEND</div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ds-text-primary);">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b; border: 1.5px solid #fff; display: inline-block;"></span> 21 Smart Telemetry Buoys
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ds-text-primary);">
+                <span style="color: #f59e0b; font-weight: bold; font-size: 12px;">▲</span> Live AIS Marine Vessels
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ds-text-primary);">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444; border: 1.5px solid #fff; display: inline-block;"></span> Verified Field Reports
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ds-text-primary);">
+                <span style="width: 12px; height: 6px; background: rgba(245, 158, 11, 0.4); border: 1px dashed #f59e0b; display: inline-block;"></span> Storm Surge Watch Zones
+              </div>
+            </div>
+
+            <!-- Telemetry HUD Bar (Bottom Right) -->
+            <div id="homepage-map-coords-hud" style="position: absolute; bottom: 16px; right: 16px; z-index: 500; background: rgba(7, 17, 30, 0.90); backdrop-filter: blur(8px); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-md); padding: 6px 14px; font-family: var(--ds-font-mono); font-size: 11px; color: var(--ds-color-brand-light); pointer-events: none;">
+              CURSOR TELEMETRY // LAT: 18.9600° N | LON: 72.8200° E | ZOOM: 11
+            </div>
+          </div>
+
+          <!-- Bottom Status Strip -->
+          <div style="padding: 10px 20px; background: var(--ds-bg-raised); border-top: 1px solid var(--ds-border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 16px; font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">
+              <span>💡 <strong style="color: var(--ds-text-primary);">Click anywhere on the map</strong> to drop a pin and report coastal hazards</span>
+              <span style="display: inline-block; width: 1px; height: 14px; background: var(--ds-border-default);"></span>
+              <span>100% Free Open Infrastructure (Esri, CARTO, OpenSeaMap)</span>
+            </div>
+            <button onclick="homepageTacticalMap && homepageTacticalMap.setView([18.96, 72.82], 11)" style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); background: none; border: none; cursor: pointer;">
+              Reset Mumbai Center ↺
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
 
     <!-- 4. Platform Spotlight -->
     <section id="platform" style="background: var(--ds-bg-base); padding: var(--ds-space-24) var(--ds-space-6);">
