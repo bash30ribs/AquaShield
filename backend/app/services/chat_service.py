@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 """
 AquaShield AI — Comprehensive Coastal Intelligence & Copilot Engine
-Full semantic intent matching, live database telemetry, NDMA/INCOIS SOPs, and system architecture guidance.
+Includes:
+- Full semantic intent matching (helplines, buoys, radars, evacuation, forensics, SOS)
+- Interactive AI Incident Scribe & Guided Complaint Assistant for citizens
+- Conversational dataset recorder for ML training
 """
 import os
 import re
 import json
+import uuid
 import sqlite3
 import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 class ChatService:
     @classmethod
@@ -18,9 +22,9 @@ class ChatService:
             "recent_reports": [],
             "active_rescues": [],
             "buoy_telemetry": [
-                {"id": "B-12", "location": "Offshore Trench (18.92N, 72.78E)", "wave_height": "3.4m", "status": "Wave Alert", "temp": "27.4C", "battery": "94%"},
-                {"id": "B-04", "location": "Harbor Approach (18.95N, 72.82E)", "wave_height": "1.6m", "status": "Operational", "temp": "28.1C", "battery": "98%"},
-                {"id": "B-09", "location": "South Shelf (18.88N, 72.75E)", "wave_height": "2.1m", "status": "Operational", "temp": "27.8C", "battery": "91%"}
+                {"id": "B-12", "location": "Offshore Trench (18.92N, 72.78E)", "wave_height": "3.4m", "status": "Wave Alert", "temp": "27.4°C", "battery": "94%"},
+                {"id": "B-04", "location": "Harbor Approach (18.95N, 72.82E)", "wave_height": "1.6m", "status": "Operational", "temp": "28.1°C", "battery": "98%"},
+                {"id": "B-09", "location": "South Shelf (18.88N, 72.75E)", "wave_height": "2.1m", "status": "Operational", "temp": "27.8°C", "battery": "91%"}
             ],
             "sar_fleet": [
                 {"unit": "CG-Sentinel-01", "type": "Fast Interceptor Craft", "status": "On Patrol Sector 4", "speed": "28 kts"},
@@ -34,7 +38,7 @@ class ChatService:
             ]
         }
         
-        db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "aquashield.db")
+        db_path = "aquashield.db" if os.path.exists("aquashield.db") else os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), "aquashield.db")
         if os.path.exists(db_path):
             try:
                 conn = sqlite3.connect(db_path)
@@ -64,10 +68,159 @@ class ChatService:
         return context
 
     @classmethod
-    def get_response(cls, message: str) -> Dict[str, Any]:
+    def extract_complaint_structure(cls, text: str, existing_session: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Converts unstructured citizen observations into a structured, professional maritime incident dossier.
+        """
+        low = text.lower()
+        
+        # 1. Determine Hazard Type
+        hazard_type = "flood"
+        if any(w in low for w in ["oil", "slick", "sheen", "chemical", "diesel", "fuel", "tar ball", "black water", "hydrocarbon"]):
+            hazard_type = "oil_spill"
+        elif any(w in low for w in ["turtle", "dolphin", "whale", "fish dead", "stranded", "injured animal", "dead fish", "seagull", "seal", "crab"]):
+            hazard_type = "marine_animal"
+        elif any(w in low for w in ["cyclone", "tree fallen", "roof", "wind damage", "pole fallen", "power line"]):
+            hazard_type = "cyclone_damage"
+        elif any(w in low for w in ["road block", "jetty broken", "bridge broken", "collapsed", "debris on road", "traffic stuck"]):
+            hazard_type = "road_blockage"
+        elif any(w in low for w in ["flood", "water rise", "waterlevel", "tide surge", "knee deep", "inundat", "submerg", "overflow", "waves over"]):
+            hazard_type = "flood"
+        elif existing_session and existing_session.get("extracted_hazard_type"):
+            hazard_type = existing_session["extracted_hazard_type"]
+
+        # 2. Extract Location
+        location = ""
+        known_locations = [
+            ("marine drive", "Marine Drive Promenade", 18.943, 72.823),
+            ("bandra", "Bandra Bandstand / Carter Road", 19.054, 72.822),
+            ("carter road", "Carter Road Coastal Corridor", 19.065, 72.825),
+            ("versova", "Versova North Beach", 19.131, 72.812),
+            ("juhu", "Juhu Beach Intertidal Zone", 19.098, 72.826),
+            ("gateway", "Gateway of India Jetty", 18.922, 72.834),
+            ("worli", "Worli Sea Face Coastal Hub", 19.013, 72.815),
+            ("malabar", "Malabar Point Offshore", 18.945, 72.785),
+            ("dadar", "Dadar Chowpatty Coast", 19.022, 72.836),
+            ("alibaug", "Alibaug Coastal Sector", 18.641, 72.872),
+            ("colaba", "Colaba Point Terminal", 18.906, 72.814),
+            ("girgaon", "Girgaon Chowpatty", 18.953, 72.816)
+        ]
+        
+        lat, lon = 18.960, 72.820
+        for loc_key, loc_name, l_lat, l_lon in known_locations:
+            if loc_key in low:
+                location = loc_name
+                lat, lon = l_lat, l_lon
+                break
+                
+        if not location and existing_session and existing_session.get("extracted_location"):
+            location = existing_session["extracted_location"]
+            lat = existing_session.get("latitude", 18.960)
+            lon = existing_session.get("longitude", 72.820)
+            
+        if not location:
+            match = re.search(r"(?:at|near|around|in)\s+([A-Za-z0-9\s,\.\-]{3,30})", text, re.IGNORECASE)
+            if match:
+                location = match.group(1).strip()
+
+        # 3. Compute Urgency & Water Level
+        urgency = 6
+        water_level = 0.0
+        if any(w in low for w in ["emergency", "urgent", "danger", "critical", "trapped", "dying", "bleeding", "severe", "life"]):
+            urgency = 9
+        elif any(w in low for w in ["rising", "fast", "spread", "heavy", "stuck", "cars stuck", "knee"]):
+            urgency = 7
+        
+        if "knee" in low:
+            water_level = 0.5
+        elif "waist" in low or "chest" in low:
+            water_level = 1.2
+        elif "meter" in low:
+            match = re.search(r"(\d+(?:\.\d+)?)\s*(?:m|meter)", low)
+            if match:
+                water_level = float(match.group(1))
+
+        # 4. Generate Professional Incident Dossier Title & Summary
+        titles = {
+            "flood": f"Coastal Inundation & High Tidal Surge at {location or 'Shoreline Sector'}",
+            "oil_spill": f"Surface Hydrocarbon Slick / Chemical Sheen Observed at {location or 'Coastal Basin'}",
+            "marine_animal": f"Stranded Coastal Marine Wildlife in Distress at {location or 'Beach Sector'}",
+            "cyclone_damage": f"Severe Wind and Infrastructure Damage at {location or 'Coastal Zone'}",
+            "road_blockage": f"Hazardous Coastal Route / Access Blockage at {location or 'Arterial Corridor'}"
+        }
+        title = titles.get(hazard_type, f"Coastal Incident Report at {location or 'Monitored Sector'}")
+        
+        prof_desc = (
+            f"Citizen field observation report: Identified {hazard_type.replace('_', ' ')} hazard. "
+            f"Observed context: \"{text}\". "
+            f"Assessment indicates estimated urgency rank {urgency}/10. "
+        )
+        if water_level > 0:
+            prof_desc += f"Estimated flood/inundation depth: ~{water_level}m. "
+        prof_desc += "Dispatched to emergency municipal response teams and coastal surveillance desk."
+
+        missing_slots = []
+        if not location:
+            missing_slots.append("location")
+            next_q = "📍 Could you specify **where along the coast** (landmark, beach, or road name) you saw this?"
+        elif len(text.split()) < 4:
+            missing_slots.append("details")
+            next_q = "👁️ Can you provide a few more details? (e.g. How deep is the water, is the spill spreading, or is anyone in danger?)"
+        else:
+            next_q = "✅ **I have structured your observation into a verified incident dossier.** Review the details below and click **'⚡ Confirm & File Report'** to immediately alert coastal dispatch!"
+
+        ready_to_file = len(missing_slots) == 0
+
+        return {
+            "hazard_type": hazard_type,
+            "title": title,
+            "location": location or "Coastal Sector (Pending Pin)",
+            "latitude": lat,
+            "longitude": lon,
+            "urgency": urgency,
+            "water_level": water_level,
+            "professional_description": prof_desc,
+            "ready_to_file": ready_to_file,
+            "next_question": next_q,
+            "raw_text": text
+        }
+
+    @classmethod
+    def record_conversational_complaint(cls, session_id: str, raw_text: str, structured: Dict[str, Any], user_id: Optional[str] = None) -> str:
+        """Stores the conversation and converted report in SQLite for continuous ML training."""
+        complaint_id = str(uuid.uuid4())
+        db_path = "aquashield.db" if os.path.exists("aquashield.db") else os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), "aquashield.db")
+        try:
+            conn = sqlite3.connect(db_path)
+            conn.execute(
+                """INSERT INTO conversational_complaints 
+                (id, session_id, user_id, raw_user_text, extracted_hazard_type, extracted_title, professional_description, extracted_location, extracted_urgency, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    complaint_id,
+                    session_id,
+                    user_id or "CITIZEN-ANON",
+                    raw_text,
+                    structured.get("hazard_type"),
+                    structured.get("title"),
+                    structured.get("professional_description"),
+                    structured.get("location"),
+                    structured.get("urgency", 5),
+                    "ready" if structured.get("ready_to_file") else "draft"
+                )
+            )
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
+        return complaint_id
+
+    @classmethod
+    def get_response(cls, message: str, session_id: Optional[str] = None) -> Dict[str, Any]:
         msg = message.strip()
         low = msg.lower()
         context = cls._get_live_context()
+        session_id = session_id or str(uuid.uuid4())
         
         # 1. External LLM Bridge (if configured in environment)
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
@@ -77,8 +230,7 @@ class ChatService:
                 gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
                 system_prompt = (
                     "You are AquaShield Sentinel AI Copilot, the official tactical assistant for the AquaShield Coastal Disaster Intelligence Platform. "
-                    "Answer any user questions about the platform, its technology, website features (Radar Map, AI Threat Scanner, Field Reports, Evacuation Routes, SOS Dispatch, LoRa Mesh, Buoy Network), "
-                    "as well as coastal oceanography, disaster preparedness, NDMA/INCOIS SOPs, and marine rescue. "
+                    "You assist citizens and commanders in reporting coastal incidents, understanding marine hazards, tracking buoys, finding evacuation routes, and contacting emergency helplines. "
                     "Format responses cleanly with markdown bolding and bullet points. "
                     f"Live Telemetry Context: {json.dumps(context)}."
                 )
@@ -102,7 +254,56 @@ class ChatService:
             except Exception:
                 pass
         
-        # 2. Advanced Multi-Factor Semantic Knowledge Engine
+        # 2. EMERGENCY HELPLINES & CONTACT DIRECTORY
+        if any(w in low for w in ["help line", "helpline", "phone number", "emergency number", "contact number", "who to call", "call coast guard", "police number", "ambulance number", "fire number", "toll free", "tollfree"]):
+            reply = (
+                "📞 **Official Maritime & Coastal Emergency Helplines (24/7 Toll-Free):**\n\n"
+                "• ⚓ **Indian Coast Guard Search & Rescue (SAR):** `1554` *(Immediate Maritime Distress & Life Saving)*\n"
+                "• 🚨 **National Unified Emergency:** `112` *(Police, Fire, Ambulance, Marine Dispatch)*\n"
+                "• 🌊 **State Disaster Management Authority (SDMA):** `1070` | **District Control Room:** `1077`\n"
+                "• 🛡️ **National Disaster Management Authority (NDMA):** `1078` / `011-26701728`\n"
+                "• 🐢 **Marine Wildlife Rescue & NGO Network:** `+91-98202-88120` *(Stranded turtles, mammals, oiled fauna)*\n"
+                "• 🚑 **Ambulance Emergency Medical Response:** `108`\n"
+                "• 🚒 **Fire & Hazardous Materials:** `101`\n"
+                "• 👮 **Coastal Security Police:** `1093`\n\n"
+                "📻 **Marine VHF Radio Channels:** Channel 16 (156.800 MHz) for Mayday / Pan-Pan voice distress."
+            )
+            sources = ["Ministry of Home Affairs", "Indian Coast Guard Emergency Directory", "NDMA Guidelines"]
+            return {"reply": reply, "sources": sources, "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()}
+
+        # 3. DETECT IF USER IS REPORTING AN INCIDENT / OBSERVATION
+        is_reporting_intent = any(w in low for w in [
+            "i saw", "i see", "there is", "there are", "water is", "oil on", "turtle stranded", "fish dying", "dead fish",
+            "spill on", "wave crashing", "road blocked", "jetty broken", "flood near", "flooding at", "water rising",
+            "smells like fuel", "black water", "dirty water", "tar balls", "help my", "complaint", "i want to report",
+            "filing a report", "broken boat", "animal injured"
+        ])
+        
+        if is_reporting_intent and len(msg.split()) >= 3:
+            structured = cls.extract_complaint_structure(msg)
+            cls.record_conversational_complaint(session_id, msg, structured)
+            
+            ready_badge = "🟢 READY TO FILE" if structured["ready_to_file"] else "🟡 NEED MORE DETAILS"
+            reply = (
+                f"📝 **AI Incident Scribe — Incident Dossier Generated:**\n\n"
+                f"• **Classification:** `{structured['hazard_type'].upper()}` ({ready_badge})\n"
+                f"• **Incident Title:** **{structured['title']}**\n"
+                f"• **Identified Location:** {structured['location']} (Lat: {structured['latitude']}, Lon: {structured['longitude']})\n"
+                f"• **Assessed Urgency:** **Rank {structured['urgency']}/10**\n\n"
+                f"📋 **Professional Tactical Summary:**\n"
+                f"*{structured['professional_description']}*\n\n"
+                f"{structured['next_question']}"
+            )
+            sources = ["AquaShield AI Incident Scribe", "Automated Triage NLP"]
+            return {
+                "reply": reply,
+                "sources": sources,
+                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "draft_report": structured,
+                "session_id": session_id
+            }
+
+        # 4. Multi-Factor Semantic Knowledge Engine
         
         # (A) What is AquaShield / Website Overview / Purpose / Features / Factors
         if any(w in low for w in ["what is aquashield", "what does this website do", "about this website", "what is this platform", "overview", "features", "how does this website work", "what can you do", "capabilities", "why aquashield", "purpose", "mission"]):
@@ -111,7 +312,7 @@ class ChatService:
                 "AquaShield is a multi-tier **Coastal Disaster Intelligence and Marine Safety Platform** engineered for real-time hazard mitigation:\n\n"
                 "• **1. Dual-Stream AI Threat Scanner:** Custom PyTorch neural network evaluating RGB + ELA (Error Level Analysis) to authenticate field disaster photos and reject synthetic fakes (>93% accuracy).\n"
                 "• **2. 3D Tactical Radar Map:** Hardware-accelerated WebGL GIS map rendering live AIS vessel positions, buoy telemetry, bathymetry, and flood risk zones.\n"
-                "• **3. Citizen Incident Portal:** Real-time crowd-sourced incident reporting with live GPS tagging and dispatcher triage.\n"
+                "• **3. Citizen Incident Scribe & Reporting:** Real-time crowd-sourced incident reporting with live GPS tagging and dispatcher triage.\n"
                 "• **4. A* Evacuation Route Engine:** Dynamic graph pathfinding to navigate populations around inundated roads toward inland shelters.\n"
                 "• **5. 1-Tap Emergency SOS & Mesh Radio:** Instant distress broadcast over LoRaWAN and Web Bluetooth even when cellular networks fail.\n"
                 "• **6. Marine Wildlife Rescue:** NGO dispatch system for stranded turtles, dolphins, and coastal fauna."
@@ -152,11 +353,11 @@ class ChatService:
             recent_count = len(context["recent_reports"])
             reply = (
                 "📋 **Community Field Incident Reporting System:**\n\n"
-                "• **Submission Steps:**\n"
-                "  1. Click **Submit Incident Report** or open the Field Reports tab.\n"
-                "  2. Select hazard category (*Coastal Flooding, Oil Spill, High Waves, Coastal Erosion, Beach Debris*).\n"
+                "• **Submission Methods:**\n"
+                "  1. **AI Guided Scribe:** You can simply type what you saw directly in this chat (e.g. *'I saw black oily water near Gateway of India'*), and the AI will auto-format and file your complaint!\n"
+                "  2. **Manual Form:** Click **'Submit Incident Report'** or open the Field Reports tab.\n"
                 "  3. Capture or upload a photo — the system automatically geotags exact GPS coordinates.\n"
-                "  4. The **Dual-Stream AI** verifies the image authenticity before routing to the emergency dispatch desk.\n\n"
+                "  4. The **Dual-Stream AI** verifies the image authenticity before routing to emergency dispatch.\n\n"
                 f"• **Current Status:** Tracking **{recent_count} active reports** in the incident registry."
             )
             sources = ["AquaShield Field Dispatch Protocol", "NDMA Citizen Reporting SOP"]
@@ -288,19 +489,18 @@ class ChatService:
             sources = ["Indian Coast Guard SAR Coordination Centre", "AIS Vessel Tracking Grid"]
             return {"reply": reply, "sources": sources, "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()}
 
-        # (N) Intelligent Context-Aware Conversational Fallback
+        # (N) Intelligent Conversational Fallback with Actionable Prompts
         active_str = f"{len(context['active_disasters'])} active disaster alert(s)" if context["active_disasters"] else "No critical disaster alerts"
         reply = (
             f"🛡️ **AquaShield Sentinel Tactical Guidance:**\n\n"
-            f"I have processed your query regarding: *{msg}*.\n\n"
-            "**Operational Platform Modules You Can Query:**\n"
-            "• **Threat Scanner:** 'How does the Dual-Stream model verify images?'\n"
-            "• **Tactical GIS Radar:** 'Show live AIS vessels and 3D bathymetry'\n"
-            "• **Field Reports:** 'How do I submit an oil spill or flood report?'\n"
-            "• **Evacuation Corridors:** 'What are the active A* evacuation routes?'\n"
-            "• **Ocean Buoys:** 'What is the wave height on Buoy B-12?'\n"
-            "• **Emergency SOS:** 'What happens when I trigger 1-tap SOS?'\n\n"
-            f"• **Live System Status:** {active_str}. All 21 buoys and LoRa mesh nodes operating normally."
+            f"I have received your query: \"*{msg}*\".\n\n"
+            "**How I can assist you right now:**\n"
+            "• **📝 Report an Incident with AI:** Simply describe what you saw (e.g. *\"I see high floodwater rising near Marine Drive\"*) and I will structure and file the report for you!\n"
+            "• **📞 Emergency Helplines:** Ask *\"What are the emergency helpline numbers?\"* for Coast Guard (1554), Police (112), and NDMA contacts.\n"
+            "• **🌊 Buoy & Surge Telemetry:** Ask *\"Check wave height on Buoy B-12\"* or *\"What is Mumbai storm surge risk?\"*\n"
+            "• **🔬 Threat Scanner:** Ask *\"How does the Dual-Stream AI verify photos?\"*\n"
+            "• **🛣️ Evacuation Engine:** Ask *\"Show optimal coastal evacuation routes\"*\n\n"
+            f"• **Live System Status:** {active_str}. All 21 buoys and LoRa nodes nominal."
         )
         sources = ["AquaShield Sentinel Intelligence Hub", "NDMA/INCOIS Coastal Grid"]
         return {"reply": reply, "sources": sources, "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()}
@@ -308,10 +508,10 @@ class ChatService:
     @classmethod
     def get_suggestions(cls) -> List[str]:
         return [
-            "What features does the AquaShield platform provide?",
+            "What are the emergency helpline numbers?",
+            "I want to report an incident with AI Scribe",
             "What is the current storm surge risk for Mumbai coast?",
             "Check wave height on Buoy B-12",
             "How does the AI Threat Scanner detect fake photos?",
-            "Calculate optimal coastal evacuation corridor",
-            "Status of active SAR rescue vessels"
+            "Calculate optimal coastal evacuation corridor"
         ]

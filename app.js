@@ -1802,7 +1802,9 @@ function resetScanner() {
   if (fileInput) fileInput.value = '';
 }
 
-// ── Emergency Copilot Chat & Tactical Intelligence ───────────────────────
+// ── Emergency Copilot Chat, Tactical Intelligence & AI Incident Scribe ───
+let currentChatSessionId = "SES-" + Math.random().toString(36).substring(2, 9);
+
 function formatChatMarkdown(text) {
   if (!text) return "";
   let html = text
@@ -1811,7 +1813,7 @@ function formatChatMarkdown(text) {
     .replace(/>/g, "&gt;")
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.*?)\*/g, "<em>$1</em>")
-    .replace(/`([^`]+)`/g, "<code style='font-family: var(--ds-font-mono); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; color: var(--ds-color-brand);'>$1</code>")
+    .replace(/`([^`]+)`/g, "<code style='font-family: var(--ds-font-mono); background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; color: var(--ds-color-brand);'>$1</code>")
     .replace(/^[•\*\-] (.*)$/gm, "<div style='display: flex; gap: 8px; margin: 4px 0;'><span style='color: var(--ds-color-brand);'>•</span><span>$1</span></div>")
     .replace(/\n\n/g, "<div style='height: 10px;'></div>")
     .replace(/\n/g, "<br>");
@@ -1838,12 +1840,15 @@ function handleSendChat(e) {
     container.scrollTop = container.scrollHeight;
   }
 
-  const formData = new FormData();
-  formData.append('message', msg);
+  const payload = {
+    message: msg,
+    session_id: currentChatSessionId
+  };
 
   fetch('/api/chat', {
     method: 'POST',
-    body: formData
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
   })
   .then(res => {
     if (!res.ok) throw new Error('API offline');
@@ -1852,7 +1857,7 @@ function handleSendChat(e) {
   .then(data => {
     const indicator = document.getElementById('chat-typing-indicator');
     if (indicator) indicator.remove();
-    appendChatMessage(data.reply || data.response || "Telemetry verified. Coastal sector operating within normal hazard thresholds.", 'bot', data.sources);
+    appendChatMessage(data.reply || data.response || "Telemetry verified. Coastal sector operating within normal hazard thresholds.", 'bot', data.sources, data.draft_report);
   })
   .catch(() => {
     const indicator = document.getElementById('chat-typing-indicator');
@@ -1860,7 +1865,9 @@ function handleSendChat(e) {
     setTimeout(() => {
       let reply = "AquaShield Copilot: Telemetry received. All 21 buoys report operational mesh connectivity. Sea conditions in Sector 4 show wave heights between 1.2m and 1.8m.";
       const low = msg.toLowerCase();
-      if (low.includes('cyclone') || low.includes('storm') || low.includes('surge')) {
+      if (low.includes('help') || low.includes('number') || low.includes('contact')) {
+        reply = "Official Helplines:\n• Coast Guard SAR: 1554 (Toll-Free)\n• Emergency Dispatch: 112\n• Marine Wildlife Rescue: +91-98202-88120\n• Disaster Control: 1070 / 1077";
+      } else if (low.includes('cyclone') || low.includes('storm') || low.includes('surge')) {
         reply = "AquaShield Copilot: Satellite radar tracks a low-pressure formation 240 nautical miles SW. Projected storm surge is +0.6m to +1.1m. Evacuation Route Alpha is primed for clearance.";
       } else if (low.includes('b-12') || low.includes('wave') || low.includes('buoy')) {
         reply = "AquaShield Copilot: Buoy B-12 (Offshore Trench) recorded peak wave swells of 3.4m with water temperature 27.4°C. Automatic vessel slowdown advisories have been broadcasted via AIS.";
@@ -1883,7 +1890,7 @@ function quickAskCopilot(prompt) {
   }
 }
 
-function appendChatMessage(text, sender, sources = []) {
+function appendChatMessage(text, sender, sources = [], draftReport = null) {
   const container = document.getElementById('chat-messages-container');
   if (!container) return;
 
@@ -1897,12 +1904,33 @@ function appendChatMessage(text, sender, sources = []) {
         sources.map(s => `<span class="aq-chat-source-tag">${s}</span>`).join("") +
         `</div>`;
     }
+
+    let draftHtml = "";
+    if (draftReport) {
+      const draftJson = encodeURIComponent(JSON.stringify(draftReport));
+      draftHtml = `
+        <div style="margin-top: 14px; background: rgba(7, 17, 30, 0.95); border: 1px solid var(--ds-color-brand); border-radius: var(--ds-radius-lg); padding: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-family: var(--ds-font-mono); font-size: 0.7rem; color: var(--ds-color-brand); font-weight: bold; letter-spacing: 0.05em;">AI INCIDENT DOSSIER · READY FOR DISPATCH</span>
+            <span style="font-family: var(--ds-font-mono); font-size: 0.7rem; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 4px; color: var(--ds-color-brand); font-weight: bold;">URGENCY ${draftReport.urgency}/10</span>
+          </div>
+          <div style="font-family: var(--ds-font-display); font-weight: bold; font-size: 0.95rem; color: #fff; margin-bottom: 4px;">${draftReport.title}</div>
+          <div style="font-size: 0.8rem; color: var(--ds-text-secondary); margin-bottom: 8px;">📍 ${draftReport.location} · Lat: ${draftReport.latitude.toFixed(3)}°, Lon: ${draftReport.longitude.toFixed(3)}°</div>
+          <div style="font-size: 0.78rem; color: #cbd5e1; background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 4px; margin-bottom: 12px; border-left: 2px solid var(--ds-color-brand);">${draftReport.professional_description}</div>
+          <button onclick="submitGuidedComplaint('${draftJson}', this)" class="aq-btn-primary" style="width: 100%; padding: 10px 14px; font-size: var(--ds-text-xs); font-weight: bold; background: var(--ds-color-brand); color: #07111e; border-radius: var(--ds-radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>⚡ Confirm & File Report to Coast Guard Desk</span>
+          </button>
+        </div>
+      `;
+    }
+
     msgDiv.innerHTML = `
       <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); letter-spacing: 0.05em; font-weight: bold;">
         <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-color-brand);"></span>
         AQUASHIELD AI SENTINEL COPILOT
       </div>
       <div style="line-height: 1.6;">${formatChatMarkdown(text)}</div>
+      ${draftHtml}
       ${sourceHtml}
     `;
   } else {
@@ -1911,6 +1939,59 @@ function appendChatMessage(text, sender, sources = []) {
   
   container.appendChild(msgDiv);
   container.scrollTop = container.scrollHeight;
+}
+
+function submitGuidedComplaint(encodedDraft, buttonEl) {
+  try {
+    const draft = JSON.parse(decodeURIComponent(encodedDraft));
+    if (buttonEl) {
+      buttonEl.disabled = true;
+      buttonEl.innerHTML = `<span>⏳ Submitting to Dispatch Desk...</span>`;
+    }
+
+    fetch('/api/chat/submit-guided-complaint', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(draft)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        if (buttonEl) {
+          buttonEl.style.background = '#10b981';
+          buttonEl.style.color = '#fff';
+          buttonEl.innerHTML = `<span>✓ REPORT FILED (${data.report_id}) — DISPATCH NOTIFIED</span>`;
+        }
+        showToast(`✓ Incident ${data.report_id} verified and dispatched to Coast Guard!`);
+        if (typeof loadCommunityReports === 'function') loadCommunityReports();
+      } else {
+        throw new Error(data.message || 'Submission failed');
+      }
+    })
+    .catch(err => {
+      if (buttonEl) {
+        buttonEl.disabled = false;
+        buttonEl.innerHTML = `<span>⚡ Retry Submission</span>`;
+      }
+      showToast(`Submission error: ${err.message}`);
+    });
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function launchAiGuidedScribe() {
+  closeReportModal();
+  openCommandCenter('chat');
+  const input = document.getElementById('chat-input-text');
+  if (input) {
+    input.placeholder = "Describe what you saw in plain words (e.g. 'I saw thick black oil on Marine Drive')...";
+    input.focus();
+  }
+  appendChatMessage(
+    "👋 **Welcome to AI Incident Scribe.**\n\nDescribe the coastal incident or hazard you witnessed in your own words (e.g. *what you saw, where it was, water depth, or animal distress*). I will convert your observation into a structured incident report and dispatch it to emergency teams!",
+    'bot'
+  );
 }
 
 // ── Emergency Rescue SOS Dispatcher ───────────────────────────────────────
