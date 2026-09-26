@@ -1802,15 +1802,41 @@ function resetScanner() {
   if (fileInput) fileInput.value = '';
 }
 
-// ── Emergency Copilot Chat ────────────────────────────────────────────────
+// ── Emergency Copilot Chat & Tactical Intelligence ───────────────────────
+function formatChatMarkdown(text) {
+  if (!text) return "";
+  let html = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/`([^`]+)`/g, "<code style='font-family: var(--ds-font-mono); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; color: var(--ds-color-brand);'>$1</code>")
+    .replace(/^[•\*\-] (.*)$/gm, "<div style='display: flex; gap: 8px; margin: 4px 0;'><span style='color: var(--ds-color-brand);'>•</span><span>$1</span></div>")
+    .replace(/\n\n/g, "<div style='height: 10px;'></div>")
+    .replace(/\n/g, "<br>");
+  return html;
+}
+
 function handleSendChat(e) {
-  e.preventDefault();
+  if (e) e.preventDefault();
   const input = document.getElementById('chat-input-text');
   const msg = input.value.trim();
   if (!msg) return;
 
   input.value = '';
   appendChatMessage(msg, 'user');
+
+  // Show typing indicator
+  const container = document.getElementById('chat-messages-container');
+  let typingEl = document.createElement('div');
+  typingEl.id = 'chat-typing-indicator';
+  typingEl.className = 'aq-chat-typing';
+  typingEl.innerHTML = `AquaShield Copilot analyzing telemetry <span></span><span></span><span></span>`;
+  if (container) {
+    container.appendChild(typingEl);
+    container.scrollTop = container.scrollHeight;
+  }
 
   const formData = new FormData();
   formData.append('message', msg);
@@ -1824,21 +1850,27 @@ function handleSendChat(e) {
     return res.json();
   })
   .then(data => {
-    appendChatMessage(data.response || data.reply || "Telemetry verified. Coastal sector operating within normal hazard thresholds.", 'bot');
+    const indicator = document.getElementById('chat-typing-indicator');
+    if (indicator) indicator.remove();
+    appendChatMessage(data.reply || data.response || "Telemetry verified. Coastal sector operating within normal hazard thresholds.", 'bot', data.sources);
   })
   .catch(() => {
+    const indicator = document.getElementById('chat-typing-indicator');
+    if (indicator) indicator.remove();
     setTimeout(() => {
       let reply = "AquaShield Copilot: Telemetry received. All 21 buoys report operational mesh connectivity. Sea conditions in Sector 4 show wave heights between 1.2m and 1.8m.";
       const low = msg.toLowerCase();
-      if (low.includes('cyclone') || low.includes('storm')) {
-        reply = "AquaShield Copilot: Satellite radar tracks a low-pressure formation 240 nautical miles SW. Projected storm surge is +0.6m at 02:00 UTC. Evacuation Route Alpha is primed for clearance.";
-      } else if (low.includes('b-12') || low.includes('wave')) {
-        reply = "AquaShield Copilot: Buoy B-12 (Offshore Trench) recorded peak wave swells of 3.4m with wind gusts of 24 kt. Automatic vessel slowdown advisories have been broadcasted.";
-      } else if (low.includes('evac')) {
-        reply = "AquaShield Copilot: Evacuation Route Alpha via Highway 48 is currently clear with 12,000 p/hr capacity. Shore Promenade (Route Charlie) is blocked by tidal surge.";
+      if (low.includes('cyclone') || low.includes('storm') || low.includes('surge')) {
+        reply = "AquaShield Copilot: Satellite radar tracks a low-pressure formation 240 nautical miles SW. Projected storm surge is +0.6m to +1.1m. Evacuation Route Alpha is primed for clearance.";
+      } else if (low.includes('b-12') || low.includes('wave') || low.includes('buoy')) {
+        reply = "AquaShield Copilot: Buoy B-12 (Offshore Trench) recorded peak wave swells of 3.4m with water temperature 27.4°C. Automatic vessel slowdown advisories have been broadcasted via AIS.";
+      } else if (low.includes('evac') || low.includes('route')) {
+        reply = "AquaShield Copilot: Evacuation Route Alpha via Highway 48 is currently CLEAR with 12,000 p/hr capacity. Shore Promenade (Route Charlie) is BLOCKED by tidal surge.";
+      } else if (low.includes('sar') || low.includes('rescue') || low.includes('vessel')) {
+        reply = "AquaShield Copilot: Fast Interceptor Craft CG-Sentinel-01 is actively patrolling Sector 4. Hovercraft H-04 on standby at Base Delta. Monitoring VHF Channel 16.";
       }
-      appendChatMessage(reply, 'bot');
-    }, 450);
+      appendChatMessage(reply, 'bot', ["AquaShield LoRa Mesh", "INCOIS Coastal Grid"]);
+    }, 300);
   });
 }
 
@@ -1847,18 +1879,36 @@ function quickAskCopilot(prompt) {
   const input = document.getElementById('chat-input-text');
   if (input) {
     input.value = prompt;
-    const form = document.getElementById('chat-input-form');
-    if (form) form.dispatchEvent(new Event('submit'));
+    handleSendChat();
   }
 }
 
-function appendChatMessage(text, sender) {
+function appendChatMessage(text, sender, sources = []) {
   const container = document.getElementById('chat-messages-container');
   if (!container) return;
 
   const msgDiv = document.createElement('div');
   msgDiv.className = `aq-chat-msg ${sender}`;
-  msgDiv.innerHTML = sender === 'bot' ? `<strong>AquaShield AI Copilot:</strong><br>${text}` : text;
+  
+  if (sender === 'bot') {
+    let sourceHtml = "";
+    if (sources && sources.length > 0) {
+      sourceHtml = `<div class="aq-chat-sources"><span style="font-family: var(--ds-font-mono); font-size: 0.65rem; color: var(--ds-text-muted);">GROUNDED SOURCES:</span>` +
+        sources.map(s => `<span class="aq-chat-source-tag">${s}</span>`).join("") +
+        `</div>`;
+    }
+    msgDiv.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); letter-spacing: 0.05em; font-weight: bold;">
+        <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-color-brand);"></span>
+        AQUASHIELD AI SENTINEL COPILOT
+      </div>
+      <div style="line-height: 1.6;">${formatChatMarkdown(text)}</div>
+      ${sourceHtml}
+    `;
+  } else {
+    msgDiv.textContent = text;
+  }
+  
   container.appendChild(msgDiv);
   container.scrollTop = container.scrollHeight;
 }

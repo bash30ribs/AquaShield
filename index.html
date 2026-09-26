@@ -1415,13 +1415,19 @@
             </div>
             <div style="padding: 0 var(--ds-space-6) 10px; display: flex; gap: 8px; overflow-x: auto;">
               <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 4px 10px; white-space: nowrap; border: 1px solid var(--ds-border-default); border-radius: 4px; color: var(--ds-text-secondary);" onclick="quickAskCopilot('What is the current storm surge risk for Mumbai coast?')">
-                Cyclone Surge Risk?
+                Cyclone Surge Risk
               </button>
               <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 4px 10px; white-space: nowrap; border: 1px solid var(--ds-border-default); border-radius: 4px; color: var(--ds-text-secondary);" onclick="quickAskCopilot('Check wave height on Buoy B-12')">
-                Buoy B-12 Status?
+                Buoy B-12 Swell Status
               </button>
-              <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 4px 10px; white-space: nowrap; border: 1px solid var(--ds-border-default); border-radius: 4px; color: var(--ds-text-secondary);" onclick="quickAskCopilot('Explain emergency coastal evacuation protocols')">
-                Evacuation Protocols
+              <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 4px 10px; white-space: nowrap; border: 1px solid var(--ds-border-default); border-radius: 4px; color: var(--ds-text-secondary);" onclick="quickAskCopilot('Calculate optimal coastal evacuation corridor')">
+                A* Evacuation Corridors
+              </button>
+              <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 4px 10px; white-space: nowrap; border: 1px solid var(--ds-border-default); border-radius: 4px; color: var(--ds-text-secondary);" onclick="quickAskCopilot('Status of active SAR rescue vessels')">
+                SAR Fleet Coordinates
+              </button>
+              <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 4px 10px; white-space: nowrap; border: 1px solid var(--ds-border-default); border-radius: 4px; color: var(--ds-text-secondary);" onclick="quickAskCopilot('How does the AI Threat Scanner detect fake photos?')">
+                Dual-Stream Forensics Info
               </button>
             </div>
             <form id="chat-input-form" onsubmit="handleSendChat(event)" style="display: flex; gap: 10px; padding: 16px var(--ds-space-6); background: var(--ds-bg-raised); border-top: 1px solid var(--ds-border-subtle);">
@@ -1892,6 +1898,15 @@
   </div>
 
   <!-- Dynamic Toast Container -->
+  <!-- Floating AI Sentinel Copilot Launcher Button -->
+  <button id="floating-copilot-trigger" onclick="openCommandCenter('chat')" class="aq-floating-copilot" aria-label="Open AI Copilot" title="Launch AquaShield AI Sentinel Copilot">
+    <div class="aq-copilot-pulse"></div>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+    <span>AI Copilot</span>
+  </button>
+
   <div id="aq-toast-container"></div>
 
   <!-- MapLibre GL JS (Hardware-Accelerated WebGL 3D Map Engine) -->

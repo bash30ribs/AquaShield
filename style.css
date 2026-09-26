@@ -666,3 +666,102 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
 .maplibre-report-marker:hover {
   transform: scale(1.25);
 }
+/* ── Sentinel AI Copilot Floating Launcher & Chat Enhancements ── */
+.aq-floating-copilot {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 990;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--ds-bg-raised);
+  border: 1px solid var(--ds-color-brand);
+  color: var(--ds-color-brand);
+  padding: 12px 20px;
+  border-radius: 9999px;
+  font-family: var(--ds-font-mono);
+  font-size: var(--ds-text-xs);
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 16px rgba(245, 158, 11, 0.2);
+  cursor: pointer;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.aq-floating-copilot:hover {
+  background: var(--ds-color-brand);
+  color: var(--ds-bg-base);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), 0 0 24px rgba(245, 158, 11, 0.35);
+}
+
+.aq-copilot-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ds-color-brand);
+  box-shadow: 0 0 8px var(--ds-color-brand);
+  animation: copilotGlow 2s infinite ease-in-out;
+}
+
+.aq-floating-copilot:hover .aq-copilot-pulse {
+  background: var(--ds-bg-base);
+  box-shadow: 0 0 8px #fff;
+}
+
+@keyframes copilotGlow {
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.aq-chat-typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border-radius: var(--ds-radius-md);
+  background: var(--ds-bg-raised);
+  border: 1px solid var(--ds-border-subtle);
+  color: var(--ds-text-muted);
+  font-size: var(--ds-text-xs);
+  font-family: var(--ds-font-mono);
+}
+
+.aq-chat-typing span {
+  width: 6px;
+  height: 6px;
+  background: var(--ds-color-brand);
+  border-radius: 50%;
+  animation: chatDotBlink 1.4s infinite ease-in-out both;
+}
+
+.aq-chat-typing span:nth-child(1) { animation-delay: -0.32s; }
+.aq-chat-typing span:nth-child(2) { animation-delay: -0.16s; }
+.aq-chat-typing span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes chatDotBlink {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.aq-chat-sources {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ds-border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.aq-chat-source-tag {
+  font-family: var(--ds-font-mono);
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: var(--ds-color-brand);
+}
