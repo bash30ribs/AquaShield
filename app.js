@@ -17,6 +17,9 @@ let homepageMapInitialized = false;
 let homepageActiveBaseLayer = null;
 let homepageNauticalOverlay = null;
 let homepageReportMarkers = [];
+let homepageBeachMarkers = [];
+let homepageBuoyMarkers = [];
+let homepageVesselMarkers = [];
 
 // Active Base Map Layer Tracker
 let currentBaseLayerName = 'dark';
@@ -30,6 +33,160 @@ let pickerMapInitialized = false;
 
 // Active User State (Persisted in localStorage)
 let currentUser = null;
+
+// Active Citizen App State
+let activeBeachFilter = 'all';
+let selectedBeachId = null;
+let userCoordinates = null;
+let activeAppMode = 'citizen';
+
+// ── Familiar Coastal Beaches Telemetry Dataset ───────────────────────────
+const BEACHES_DATA = [
+  {
+    id: 'beach-juhu',
+    name: 'Juhu Beach',
+    location: 'Western Suburbs, Mumbai',
+    lat: 19.0988,
+    lng: 72.8264,
+    status: 'safe',
+    statusText: 'Safe to Swim',
+    wave: '1.1 m',
+    temp: '28.4°C',
+    tide: 'Low Tide in 1.5h',
+    waterQuality: 'Good',
+    lifeguards: 'Active',
+    familyFriendly: '4.8 / 5',
+    reportsCount: 0,
+    desc: 'Gentle swell and wide sandy beach. Safe for walking and shallow swimming. Lifeguards actively stationed at main watch towers.',
+    directionsUrl: 'https://maps.google.com/?q=Juhu+Beach+Mumbai'
+  },
+  {
+    id: 'beach-girgaon',
+    name: 'Girgaon Chowpatty',
+    location: 'South Mumbai, Marine Lines',
+    lat: 18.9548,
+    lng: 72.8147,
+    status: 'safe',
+    statusText: 'Calm & Safe',
+    wave: '0.9 m',
+    temp: '28.6°C',
+    tide: 'Low Tide at 4:30 PM',
+    waterQuality: 'Good',
+    lifeguards: 'Active',
+    familyFriendly: '4.9 / 5',
+    reportsCount: 0,
+    desc: 'Calm sheltered bay waters protected by Malabar Hill. Ideal for families and evening walking. Bacteria counts well within recreational safety norms.',
+    directionsUrl: 'https://maps.google.com/?q=Girgaon+Chowpatty+Mumbai'
+  },
+  {
+    id: 'beach-marine-drive',
+    name: 'Marine Drive Promenade',
+    location: 'South Mumbai Promenade',
+    lat: 18.9430,
+    lng: 72.8230,
+    status: 'caution',
+    statusText: 'High Tide Swell',
+    wave: '2.2 m',
+    temp: '28.1°C',
+    tide: 'High Tide Warning',
+    waterQuality: 'Moderate',
+    lifeguards: 'Patrol Active',
+    familyFriendly: '4.2 / 5',
+    reportsCount: 2,
+    desc: 'Strong tidal surge over barrier tetrapods during high tide. Promenade walkway fully open, but avoid climbing onto water-facing rocks.',
+    directionsUrl: 'https://maps.google.com/?q=Marine+Drive+Promenade+Mumbai'
+  },
+  {
+    id: 'beach-bandra',
+    name: 'Bandra Bandstand',
+    location: 'Bandra West, Mumbai',
+    lat: 19.0540,
+    lng: 72.8220,
+    status: 'caution',
+    statusText: 'Rocky Surge',
+    wave: '1.8 m',
+    temp: '27.9°C',
+    tide: 'Mid Tide',
+    waterQuality: 'Good',
+    lifeguards: 'Signage Posted',
+    familyFriendly: '3.9 / 5',
+    reportsCount: 1,
+    desc: 'Rocky intertidal shoreline with periodic strong wave surge. Paved promenade open; stay clear of wet slippery rocks near the sea wall.',
+    directionsUrl: 'https://maps.google.com/?q=Bandra+Bandstand+Mumbai'
+  },
+  {
+    id: 'beach-versova',
+    name: 'Versova Beach',
+    location: 'Andheri West, Mumbai',
+    lat: 19.1310,
+    lng: 72.8120,
+    status: 'safe',
+    statusText: 'Turtle Patrol Active',
+    wave: '1.3 m',
+    temp: '28.2°C',
+    tide: 'Low Tide in 2h',
+    waterQuality: 'Good',
+    lifeguards: 'Patrol Active',
+    familyFriendly: '4.6 / 5',
+    reportsCount: 1,
+    desc: 'Cleaned coastal sector monitored by community volunteers. Active Olive Ridley sea turtle nesting corridor. Swimming permitted in designated flags.',
+    directionsUrl: 'https://maps.google.com/?q=Versova+Beach+Mumbai'
+  },
+  {
+    id: 'beach-aksa',
+    name: 'Aksa Beach',
+    location: 'Malad West, Mumbai',
+    lat: 19.1760,
+    lng: 72.7950,
+    status: 'hazard',
+    statusText: 'Rip Currents Warning',
+    wave: '2.6 m',
+    temp: '27.7°C',
+    tide: 'Shifting Sandbar',
+    waterQuality: 'Moderate',
+    lifeguards: 'Red Flags Posted',
+    familyFriendly: '2.8 / 5',
+    reportsCount: 1,
+    desc: 'Hazardous undertow and quicksand pockets. Deep swimming is strictly prohibited today. Visitors advised to stay on dry upper shore.',
+    directionsUrl: 'https://maps.google.com/?q=Aksa+Beach+Mumbai'
+  },
+  {
+    id: 'beach-colaba',
+    name: 'Colaba Point & Harbor',
+    location: 'South Mumbai Coast',
+    lat: 18.8980,
+    lng: 72.8120,
+    status: 'safe',
+    statusText: 'Safe Navigation',
+    wave: '1.2 m',
+    temp: '28.4°C',
+    tide: 'Normal Harbor Swell',
+    waterQuality: 'Good',
+    lifeguards: 'Harbor Security',
+    familyFriendly: '4.5 / 5',
+    reportsCount: 0,
+    desc: 'Stable navigation and calm water conditions. Ferry services operating normally between Gateway of India and Alibaug / Mandwa.',
+    directionsUrl: 'https://maps.google.com/?q=Colaba+Point+Mumbai'
+  },
+  {
+    id: 'beach-alibaug',
+    name: 'Alibaug & Varsoli Beach',
+    location: 'Raigad Coastal Belt',
+    lat: 18.6410,
+    lng: 72.8720,
+    status: 'safe',
+    statusText: 'Safe & Open',
+    wave: '1.0 m',
+    temp: '28.5°C',
+    tide: 'Low Tide in 3h',
+    waterQuality: 'Excellent',
+    lifeguards: 'Active',
+    familyFriendly: '4.9 / 5',
+    reportsCount: 0,
+    desc: 'Expansive flat white sand beach with gentle waves. Safe for family bathing, boating, and beach walks. Zero hazard advisories active.',
+    directionsUrl: 'https://maps.google.com/?q=Varsoli+Beach+Alibaug'
+  }
+];
 
 // Global Buoy Telemetry Network
 const BUOYS_DATA = [
@@ -61,14 +218,15 @@ const GLOBAL_HOTSPOTS = [
 
 // ── DOM Initialization ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  initNavbarScroll();
-  initScrollReveal();
-  initBuoyRoster();
-  initClock();
-  initScannerDropzone();
-  initAuthSession();
-  initHomepageMap();
-  loadReports();
+  try { initNavbarScroll(); } catch (e) { console.error('initNavbarScroll:', e); }
+  try { initScrollReveal(); } catch (e) { console.error('initScrollReveal:', e); }
+  try { initBeachConditions(); } catch (e) { console.error('initBeachConditions:', e); }
+  try { loadReports(); } catch (e) { console.error('loadReports:', e); }
+  try { initBuoyRoster(); } catch (e) { console.error('initBuoyRoster:', e); }
+  try { initClock(); } catch (e) { console.error('initClock:', e); }
+  try { initScannerDropzone(); } catch (e) { console.error('initScannerDropzone:', e); }
+  try { initAuthSession(); } catch (e) { console.error('initAuthSession:', e); }
+  try { initHomepageMap(); } catch (e) { console.error('initHomepageMap:', e); }
 });
 
 function initNavbarScroll() {
@@ -327,8 +485,6 @@ const MAPLIBRE_STYLES = {
   }
 };
 
-let homepageBuoyMarkers = [];
-let homepageVesselMarkers = [];
 let modalBuoyMarkers = [];
 let modalVesselMarkers = [];
 
@@ -457,6 +613,9 @@ function renderHomepageStaticLayers() {
       .addTo(homepageTacticalMap);
     homepageVesselMarkers.push(marker);
   });
+
+  // 3. Plot Familiar Coastal Beaches
+  plotBeachesOnHomepageMap();
 }
 
 function switchHomepageBaseLayer(layerName) {
@@ -1587,37 +1746,81 @@ function renderLandingFieldReports(reports) {
     missing_person: '⚓'
   };
 
-  const displayReports = reports.slice(0, 3);
-  container.innerHTML = displayReports.map(r => `
-    <div class="aq-card aq-reveal aq-revealed" style="display: flex; flex-direction: column; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-xl); overflow: hidden;">
-      <div style="padding: var(--ds-space-6); display: flex; flex-direction: column; flex: 1;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--ds-space-3);">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 18px;">${emojiMap[r.type] || '⚠'}</span>
-            <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); font-weight: var(--ds-weight-semibold);">${r.type.toUpperCase().replace('_', ' ')}</span>
+  const labelMap = {
+    flood: 'Tidal Surge / Flood',
+    marine_animal: 'Marine Wildlife Stranding',
+    oil_spill: 'Oil & Water Pollution',
+    cyclone_damage: 'High Swell & Structural Hazard',
+    road_blockage: 'Coastal Road Blockage',
+    missing_person: 'Water Rescue / Distress'
+  };
+
+  if (!reports || reports.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; background: var(--ds-bg-surface); border: 1px dashed var(--ds-border-default); border-radius: var(--ds-radius-xl);">
+        <div style="font-size: 28px; margin-bottom: 8px;">📋</div>
+        <div style="font-weight: 700; font-size: 15px; color: var(--ds-text-primary);">No active incident reports in this category</div>
+        <p style="font-size: 13px; color: var(--ds-text-secondary); margin: 6px 0 14px;">Shoreline conditions in this category are nominal. Observed an issue?</p>
+        <button class="aq-btn-primary" onclick="openReportModal()" style="padding: 8px 18px; font-size: 12px; font-weight: bold; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 6px; border: none; cursor: pointer;">
+          + Submit Coastal Report
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const confirmations = getReportConfirmations();
+  const displayReports = reports.slice(0, 6);
+
+  container.innerHTML = displayReports.map(r => {
+    const typeLabel = labelMap[r.type] || (r.type ? r.type.toUpperCase().replace('_', ' ') : 'COASTAL HAZARD');
+    const emoji = emojiMap[r.type] || '⚠';
+    const confData = confirmations[r.id];
+    const userConfirmed = confData?.userConfirmed || false;
+    const confCount = (confData?.count || 0) + (r.upvotes || 1);
+
+    return `
+      <div class="aq-card aq-reveal aq-revealed" style="display: flex; flex-direction: column; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-xl); overflow: hidden; transition: transform var(--ds-transition-fast), border-color var(--ds-transition-fast);">
+        <div style="padding: var(--ds-space-6); display: flex; flex-direction: column; flex: 1;">
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--ds-space-3);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">${emoji}</span>
+              <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); font-weight: var(--ds-weight-semibold);">${typeLabel}</span>
+            </div>
+            <span class="aq-user-badge" style="font-size: 0.65rem; background: rgba(245,158,11,0.1); border: 1px solid var(--ds-border-brand); color: var(--ds-color-brand-light);">${r.id}</span>
           </div>
-          <span class="aq-user-badge" style="font-size: 0.65rem;">${r.id}</span>
-        </div>
 
-        <h3 style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-semibold); color: var(--ds-text-primary); line-height: var(--ds-leading-snug); margin-bottom: var(--ds-space-3);">
-          ${r.title}
-        </h3>
+          <h3 style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-semibold); color: var(--ds-text-primary); line-height: var(--ds-leading-snug); margin-bottom: var(--ds-space-2);">
+            ${r.title}
+          </h3>
 
-        <p style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary); line-height: 1.6; margin-bottom: var(--ds-space-4); flex: 1;">
-          ${r.description.slice(0, 140)}...
-        </p>
+          <p style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary); line-height: 1.6; margin-bottom: var(--ds-space-4); flex: 1;">
+            ${r.description.slice(0, 140)}${r.description.length > 140 ? '...' : ''}
+          </p>
 
-        <div style="padding-top: var(--ds-space-3); border-top: 1px solid var(--ds-border-subtle); display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-family: var(--ds-font-mono); font-size: 0.68rem; color: var(--ds-text-muted);">
-            By ${r.reporter_name} (${r.reporter_badge || 'SCOUT'})
-          </span>
-          <button class="aq-btn-ghost" style="padding: 4px 8px; font-size: 0.72rem; color: var(--ds-color-brand);" onclick="focusReportOnMap(${r.latitude}, ${r.longitude}, '${r.id}')">
-            Map Track →
-          </button>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-top: var(--ds-space-3); border-top: 1px solid var(--ds-border-subtle); flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button class="aq-report-confirm-btn ${userConfirmed ? 'confirmed' : ''}" onclick="confirmReport('${r.id}', this)" title="Confirm you also saw this incident">
+                <span>${userConfirmed ? '✓ Confirmed' : '👍 I See This Too'}</span>
+                <span style="font-family: var(--ds-font-mono); font-weight: bold; background: rgba(255,255,255,0.15); padding: 1px 6px; border-radius: 99px;">${confCount}</span>
+              </button>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-family: var(--ds-font-mono); font-size: 0.68rem; color: var(--ds-text-muted);">
+                By ${r.reporter_name || 'Citizen'}
+              </span>
+              <button class="aq-btn-ghost" style="padding: 4px 10px; font-size: 0.72rem; color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); border-radius: 4px;" onclick="focusReportOnMap(${r.latitude}, ${r.longitude}, '${r.id}')">
+                📍 Track on Map
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 // ── Toast Notification System ─────────────────────────────────────────────
@@ -2064,4 +2267,441 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
+}
+
+// ── Citizen Coastal Hub & Beach Conditions Engine ───────────────────────────
+function initBeachConditions() {
+  renderBeachCards(BEACHES_DATA);
+
+  // Search input live filtering
+  const searchInput = document.getElementById('citizen-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      handleCitizenSearch(e.target.value);
+    });
+  }
+
+  // Close beach drawer when clicking outside
+  document.addEventListener('click', (e) => {
+    const drawer = document.getElementById('beach-detail-drawer');
+    if (!drawer || !drawer.classList.contains('active')) return;
+    if (!drawer.contains(e.target) && !e.target.closest('.aq-beach-card') && !e.target.closest('.maplibre-beach-marker')) {
+      closeBeachDrawer();
+    }
+  });
+
+  // Close emergency modal on backdrop click
+  const emModal = document.getElementById('emergency-modal');
+  if (emModal) {
+    emModal.addEventListener('click', (e) => {
+      if (e.target === emModal) closeEmergencyModal();
+    });
+  }
+}
+
+function renderBeachCards(beaches) {
+  const container = document.getElementById('beach-cards-container');
+  if (!container) return;
+
+  if (!beaches || beaches.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; background: var(--ds-bg-surface); border: 1px dashed var(--ds-border-default); border-radius: var(--ds-radius-xl);">
+        <div style="font-size: 28px; margin-bottom: 8px;">🏖️</div>
+        <div style="font-weight: 700; font-size: 16px; color: var(--ds-text-primary);">No beaches match your search</div>
+        <p style="font-size: 13px; color: var(--ds-text-secondary); margin: 6px 0 16px;">Try searching for "Juhu", "Girgaon", "Safe", or click "All Beaches".</p>
+        <button class="aq-btn-primary" onclick="filterBeaches('all', document.querySelector('.aq-filter-chip[data-filter=all]'))" style="padding: 8px 18px; font-size: 12px; font-weight: bold; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 6px; border: none; cursor: pointer;">
+          Reset Beach Filter
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = beaches.map(b => {
+    const statusClass = b.status === 'safe' ? 'safe' : (b.status === 'caution' ? 'caution' : 'hazard');
+    const statusIcon = b.status === 'safe' ? '✓' : (b.status === 'caution' ? '⚠' : '🚨');
+    const distBadge = b.distanceText ? `<span style="font-family: var(--ds-font-mono); font-size: 11px; color: var(--ds-color-brand-light); background: rgba(245,158,11,0.1); border: 1px solid var(--ds-border-brand); padding: 2px 8px; border-radius: 99px;">📍 ${b.distanceText}</span>` : '';
+
+    return `
+      <div class="aq-beach-card aq-reveal aq-revealed" data-id="${b.id}">
+        <div class="aq-beach-header">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <h3 class="aq-beach-name">${b.name}</h3>
+              ${distBadge}
+            </div>
+            <div class="aq-beach-location">${b.location}</div>
+          </div>
+          <span class="aq-status-badge ${statusClass}">
+            ${statusIcon} ${b.statusText}
+          </span>
+        </div>
+
+        <div class="aq-beach-metrics">
+          <div class="aq-metric-item">
+            <span class="aq-metric-label">SWELL HEIGHT</span>
+            <span class="aq-metric-val" style="color: var(--ds-color-brand-light);">${b.wave}</span>
+          </div>
+          <div class="aq-metric-item">
+            <span class="aq-metric-label">WATER TEMP</span>
+            <span class="aq-metric-val">${b.temp}</span>
+          </div>
+          <div class="aq-metric-item">
+            <span class="aq-metric-label">TIDE STATUS</span>
+            <span class="aq-metric-val" style="font-size: 12px; font-weight: 600; color: ${b.status === 'safe' ? '#10b981' : '#f59e0b'};">${b.tide}</span>
+          </div>
+        </div>
+
+        <p class="aq-beach-desc">${b.desc}</p>
+
+        <div class="aq-beach-actions">
+          <button class="aq-beach-btn primary" onclick="openBeachDrawer('${b.id}')">
+            🌊 Check Safety & Swell
+          </button>
+          <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(${b.lat}, ${b.lng}, '${b.id}')" title="Center on Live Map">
+            🗺️ Map
+          </button>
+          <button class="aq-beach-btn ghost" onclick="openReportModalWithCoords(${b.lat}, ${b.lng}, '${b.name.replace(/'/g, "\\'")}')" title="Log Incident at ${b.name}">
+            + Report
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function plotBeachesOnHomepageMap() {
+  if (!homepageTacticalMap) return;
+
+  // Clear previous beach markers
+  homepageBeachMarkers.forEach(m => m.remove());
+  homepageBeachMarkers = [];
+
+  BEACHES_DATA.forEach(b => {
+    const el = document.createElement('div');
+    el.className = `maplibre-beach-marker ${b.status}`;
+    el.innerHTML = `<span class="marker-dot"></span><span>${b.name.replace(' Beach', '').replace(' Promenade', '')}</span>`;
+    el.title = `${b.name} — ${b.statusText} (${b.wave} swell)`;
+
+    const popup = new maplibregl.Popup({ offset: 14 }).setHTML(`
+      <div style="background:#07111e; color:#f1f5f9; padding:10px; min-width: 210px; border-radius:6px; font-family:var(--ds-font-body);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+          <strong style="color: #f1f5f9; font-size: 13px;">${b.name}</strong>
+          <span style="font-size: 10px; font-weight:bold; color: ${b.status === 'safe' ? '#10b981' : (b.status === 'caution' ? '#f59e0b' : '#ef4444')};">
+            ${b.status.toUpperCase()}
+          </span>
+        </div>
+        <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">${b.location}</div>
+        <div style="display: flex; gap: 8px; font-family: var(--ds-font-mono); font-size: 11px; background: rgba(255,255,255,0.05); padding: 5px 8px; border-radius: 4px; margin-bottom: 8px;">
+          <span>🌊 ${b.wave}</span>
+          <span>🌡️ ${b.temp}</span>
+          <span>🏊 ${b.lifeguards}</span>
+        </div>
+        <button onclick="openBeachDrawer('${b.id}')" style="width: 100%; padding: 6px; font-size: 11px; font-weight: bold; background: var(--ds-color-brand); color: var(--ds-bg-base); border: none; border-radius: 4px; cursor: pointer;">
+          View Full Beach Swell & Details →
+        </button>
+      </div>
+    `);
+
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openBeachDrawer(b.id);
+    });
+
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([b.lng, b.lat])
+      .setPopup(popup)
+      .addTo(homepageTacticalMap);
+
+    homepageBeachMarkers.push(marker);
+  });
+}
+
+function focusBeachOnMap(lat, lng, beachId) {
+  const hpMapEl = document.getElementById('radar-map');
+  if (hpMapEl && homepageTacticalMap) {
+    hpMapEl.scrollIntoView({ behavior: 'smooth' });
+    homepageTacticalMap.flyTo({ center: [lng, lat], zoom: 13.5, pitch: 30, duration: 1200 });
+    const b = BEACHES_DATA.find(x => x.id === beachId);
+    if (b) showToast('📍 Beach Focused', `Zoomed to ${b.name}. Current swell: ${b.wave}.`, 'info');
+  }
+}
+
+function handleCitizenSearch(query) {
+  const cleanQ = (query || '').trim().toLowerCase();
+  if (!cleanQ) {
+    renderBeachCards(BEACHES_DATA);
+    return;
+  }
+
+  const filtered = BEACHES_DATA.filter(b => 
+    b.name.toLowerCase().includes(cleanQ) ||
+    b.location.toLowerCase().includes(cleanQ) ||
+    b.status.toLowerCase().includes(cleanQ) ||
+    b.statusText.toLowerCase().includes(cleanQ) ||
+    b.desc.toLowerCase().includes(cleanQ)
+  );
+
+  renderBeachCards(filtered);
+}
+
+function filterBeaches(filterType, btn) {
+  activeBeachFilter = filterType;
+
+  // Update button classes and active styling
+  document.querySelectorAll('.aq-filter-chip').forEach(b => {
+    b.classList.remove('active');
+    b.style.background = 'var(--ds-bg-card)';
+    b.style.borderColor = 'var(--ds-border-default)';
+    b.style.color = 'var(--ds-text-secondary)';
+    b.style.fontWeight = '500';
+  });
+  if (btn) {
+    btn.classList.add('active');
+    btn.style.background = 'var(--ds-color-brand)';
+    btn.style.borderColor = 'var(--ds-color-brand)';
+    btn.style.color = 'var(--ds-bg-base)';
+    btn.style.fontWeight = '700';
+  }
+
+  let filtered = BEACHES_DATA;
+  if (filterType === 'safe') {
+    filtered = BEACHES_DATA.filter(b => b.status === 'safe');
+  } else if (filterType === 'caution') {
+    filtered = BEACHES_DATA.filter(b => b.status === 'caution');
+  } else if (filterType === 'rescue') {
+    filtered = BEACHES_DATA.filter(b => b.lifeguards.toLowerCase().includes('active') || b.lifeguards.toLowerCase().includes('patrol'));
+  } else if (filterType === 'hazard') {
+    filtered = BEACHES_DATA.filter(b => b.status === 'hazard');
+  }
+
+  renderBeachCards(filtered);
+}
+
+function calculateHaversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function findBeachesNearMe() {
+  showToast('📍 Detecting Location', 'Requesting GPS access to find your closest beach...', 'info');
+
+  const applyCoordinates = (lat, lng) => {
+    userCoordinates = { lat, lng };
+
+    const withDist = BEACHES_DATA.map(b => {
+      const dist = calculateHaversineKm(lat, lng, b.lat, b.lng);
+      return {
+        ...b,
+        distanceKm: dist,
+        distanceText: `${dist.toFixed(1)} km away`
+      };
+    });
+
+    withDist.sort((a, b) => a.distanceKm - b.distanceKm);
+
+    renderBeachCards(withDist);
+    scrollToSection('beaches-section');
+
+    const closest = withDist[0];
+    showToast('✓ Closest Beach Found', `${closest.name} is nearest to you (${closest.distanceText}). Status: ${closest.statusText}.`, 'success');
+
+    if (homepageTacticalMap) {
+      homepageTacticalMap.flyTo({ center: [closest.lng, closest.lat], zoom: 13, pitch: 25, duration: 1200 });
+    }
+  };
+
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        applyCoordinates(pos.coords.latitude, pos.coords.longitude);
+      },
+      (err) => {
+        // Fallback to central Mumbai coast
+        console.warn('Geolocation unavailable, defaulting to Mumbai Coast', err);
+        applyCoordinates(19.0144, 72.8479);
+        showToast('📍 Mumbai Coastal Reference', 'Using Central Mumbai GPS reference for distance ranking.', 'info');
+      },
+      { timeout: 7000, enableHighAccuracy: true }
+    );
+  } else {
+    applyCoordinates(19.0144, 72.8479);
+  }
+}
+
+function openBeachDrawer(beachId) {
+  const b = BEACHES_DATA.find(x => x.id === beachId);
+  if (!b) return;
+
+  selectedBeachId = beachId;
+
+  const drawer = document.getElementById('beach-detail-drawer');
+  if (!drawer) return;
+
+  const nameEl = document.getElementById('drawer-beach-name');
+  const badgeEl = document.getElementById('drawer-beach-badge');
+  const locEl = document.getElementById('drawer-beach-loc');
+  const waveEl = document.getElementById('drawer-wave');
+  const tempEl = document.getElementById('drawer-temp');
+  const tideEl = document.getElementById('drawer-tide');
+  const lifeguardsEl = document.getElementById('drawer-lifeguards');
+  const descEl = document.getElementById('drawer-desc');
+  const directionsEl = document.getElementById('drawer-directions-link');
+
+  if (nameEl) nameEl.textContent = b.name;
+  if (badgeEl) {
+    badgeEl.className = `aq-status-badge ${b.status}`;
+    badgeEl.textContent = b.statusText;
+  }
+  if (locEl) locEl.textContent = `${b.location} · Lat: ${b.lat.toFixed(4)}, Lon: ${b.lng.toFixed(4)}`;
+  if (waveEl) waveEl.textContent = b.wave;
+  if (tempEl) tempEl.textContent = b.temp;
+  if (tideEl) {
+    tideEl.textContent = b.tide;
+    tideEl.style.color = b.status === 'safe' ? '#10b981' : '#f59e0b';
+  }
+  if (lifeguardsEl) lifeguardsEl.textContent = b.lifeguards;
+  if (descEl) descEl.textContent = b.desc;
+  if (directionsEl) directionsEl.href = b.directionsUrl;
+
+  drawer.classList.add('active');
+}
+
+function closeBeachDrawer() {
+  const drawer = document.getElementById('beach-detail-drawer');
+  if (drawer) drawer.classList.remove('active');
+  selectedBeachId = null;
+}
+
+function zoomToSelectedBeach() {
+  if (!selectedBeachId) return;
+  const b = BEACHES_DATA.find(x => x.id === selectedBeachId);
+  if (b) {
+    closeBeachDrawer();
+    focusBeachOnMap(b.lat, b.lng, b.id);
+  }
+}
+
+function reportFromDrawer() {
+  if (!selectedBeachId) return;
+  const b = BEACHES_DATA.find(x => x.id === selectedBeachId);
+  if (b) {
+    closeBeachDrawer();
+    openReportModalWithCoords(b.lat, b.lng, b.name);
+  }
+}
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+}
+
+function openEmergencyModal() {
+  const modal = document.getElementById('emergency-modal');
+  if (modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeEmergencyModal() {
+  const modal = document.getElementById('emergency-modal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+  }
+}
+
+function setAppMode(mode) {
+  activeAppMode = mode;
+
+  const btnCitizen = document.getElementById('btn-mode-citizen');
+  const btnOfficer = document.getElementById('btn-mode-officer');
+
+  if (mode === 'officer') {
+    if (btnCitizen) {
+      btnCitizen.classList.remove('active');
+      btnCitizen.style.background = 'transparent';
+      btnCitizen.style.color = 'var(--ds-text-secondary)';
+      btnCitizen.style.fontWeight = '600';
+    }
+    if (btnOfficer) {
+      btnOfficer.classList.add('active');
+      btnOfficer.style.background = 'var(--ds-color-brand)';
+      btnOfficer.style.color = 'var(--ds-bg-base)';
+      btnOfficer.style.fontWeight = '700';
+    }
+    openCommandCenter('overview');
+    showToast('🛡️ Officer HUD Engaged', 'Switched to Operations HUD: Telemetry, AIS Vessels & CASIA2 Forensics active.', 'info');
+  } else {
+    if (btnOfficer) {
+      btnOfficer.classList.remove('active');
+      btnOfficer.style.background = 'transparent';
+      btnOfficer.style.color = 'var(--ds-text-secondary)';
+      btnOfficer.style.fontWeight = '600';
+    }
+    if (btnCitizen) {
+      btnCitizen.classList.add('active');
+      btnCitizen.style.background = 'var(--ds-color-brand)';
+      btnCitizen.style.color = 'var(--ds-bg-base)';
+      btnCitizen.style.fontWeight = '700';
+    }
+    closeCommandCenter();
+    scrollToSection('beaches-section');
+    showToast('🏖️ Citizen View', 'Switched to Community View: Live beach conditions and 1-tap hazard reporting.', 'info');
+  }
+}
+
+// ── Report Upvoting & Confirmations Engine ───────────────────────────────────
+function getReportConfirmations() {
+  try {
+    return JSON.parse(localStorage.getItem('aquashield_confirmations') || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function confirmReport(reportId, btnEl) {
+  const data = getReportConfirmations();
+  if (data[reportId]?.userConfirmed) {
+    showToast('Already Validated', 'You have already confirmed this incident. Thank you for validating local safety!', 'info');
+    return;
+  }
+
+  const currentCount = (data[reportId]?.count || 0) + 1;
+  data[reportId] = {
+    count: currentCount,
+    userConfirmed: true,
+    timestamp: Date.now()
+  };
+  localStorage.setItem('aquashield_confirmations', JSON.stringify(data));
+
+  if (btnEl) {
+    btnEl.classList.add('confirmed');
+    btnEl.innerHTML = `<span>✓ Confirmed</span> <span class="conf-badge">${currentCount}</span>`;
+  }
+  showToast('✓ Incident Confirmed', 'Thank you! Your validation alerts lifeguards and local beachgoers.', 'success');
+}
+
+function filterLandingReports(category, btn) {
+  if (btn) {
+    const parent = btn.parentElement;
+    if (parent) {
+      parent.querySelectorAll('.aq-filter-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  }
+
+  if (category === 'all') {
+    renderLandingFieldReports(allReportsData);
+  } else {
+    const filtered = allReportsData.filter(r => r.type === category);
+    renderLandingFieldReports(filtered);
+  }
 }

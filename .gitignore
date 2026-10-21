@@ -24,4 +24,7 @@ Thumbs.db
 scratch/
 *.log
 *.backup
-
+# Datasets & Large Weights
+dataset/
+*.tif
+*.tiff
