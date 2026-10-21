@@ -358,6 +358,47 @@ function closeTermsModal() {
   }
 }
 
+function openStandardsModal(category = 'all') {
+  const modal = document.getElementById('standards-modal');
+  if (modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    if (category !== 'all') {
+      const btn = Array.from(modal.querySelectorAll('.aq-filter-chip')).find(
+        b => b.getAttribute('onclick')?.includes(`'${category}'`)
+      );
+      filterStandards(category, btn);
+    }
+  }
+}
+
+function closeStandardsModal() {
+  const modal = document.getElementById('standards-modal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+  }
+}
+
+function filterStandards(category, btn) {
+  if (btn) {
+    const parent = btn.parentElement;
+    if (parent) {
+      parent.querySelectorAll('.aq-filter-chip').forEach(b => b.classList.remove('active'));
+    }
+    btn.classList.add('active');
+  }
+
+  const cards = document.querySelectorAll('#standards-cards-container .aq-pillar-card');
+  cards.forEach(card => {
+    if (category === 'all' || card.getAttribute('data-category') === category) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeCommandCenter();
@@ -365,6 +406,7 @@ document.addEventListener('keydown', (e) => {
     closeAuthModal();
     closePrivacyModal();
     closeTermsModal();
+    closeStandardsModal();
   }
 });
 

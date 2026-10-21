@@ -28,3 +28,4 @@ scratch/
 dataset/
 *.tif
 *.tiff
+backend/assets/uploads/

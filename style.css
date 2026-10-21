@@ -1345,3 +1345,236 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   transform: scale(1.04);
 }
 
+/* ── Standards & Architectural Integrity Modal ─────────────────────── */
+.aq-standards-modal-card {
+  background: var(--ds-bg-surface);
+  border: 1px solid var(--ds-border-default);
+  border-radius: var(--ds-radius-2xl);
+  width: 95%;
+  max-width: 1040px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 40px rgba(245, 158, 11, 0.12);
+  animation: aq-modal-pop var(--ds-transition-base) forwards;
+}
+
+.aq-standards-header {
+  padding: 24px 28px 16px;
+  background: var(--ds-bg-surface);
+  border-bottom: 1px solid var(--ds-border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.aq-standards-body {
+  padding: 24px 28px 40px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.aq-pillar-card {
+  background: var(--ds-bg-card);
+  border: 1px solid var(--ds-border-default);
+  border-radius: var(--ds-radius-xl);
+  padding: 24px;
+  transition: border-color var(--ds-transition-fast);
+}
+
+.aq-pillar-card:hover {
+  border-color: var(--ds-border-brand);
+}
+
+.aq-pillar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.aq-pillar-num {
+  font-family: var(--ds-font-mono);
+  font-size: var(--ds-text-xs);
+  color: var(--ds-color-brand-light);
+  background: var(--ds-bg-raised);
+  border: 1px solid var(--ds-border-brand);
+  padding: 3px 10px;
+  border-radius: var(--ds-radius-sm);
+  font-weight: 700;
+}
+
+.aq-pillar-title {
+  font-family: var(--ds-font-display);
+  font-size: var(--ds-text-xl);
+  font-weight: var(--ds-weight-bold);
+  color: var(--ds-text-primary);
+  margin-top: 4px;
+}
+
+.aq-pillar-subtitle {
+  font-size: var(--ds-text-xs);
+  color: var(--ds-text-secondary);
+  font-family: var(--ds-font-body);
+}
+
+.aq-rule-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .aq-rule-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Green "Do This" Column */
+.aq-rule-box-green {
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--ds-radius-lg);
+  padding: 16px;
+}
+
+.aq-rule-box-green .aq-rule-label {
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Red "Never Do This" Column */
+.aq-rule-box-red {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--ds-radius-lg);
+  padding: 16px;
+}
+
+.aq-rule-box-red .aq-rule-label {
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Yellow/Amber Warning Box */
+.aq-rule-box-amber {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--ds-radius-lg);
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.aq-rule-box-amber-icon {
+  color: var(--ds-color-brand);
+  font-family: var(--ds-font-mono);
+  font-weight: 900;
+  font-size: 16px;
+  background: rgba(245, 158, 11, 0.2);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.aq-rule-box-amber-text {
+  font-size: var(--ds-text-xs);
+  color: #fde68a;
+  line-height: 1.55;
+}
+
+/* AquaShield Verified Compliance Strip */
+.aq-compliance-strip {
+  background: var(--ds-bg-raised);
+  border: 1px solid var(--ds-border-subtle);
+  border-radius: var(--ds-radius-md);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.aq-compliance-strip .verified {
+  color: #10b981;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.aq-rule-item {
+  font-size: var(--ds-text-xs);
+  line-height: 1.55;
+  color: var(--ds-text-secondary);
+  margin-bottom: 10px;
+  padding-left: 20px;
+  position: relative;
+}
+
+.aq-rule-item:last-child {
+  margin-bottom: 0;
+}
+
+.aq-rule-item-green::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #10b981;
+  font-weight: 700;
+}
+
+.aq-rule-item-red::before {
+  content: "✗";
+  position: absolute;
+  left: 0;
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.aq-rule-strong {
+  color: var(--ds-text-primary);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* Accessible Reduced Motion Support (Pillar 07) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

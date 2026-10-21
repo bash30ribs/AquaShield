@@ -41,6 +41,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next) -> Response:
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(self)"
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+
 # Include All Feature Routers
 app.include_router(disasters_router)
 app.include_router(reports_router)
@@ -88,6 +103,14 @@ def get_sw():
 @app.get("/manifest.json")
 def get_manifest():
     return FileResponse(os.path.join(ROOT_DIR, "manifest.json"), media_type="application/json")
+
+@app.get("/sitemap.xml")
+def get_sitemap():
+    return FileResponse(os.path.join(ROOT_DIR, "sitemap.xml"), media_type="application/xml")
+
+@app.get("/robots.txt")
+def get_robots():
+    return FileResponse(os.path.join(ROOT_DIR, "robots.txt"), media_type="text/plain")
 
 if __name__ == "__main__":
     import uvicorn

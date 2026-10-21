@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/admin/
+Disallow: /api/auth/token
+
+Sitemap: https://aquashield.org/sitemap.xml
