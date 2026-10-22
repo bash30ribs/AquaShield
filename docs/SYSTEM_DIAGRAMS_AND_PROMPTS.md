@@ -6,6 +6,10 @@ This document contains GitHub-renderable Mermaid diagrams alongside ready-to-use
 
 ## 1. Data Flow Diagram (DFD)
 
+### Visual Vector Diagram (SVG)
+![Data Flow Diagram Level 1](diagrams/dfd_diagram.svg)
+*Direct SVG File*: [`docs/diagrams/dfd_diagram.svg`](diagrams/dfd_diagram.svg)
+
 ### 1.1 Level 0: Context Level Diagram (GitHub Rendered)
 
 ```mermaid
@@ -109,6 +113,10 @@ graph TD
 
 ## 2. System Workflow Flowchart
 
+### Visual Vector Diagram (SVG)
+![System Workflow Flowchart](diagrams/flowchart_diagram.svg)
+*Direct SVG File*: [`docs/diagrams/flowchart_diagram.svg`](diagrams/flowchart_diagram.svg)
+
 ### 2.1 End-to-End Decision Flowchart (GitHub Rendered)
 
 ```mermaid
@@ -187,6 +195,10 @@ flowchart TD
 ---
 
 ## 3. Unified Modeling Language (UML) Diagrams
+
+### Visual Vector Diagram (SVG)
+![UML Class Diagram](diagrams/uml_class_diagram.svg)
+*Direct SVG File*: [`docs/diagrams/uml_class_diagram.svg`](diagrams/uml_class_diagram.svg)
 
 ### 3.1 UML Class Diagram (GitHub Rendered)
 
@@ -344,6 +356,10 @@ sequenceDiagram
 ---
 
 ## 4. System Block Diagram
+
+### Visual Vector Diagram (SVG)
+![System Engineering Block Diagram](diagrams/system_block_diagram.svg)
+*Direct SVG File*: [`docs/diagrams/system_block_diagram.svg`](diagrams/system_block_diagram.svg)
 
 ### 4.1 System Block Architecture (GitHub Rendered)
 

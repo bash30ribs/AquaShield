@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1150 820" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #07111e; }
+      .title { font-family: system-ui, -apple-system, sans-serif; font-size: 22px; font-weight: bold; fill: #f8fafc; }
+      .subtitle { font-family: system-ui, -apple-system, sans-serif; font-size: 13px; fill: #94a3b8; }
+      .tier-box { fill: #0c1827; stroke: #334155; stroke-width: 2; rx: 12px; }
+      .tier-header { font-family: system-ui, -apple-system, sans-serif; font-size: 13px; font-weight: bold; fill: #94a3b8; letter-spacing: 1px; }
+      .comp-box { fill: #122238; stroke: #38bdf8; stroke-width: 1.8; rx: 8px; }
+      .comp-amber { fill: #122238; stroke: #f59e0b; stroke-width: 1.8; rx: 8px; }
+      .comp-green { fill: #122238; stroke: #10b981; stroke-width: 1.8; rx: 8px; }
+      .comp-red { fill: #122238; stroke: #ef4444; stroke-width: 1.8; rx: 8px; }
+      .comp-title { font-family: system-ui, -apple-system, sans-serif; font-size: 13px; font-weight: bold; fill: #f8fafc; text-anchor: middle; }
+      .comp-sub { font-family: system-ui, -apple-system, sans-serif; font-size: 11px; fill: #94a3b8; text-anchor: middle; }
+      .bus-line { stroke: #64748b; stroke-width: 2.2; fill: none; marker-end: url(#blk-arrow); }
+      .bus-label { font-family: system-ui, -apple-system, sans-serif; font-size: 11px; fill: #f59e0b; font-weight: bold; }
+    </style>
+    <marker id="blk-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" class="bg" />
+
+  <!-- Title -->
+  <text x="40" y="45" class="title">AquaShield AI — System Engineering Block Diagram</text>
+  <text x="40" y="70" class="subtitle">Detailed breakdown across Sensory Ingest, Client Presentation, Application Logic, AI Engine, and Persistence</text>
+
+  <!-- 1. Sensory Block (Top Left) -->
+  <rect x="40" y="110" width="520" height="150" class="tier-box" />
+  <text x="60" y="135" class="tier-header">BLOCK 1: SENSORY &amp; TELEMETRY INGESTION TIER</text>
+  
+  <rect x="60" y="155" width="110" height="85" class="comp-box" />
+  <text x="115" y="190" class="comp-title">Ocean Buoys</text>
+  <text x="115" y="210" class="comp-sub">INCOIS Swell</text>
+
+  <rect x="185" y="155" width="115" height="85" class="comp-box" />
+  <text x="242" y="190" class="comp-title">Weather APIs</text>
+  <text x="242" y="210" class="comp-sub">IMD &amp; Waves</text>
+
+  <rect x="315" y="155" width="110" height="85" class="comp-box" />
+  <text x="370" y="190" class="comp-title">Device GPS</text>
+  <text x="370" y="210" class="comp-sub">Geolocation API</text>
+
+  <rect x="440" y="155" width="105" height="85" class="comp-box" />
+  <text x="492" y="190" class="comp-title">Camera</text>
+  <text x="492" y="210" class="comp-sub">EXIF &amp; Pixels</text>
+
+  <!-- 2. Client Tier (Top Right) -->
+  <rect x="590" y="110" width="520" height="150" class="tier-box" />
+  <text x="610" y="135" class="tier-header">BLOCK 2: CLIENT &amp; PRESENTATION TIER (OFFLINE-FIRST PWA)</text>
+
+  <rect x="610" y="155" width="115" height="85" class="comp-box" />
+  <text x="667" y="190" class="comp-title">HTML5 / CSS3</text>
+  <text x="667" y="210" class="comp-sub">Obsidian Navy SPA</text>
+
+  <rect x="740" y="155" width="115" height="85" class="comp-box" />
+  <text x="797" y="190" class="comp-title">Leaflet &amp; Radar</text>
+  <text x="797" y="210" class="comp-sub">GIS Map &amp; SVG</text>
+
+  <rect x="870" y="155" width="110" height="85" class="comp-box" />
+  <text x="925" y="190" class="comp-title">sw.js Cache</text>
+  <text x="925" y="210" class="comp-sub">Service Worker</text>
+
+  <rect x="995" y="155" width="100" height="85" class="comp-red" />
+  <text x="1045" y="190" class="comp-title">SMS SOS</text>
+  <text x="1045" y="210" class="comp-sub">Zero-Data URI</text>
+
+  <!-- 3. Application / Backend Logic (Middle Full Width) -->
+  <rect x="40" y="320" width="1070" height="180" class="tier-box" />
+  <text x="60" y="345" class="tier-header">BLOCK 3: APPLICATION &amp; BACKEND LOGIC TIER (FASTAPI ASGI)</text>
+
+  <rect x="60" y="365" width="180" height="110" class="comp-amber" />
+  <text x="150" y="405" class="comp-title">ASGI Core &amp; Security</text>
+  <text x="150" y="425" class="comp-sub">FastAPI, CORS,</text>
+  <text x="150" y="445" class="comp-sub">Security Headers No-Sniff</text>
+
+  <rect x="260" y="365" width="190" height="110" class="comp-box" />
+  <text x="355" y="405" class="comp-title">Disasters &amp; Reports</text>
+  <text x="355" y="425" class="comp-sub">Observation Ingestion,</text>
+  <text x="355" y="445" class="comp-sub">Multipart Form Handlers</text>
+
+  <rect x="470" y="365" width="180" height="110" class="comp-green" />
+  <text x="560" y="405" class="comp-title">Marine Dispatch</text>
+  <text x="560" y="425" class="comp-sub">Wildlife Stranding,</text>
+  <text x="560" y="445" class="comp-sub">Regional NGO Routing</text>
+
+  <rect x="670" y="365" width="190" height="110" class="comp-amber" />
+  <text x="765" y="405" class="comp-title">Evac &amp; Routing</text>
+  <text x="765" y="425" class="comp-sub">Modified A* Algorithm,</text>
+  <text x="765" y="445" class="comp-sub">Elevation Safety Index</text>
+
+  <rect x="880" y="365" width="210" height="110" class="comp-box" />
+  <text x="985" y="405" class="comp-title">Disaster Copilot RAG</text>
+  <text x="985" y="425" class="comp-sub">NDMA/INCOIS SOPs,</text>
+  <text x="985" y="445" class="comp-sub">Rule-Based Assistant</text>
+
+  <!-- 4. AI & Algorithmic Tier (Bottom Left) -->
+  <rect x="40" y="560" width="520" height="190" class="tier-box" />
+  <text x="60" y="585" class="tier-header">BLOCK 4: AI &amp; COMPUTER VISION INTELLIGENCE</text>
+
+  <rect x="60" y="605" width="225" height="120" class="comp-green" />
+  <text x="172" y="645" class="comp-title">DualStreamForensicNet</text>
+  <text x="172" y="665" class="comp-sub">EfficientNet-B0 RGB Stream</text>
+  <text x="172" y="685" class="comp-sub">+ ELA Stream (CASIA2 trained)</text>
+
+  <rect x="305" y="605" width="235" height="120" class="comp-amber" />
+  <text x="422" y="645" class="comp-title">Multi-Layer Filters</text>
+  <text x="422" y="665" class="comp-sub">2D Artwork / Anime Filter</text>
+  <text x="422" y="685" class="comp-sub">Noise Entropy &amp; EXIF Sensors</text>
+
+  <!-- 5. Persistence & External Dispatch (Bottom Right) -->
+  <rect x="590" y="560" width="520" height="190" class="tier-box" />
+  <text x="610" y="585" class="tier-header">BLOCK 5: PERSISTENCE &amp; EMERGENCY DISPATCH</text>
+
+  <rect x="610" y="605" width="150" height="120" class="comp-box" />
+  <text x="685" y="645" class="comp-title">SQLAlchemy 2.0</text>
+  <text x="685" y="665" class="comp-sub">Async SQLite /</text>
+  <text x="685" y="685" class="comp-sub">PostgreSQL Engine</text>
+
+  <rect x="780" y="605" width="160" height="120" class="comp-red" />
+  <text x="860" y="645" class="comp-title">Emergency Helplines</text>
+  <text x="860" y="665" class="comp-sub">Coast Guard (1554)</text>
+  <text x="860" y="685" class="comp-sub">National SOS (112)</text>
+
+  <rect x="960" y="605" width="135" height="120" class="comp-green" />
+  <text x="1027" y="645" class="comp-title">NGO Fleet</text>
+  <text x="1027" y="665" class="comp-sub">Marine Rescue</text>
+  <text x="1027" y="685" class="comp-sub">Dispatch Network</text>
+
+  <!-- Data Bus Arrows -->
+  <path d="M 300 260 L 300 320" class="bus-line" />
+  <text x="310" y="295" class="bus-label">Sensor Telemetry Bus</text>
+
+  <path d="M 850 260 L 850 320" class="bus-line" />
+  <text x="860" y="295" class="bus-label">HTTPS REST / FormData</text>
+
+  <path d="M 300 500 L 300 560" class="bus-line" />
+  <text x="310" y="535" class="bus-label">PyTorch Tensor Pipeline</text>
+
+  <path d="M 850 500 L 850 560" class="bus-line" />
+  <text x="860" y="535" class="bus-label">Async ORM &amp; Dispatch Bus</text>
+</svg>

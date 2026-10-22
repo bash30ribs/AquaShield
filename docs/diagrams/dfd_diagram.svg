@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1150 820" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #07111e; }
+      .title { font-family: system-ui, -apple-system, sans-serif; font-size: 22px; font-weight: bold; fill: #f8fafc; }
+      .subtitle { font-family: system-ui, -apple-system, sans-serif; font-size: 13px; fill: #94a3b8; }
+      .entity-box { fill: #0c1827; stroke: #38bdf8; stroke-width: 2.5; rx: 12px; }
+      .entity-title { font-family: system-ui, -apple-system, sans-serif; font-size: 15px; font-weight: bold; fill: #38bdf8; }
+      .entity-sub { font-family: system-ui, -apple-system, sans-serif; font-size: 11px; fill: #cbd5e1; }
+      .proc-circle { fill: #122238; stroke: #f59e0b; stroke-width: 2.5; rx: 28px; }
+      .proc-num { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; font-weight: bold; fill: #f59e0b; }
+      .proc-text { font-family: system-ui, -apple-system, sans-serif; font-size: 13px; font-weight: 600; fill: #f8fafc; }
+      .store-box { fill: #0c1827; stroke: #10b981; stroke-width: 2; stroke-dasharray: 4,4; rx: 8px; }
+      .store-text { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; font-weight: bold; fill: #10b981; }
+      .arrow-line { stroke: #64748b; stroke-width: 1.8; fill: none; marker-end: url(#arrow); }
+      .arrow-label { font-family: system-ui, -apple-system, sans-serif; font-size: 11px; fill: #cbd5e1; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b" />
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" class="bg" />
+
+  <!-- Headers -->
+  <text x="40" y="45" class="title">AquaShield AI — Data Flow Diagram (DFD Level 1)</text>
+  <text x="40" y="70" class="subtitle">Complete functional data pipeline: Citizen Ingest, Sensor Telemetry, AI Forensics, and Emergency Dispatch</text>
+
+  <!-- External Entities (Left) -->
+  <!-- Entity: Citizens -->
+  <rect x="40" y="130" width="180" height="90" class="entity-box" />
+  <text x="130" y="165" text-anchor="middle" class="entity-title">Citizen / Volunteer</text>
+  <text x="130" y="190" text-anchor="middle" class="entity-sub">Beachgoers &amp; Fishers</text>
+
+  <!-- Entity: Ocean Buoy Sensors -->
+  <rect x="40" y="470" width="180" height="90" class="entity-box" />
+  <text x="130" y="505" text-anchor="middle" class="entity-title">Ocean IoT Buoys</text>
+  <text x="130" y="530" text-anchor="middle" class="entity-sub">INCOIS &amp; IMD Telemetry</text>
+
+  <!-- External Entities (Right) -->
+  <!-- Entity: Coast Guard & 112 -->
+  <rect x="920" y="130" width="190" height="90" class="entity-box" style="stroke: #ef4444;" />
+  <text x="1015" y="165" text-anchor="middle" class="entity-title" style="fill: #ef4444;">Coast Guard / 112</text>
+  <text x="1015" y="190" text-anchor="middle" class="entity-sub">Emergency Responders</text>
+
+  <!-- Entity: Marine NGOs -->
+  <rect x="920" y="470" width="190" height="90" class="entity-box" style="stroke: #10b981;" />
+  <text x="1015" y="505" text-anchor="middle" class="entity-title" style="fill: #10b981;">Wildlife NGOs</text>
+  <text x="1015" y="530" text-anchor="middle" class="entity-sub">Marine Rescue Teams</text>
+
+  <!-- Processes (Middle Columns) -->
+  <!-- Process 2.0: Incident Ingestion -->
+  <rect x="300" y="130" width="230" height="85" class="proc-circle" />
+  <text x="415" y="160" text-anchor="middle" class="proc-num">PROCESS 2.0</text>
+  <text x="415" y="185" text-anchor="middle" class="proc-text">Incident Ingestion &amp; GPS</text>
+
+  <!-- Process 3.0: Dual-Stream AI Forensics -->
+  <rect x="610" y="130" width="240" height="85" class="proc-circle" style="stroke: #38bdf8;" />
+  <text x="730" y="160" text-anchor="middle" class="proc-num" style="fill: #38bdf8;">PROCESS 3.0</text>
+  <text x="730" y="185" text-anchor="middle" class="proc-text">Dual-Stream AI Forensics</text>
+
+  <!-- Process 1.0: Telemetry Ingest -->
+  <rect x="300" y="470" width="230" height="85" class="proc-circle" />
+  <text x="415" y="500" text-anchor="middle" class="proc-num">PROCESS 1.0</text>
+  <text x="415" y="525" text-anchor="middle" class="proc-text">Telemetry Ingest &amp; Index</text>
+
+  <!-- Process 4.0: Evacuation Routing -->
+  <rect x="300" y="300" width="230" height="85" class="proc-circle" />
+  <text x="415" y="330" text-anchor="middle" class="proc-num">PROCESS 4.0</text>
+  <text x="415" y="355" text-anchor="middle" class="proc-text">Risk-Weighted A* Routing</text>
+
+  <!-- Process 5.0: Marine Wildlife Dispatch -->
+  <rect x="610" y="470" width="240" height="85" class="proc-circle" style="stroke: #10b981;" />
+  <text x="730" y="500" text-anchor="middle" class="proc-num" style="fill: #10b981;">PROCESS 5.0</text>
+  <text x="730" y="525" text-anchor="middle" class="proc-text">Marine Rescue Dispatcher</text>
+
+  <!-- Process 6.0: Offline SMS SOS -->
+  <rect x="610" y="300" width="240" height="85" class="proc-circle" style="stroke: #ef4444;" />
+  <text x="730" y="330" text-anchor="middle" class="proc-num" style="fill: #ef4444;">PROCESS 6.0</text>
+  <text x="730" y="355" text-anchor="middle" class="proc-text">Zero-Data SMS SOS Gateway</text>
+
+  <!-- Data Stores (Bottom Central) -->
+  <rect x="180" y="680" width="200" height="70" class="store-box" />
+  <text x="280" y="710" text-anchor="middle" class="store-text">D1: Sensor Telemetry</text>
+  <text x="280" y="730" text-anchor="middle" class="entity-sub">Buoy, Swell, Wind Vectors</text>
+
+  <rect x="420" y="680" width="200" height="70" class="store-box" />
+  <text x="520" y="710" text-anchor="middle" class="store-text">D2: Incident Reports</text>
+  <text x="520" y="730" text-anchor="middle" class="entity-sub">Verified community photos</text>
+
+  <rect x="660" y="680" width="200" height="70" class="store-box" />
+  <text x="760" y="710" text-anchor="middle" class="store-text">D3: Marine Rescue DB</text>
+  <text x="760" y="730" text-anchor="middle" class="entity-sub">Stranded fauna tickets</text>
+
+  <rect x="890" y="680" width="200" height="70" class="store-box" />
+  <text x="990" y="710" text-anchor="middle" class="store-text">D4: Road &amp; Hazard Graph</text>
+  <text x="990" y="730" text-anchor="middle" class="entity-sub">Inundation risk weights</text>
+
+  <!-- Connecting Lines & Data Flows -->
+  <!-- Citizen to 2.0 -->
+  <path d="M 220 160 L 300 160" class="arrow-line" />
+  <text x="260" y="150" text-anchor="middle" class="arrow-label">Photo + GPS</text>
+
+  <!-- 2.0 to 3.0 -->
+  <path d="M 530 172 L 610 172" class="arrow-line" />
+  <text x="570" y="162" text-anchor="middle" class="arrow-label">Raw Image</text>
+
+  <!-- 3.0 to Coast Guard -->
+  <path d="M 850 165 L 920 165" class="arrow-line" style="stroke: #ef4444;" />
+  <text x="885" y="155" text-anchor="middle" class="arrow-label">Verified Alert</text>
+
+  <!-- 3.0 down to D2 -->
+  <path d="M 730 215 L 730 260 L 520 260 L 520 680" class="arrow-line" />
+  <text x="550" y="275" class="arrow-label">Store verdict (is_fake=0/1)</text>
+
+  <!-- Buoys to 1.0 -->
+  <path d="M 220 512 L 300 512" class="arrow-line" />
+  <text x="260" y="502" text-anchor="middle" class="arrow-label">Wave/Wind</text>
+
+  <!-- 1.0 down to D1 -->
+  <path d="M 415 555 L 415 620 L 280 620 L 280 680" class="arrow-line" />
+  <text x="350" y="635" text-anchor="middle" class="arrow-label">Sensor records</text>
+
+  <!-- Citizen to 4.0 (Evacuation) -->
+  <path d="M 130 220 L 130 342 L 300 342" class="arrow-line" />
+  <text x="210" y="332" text-anchor="middle" class="arrow-label">Origin &amp; Destination</text>
+
+  <!-- D4 to 4.0 -->
+  <path d="M 990 680 L 990 410 L 415 410 L 415 385" class="arrow-line" />
+  <text x="700" y="425" text-anchor="middle" class="arrow-label">Road Inundation Weights</text>
+
+  <!-- Citizen to 6.0 (SOS) -->
+  <path d="M 170 220 L 170 280 L 610 325" class="arrow-line" style="stroke: #ef4444;" />
+  <text x="380" y="275" text-anchor="middle" class="arrow-label" style="fill: #ef4444;">Offline SOS Tap</text>
+
+  <!-- 6.0 to Coast Guard -->
+  <path d="M 850 342 L 1015 342 L 1015 220" class="arrow-line" style="stroke: #ef4444;" />
+  <text x="930" y="332" text-anchor="middle" class="arrow-label" style="fill: #ef4444;">SMS payload (GPS)</text>
+
+  <!-- 5.0 to Marine NGO -->
+  <path d="M 850 512 L 920 512" class="arrow-line" style="stroke: #10b981;" />
+  <text x="885" y="502" text-anchor="middle" class="arrow-label" style="fill: #10b981;">Rescue Ticket</text>
+</svg>

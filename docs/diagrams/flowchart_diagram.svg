@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 950" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #07111e; }
+      .title { font-family: system-ui, -apple-system, sans-serif; font-size: 22px; font-weight: bold; fill: #f8fafc; }
+      .subtitle { font-family: system-ui, -apple-system, sans-serif; font-size: 13px; fill: #94a3b8; }
+      .start-node { fill: #1e293b; stroke: #38bdf8; stroke-width: 2.5; rx: 30px; }
+      .decision-diamond { fill: #122238; stroke: #f59e0b; stroke-width: 2.5; }
+      .process-rect { fill: #0c1827; stroke: #64748b; stroke-width: 2; rx: 8px; }
+      .process-amber { fill: #0c1827; stroke: #f59e0b; stroke-width: 2; rx: 8px; }
+      .process-green { fill: #0c1827; stroke: #10b981; stroke-width: 2; rx: 8px; }
+      .process-red { fill: #0c1827; stroke: #ef4444; stroke-width: 2; rx: 8px; }
+      .node-text { font-family: system-ui, -apple-system, sans-serif; font-size: 13px; font-weight: 600; fill: #f8fafc; text-anchor: middle; }
+      .node-sub { font-family: system-ui, -apple-system, sans-serif; font-size: 11px; fill: #94a3b8; text-anchor: middle; }
+      .arrow { stroke: #94a3b8; stroke-width: 2; fill: none; marker-end: url(#fc-arrow); }
+      .branch-label { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; font-weight: bold; fill: #f59e0b; }
+    </style>
+    <marker id="fc-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#94a3b8" />
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" class="bg" />
+
+  <!-- Titles -->
+  <text x="50" y="45" class="title">AquaShield AI — End-to-End System Workflow Flowchart</text>
+  <text x="50" y="70" class="subtitle">Complete logic lifecycle from network check, offline SOS fallback to AI forensic image verification</text>
+
+  <!-- Start Node -->
+  <rect x="425" y="105" width="250" height="50" class="start-node" />
+  <text x="550" y="136" class="node-text">User Opens AquaShield Platform</text>
+
+  <!-- Decision: Internet Available? -->
+  <polygon points="550,190 680,245 550,300 420,245" class="decision-diamond" />
+  <text x="550" y="242" class="node-text">Is Internet</text>
+  <text x="550" y="258" class="node-text">Available?</text>
+
+  <path d="M 550 155 L 550 190" class="arrow" />
+
+  <!-- Branch NO: Offline Path (Left) -->
+  <path d="M 420 245 L 200 245 L 200 320" class="arrow" />
+  <text x="270" y="235" class="branch-label">NO [Offline]</text>
+
+  <rect x="90" y="320" width="220" height="65" class="process-red" />
+  <text x="200" y="348" class="node-text">Load Service Worker (sw.js)</text>
+  <text x="200" y="368" class="node-sub">Offline Asset Cache Active</text>
+
+  <path d="M 200 385 L 200 440" class="arrow" />
+
+  <polygon points="200,440 290,480 200,520 110,480" class="decision-diamond" />
+  <text x="200" y="478" class="node-text">Action Type?</text>
+
+  <path d="M 110 480 L 50 480 L 50 580" class="arrow" />
+  <text x="55" y="470" class="branch-label">SOP View</text>
+  <rect x="10" y="580" width="160" height="60" class="process-rect" />
+  <text x="90" y="605" class="node-text">View Offline</text>
+  <text x="90" y="625" class="node-sub">Disaster SOP Checklists</text>
+
+  <path d="M 290 480 L 290 580" class="arrow" />
+  <text x="295" y="520" class="branch-label">Emergency SOS</text>
+  <rect x="210" y="580" width="180" height="60" class="process-red" />
+  <text x="300" y="605" class="node-text">Trigger Native SMS URI</text>
+  <text x="300" y="625" class="node-sub">GPS Lat/Lng to 112 / Coast Guard</text>
+
+  <!-- Branch YES: Online Path (Right) -->
+  <path d="M 680 245 L 800 245 L 800 320" class="arrow" />
+  <text x="700" y="235" class="branch-label" style="fill: #10b981;">YES [Online]</text>
+
+  <rect x="680" y="320" width="240" height="65" class="process-green" />
+  <text x="800" y="348" class="node-text">Fetch Live Buoy Telemetry</text>
+  <text x="800" y="368" class="node-sub">Swell, Wave Height, Wind Speeds</text>
+
+  <path d="M 800 385 L 800 440" class="arrow" />
+
+  <polygon points="800,440 920,480 800,520 680,480" class="decision-diamond" />
+  <text x="800" y="478" class="node-text">Select Feature</text>
+
+  <!-- Online Feature Branches -->
+  <!-- 1. Beach Safety -->
+  <path d="M 680 480 L 460 480 L 460 580" class="arrow" />
+  <text x="470" y="520" class="branch-label">Beach Radar</text>
+  <rect x="380" y="580" width="160" height="60" class="process-rect" />
+  <text x="460" y="605" class="node-text">Check Beach Status</text>
+  <text x="460" y="625" class="node-sub">Safe / Caution / Hazard</text>
+
+  <!-- 2. Evacuation -->
+  <path d="M 740 500 L 610 500 L 610 580" class="arrow" />
+  <text x="615" y="540" class="branch-label">Evac Route</text>
+  <rect x="530" y="580" width="160" height="60" class="process-amber" />
+  <text x="610" y="605" class="node-text">Risk-Weighted A*</text>
+  <text x="610" y="625" class="node-sub">Bypass Flooded Corridors</text>
+
+  <!-- 3. Marine Rescue -->
+  <path d="M 860 500 L 980 500 L 980 580" class="arrow" />
+  <text x="985" y="540" class="branch-label">Marine Wildlife</text>
+  <rect x="910" y="580" width="160" height="60" class="process-green" />
+  <text x="990" y="605" class="node-text">Log Injured Fauna</text>
+  <text x="990" y="625" class="node-sub">Automated NGO Dispatch</text>
+
+  <!-- 4. Report Hazard (Main Forensic Flow) -->
+  <path d="M 800 520 L 800 580" class="arrow" />
+  <text x="810" y="545" class="branch-label">Report Hazard</text>
+  <rect x="710" y="580" width="180" height="60" class="process-amber" />
+  <text x="800" y="605" class="node-text">Upload Incident Photo</text>
+  <text x="800" y="625" class="node-sub">Auto Geolocation Tag</text>
+
+  <path d="M 800 640 L 800 680" class="arrow" />
+
+  <rect x="670" y="680" width="260" height="60" class="process-amber" style="stroke: #38bdf8;" />
+  <text x="800" y="705" class="node-text">Run Dual-Stream AI Forensics</text>
+  <text x="800" y="725" class="node-sub">EfficientNet-B0 RGB + ELA Compression</text>
+
+  <path d="M 800 740 L 800 775" class="arrow" />
+
+  <polygon points="800,775 910,815 800,855 690,815" class="decision-diamond" />
+  <text x="800" y="812" class="node-text">Is Image Authentic?</text>
+
+  <!-- Authentic = YES -->
+  <path d="M 910 815 L 980 815 L 980 875" class="arrow" />
+  <text x="920" y="805" class="branch-label" style="fill: #10b981;">YES [Real]</text>
+  <rect x="900" y="875" width="170" height="55" class="process-green" />
+  <text x="985" y="900" class="node-text">Broadcast Live Hazard</text>
+  <text x="985" y="918" class="node-sub">Alert Coast Guard &amp; Public</text>
+
+  <!-- Authentic = NO -->
+  <path d="M 690 815 L 620 815 L 620 875" class="arrow" />
+  <text x="630" y="805" class="branch-label" style="fill: #ef4444;">NO [Fake]</text>
+  <rect x="540" y="875" width="170" height="55" class="process-red" />
+  <text x="625" y="900" class="node-text">Flag &amp; Suppress Alert</text>
+  <text x="625" y="918" class="node-sub">Prevent Public False Alarm</text>
+</svg>

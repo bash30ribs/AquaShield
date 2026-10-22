@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1150 820" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #07111e; }
+      .title { font-family: system-ui, -apple-system, sans-serif; font-size: 22px; font-weight: bold; fill: #f8fafc; }
+      .subtitle { font-family: system-ui, -apple-system, sans-serif; font-size: 13px; fill: #94a3b8; }
+      .uml-box { fill: #0c1827; stroke: #38bdf8; stroke-width: 2; rx: 6px; }
+      .uml-box-srv { fill: #0c1827; stroke: #f59e0b; stroke-width: 2; rx: 6px; }
+      .uml-box-net { fill: #0c1827; stroke: #10b981; stroke-width: 2; rx: 6px; }
+      .uml-header { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; font-weight: bold; fill: #f8fafc; text-anchor: middle; }
+      .uml-sub { font-family: system-ui, -apple-system, sans-serif; font-size: 10px; fill: #94a3b8; text-anchor: middle; font-style: italic; }
+      .uml-divider { stroke: #334155; stroke-width: 1.5; }
+      .uml-text { font-family: "JetBrains Mono", monospace, monospace; font-size: 11px; fill: #cbd5e1; }
+      .uml-arrow { stroke: #94a3b8; stroke-width: 1.8; fill: none; marker-end: url(#uml-arrow-head); }
+    </style>
+    <marker id="uml-arrow-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#94a3b8" />
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" class="bg" />
+
+  <!-- Titles -->
+  <text x="40" y="45" class="title">AquaShield AI — Unified Modeling Language (UML) Class Diagram</text>
+  <text x="40" y="70" class="subtitle">Complete class models, ORM schemas, PyTorch neural vision modules, and service layers</text>
+
+  <!-- Class: User -->
+  <g transform="translate(40, 110)">
+    <rect width="240" height="200" class="uml-box" />
+    <rect width="240" height="35" fill="#122238" rx="6" />
+    <text x="120" y="20" class="uml-header">User</text>
+    <text x="120" y="32" class="uml-sub">&lt;&lt;SQLAlchemy ORM Model&gt;&gt;</text>
+    <line x1="0" y1="35" x2="240" y2="35" class="uml-divider" />
+    <text x="15" y="55" class="uml-text">+ id: int [PK]</text>
+    <text x="15" y="75" class="uml-text">+ email: string</text>
+    <text x="15" y="95" class="uml-text">+ hashed_password: string</text>
+    <text x="15" y="115" class="uml-text">+ full_name: string</text>
+    <text x="15" y="135" class="uml-text">+ role: UserRole</text>
+    <text x="15" y="155" class="uml-text">+ is_active: bool</text>
+    <line x1="0" y1="165" x2="240" y2="165" class="uml-divider" />
+    <text x="15" y="185" class="uml-text">+ verify_password(pwd): bool</text>
+  </g>
+
+  <!-- Class: CommunityReport -->
+  <g transform="translate(320, 110)">
+    <rect width="260" height="240" class="uml-box" />
+    <rect width="260" height="35" fill="#122238" rx="6" />
+    <text x="130" y="20" class="uml-header">CommunityReport</text>
+    <text x="130" y="32" class="uml-sub">&lt;&lt;SQLAlchemy ORM Model&gt;&gt;</text>
+    <line x1="0" y1="35" x2="260" y2="35" class="uml-divider" />
+    <text x="15" y="55" class="uml-text">+ id: int [PK]</text>
+    <text x="15" y="75" class="uml-text">+ title: string</text>
+    <text x="15" y="95" class="uml-text">+ report_type: string</text>
+    <text x="15" y="115" class="uml-text">+ latitude, longitude: float</text>
+    <text x="15" y="135" class="uml-text">+ image_url: string</text>
+    <text x="15" y="155" class="uml-text">+ ai_verified: bool</text>
+    <text x="15" y="175" class="uml-text">+ ai_confidence: float</text>
+    <text x="15" y="195" class="uml-text">+ is_fake: bool</text>
+    <line x1="0" y1="205" x2="260" y2="205" class="uml-divider" />
+    <text x="15" y="225" class="uml-text">+ to_dict(): Dict</text>
+  </g>
+
+  <!-- Class: AIService -->
+  <g transform="translate(620, 110)">
+    <rect width="270" height="240" class="uml-box-srv" />
+    <rect width="270" height="35" fill="#1e293b" rx="6" />
+    <text x="135" y="20" class="uml-header" style="fill: #f59e0b;">AIService</text>
+    <text x="135" y="32" class="uml-sub">&lt;&lt;Forensic Verification Service&gt;&gt;</text>
+    <line x1="0" y1="35" x2="270" y2="35" class="uml-divider" />
+    <text x="15" y="55" class="uml-text">- _TORCH_MODEL: nn.Module</text>
+    <text x="15" y="75" class="uml-text">- _TORCH_DEVICE: Device</text>
+    <line x1="0" y1="90" x2="270" y2="90" class="uml-divider" />
+    <text x="15" y="110" class="uml-text">+ analyze_authenticity(bytes)</text>
+    <text x="15" y="130" class="uml-text">+ compute_ela(image, 90)</text>
+    <text x="15" y="150" class="uml-text">+ detect_2d_artwork(image)</text>
+    <text x="15" y="170" class="uml-text">+ analyze_noise_entropy(img)</text>
+    <text x="15" y="190" class="uml-text">+ check_exif_sensors(img)</text>
+    <text x="15" y="210" class="uml-text">+ analyze_hydro_spectral(img)</text>
+  </g>
+
+  <!-- Class: DualStreamForensicNet -->
+  <g transform="translate(920, 110)">
+    <rect width="210" height="240" class="uml-box-net" />
+    <rect width="210" height="35" fill="#143026" rx="6" />
+    <text x="105" y="20" class="uml-header" style="fill: #10b981;">DualStreamForensicNet</text>
+    <text x="105" y="32" class="uml-sub">&lt;&lt;PyTorch nn.Module&gt;&gt;</text>
+    <line x1="0" y1="35" x2="210" y2="35" class="uml-divider" />
+    <text x="15" y="55" class="uml-text">+ rgb_stream: EfficientNet</text>
+    <text x="15" y="75" class="uml-text">+ ela_stream: EfficientNet</text>
+    <text x="15" y="95" class="uml-text">+ classifier: Sequential</text>
+    <line x1="0" y1="110" x2="210" y2="110" class="uml-divider" />
+    <text x="15" y="130" class="uml-text">+ forward(rgb, ela): Tensor</text>
+    <text x="15" y="150" class="uml-text">+ extract_features(x)</text>
+    <text x="15" y="170" class="uml-text">+ predict_authenticity()</text>
+  </g>
+
+  <!-- Bottom Row Classes -->
+  <!-- Disaster Model -->
+  <g transform="translate(40, 420)">
+    <rect width="240" height="190" class="uml-box" />
+    <rect width="240" height="35" fill="#122238" rx="6" />
+    <text x="120" y="20" class="uml-header">Disaster</text>
+    <text x="120" y="32" class="uml-sub">&lt;&lt;SQLAlchemy ORM Model&gt;&gt;</text>
+    <line x1="0" y1="35" x2="240" y2="35" class="uml-divider" />
+    <text x="15" y="55" class="uml-text">+ id: int [PK]</text>
+    <text x="15" y="75" class="uml-text">+ title: string</text>
+    <text x="15" y="95" class="uml-text">+ type: DisasterType</text>
+    <text x="15" y="115" class="uml-text">+ severity: SeverityLevel</text>
+    <text x="15" y="135" class="uml-text">+ latitude, longitude: float</text>
+    <text x="15" y="155" class="uml-text">+ is_active: bool</text>
+  </g>
+
+  <!-- MarineRescue Model -->
+  <g transform="translate(320, 420)">
+    <rect width="260" height="190" class="uml-box" />
+    <rect width="260" height="35" fill="#122238" rx="6" />
+    <text x="130" y="20" class="uml-header">MarineRescue</text>
+    <text x="130" y="32" class="uml-sub">&lt;&lt;SQLAlchemy ORM Model&gt;&gt;</text>
+    <line x1="0" y1="35" x2="260" y2="35" class="uml-divider" />
+    <text x="15" y="55" class="uml-text">+ id: int [PK]</text>
+    <text x="15" y="75" class="uml-text">+ species: string</text>
+    <text x="15" y="95" class="uml-text">+ beach_name: string</text>
+    <text x="15" y="115" class="uml-text">+ injury_severity: string</text>
+    <text x="15" y="135" class="uml-text">+ status: RescueStatus</text>
+    <text x="15" y="155" class="uml-text">+ ngo_assigned: string</text>
+  </g>
+
+  <!-- RouteService -->
+  <g transform="translate(620, 420)">
+    <rect width="270" height="190" class="uml-box-srv" />
+    <rect width="270" height="35" fill="#1e293b" rx="6" />
+    <text x="135" y="20" class="uml-header" style="fill: #f59e0b;">RouteService</text>
+    <text x="135" y="32" class="uml-sub">&lt;&lt;Navigation Service&gt;&gt;</text>
+    <line x1="0" y1="35" x2="270" y2="35" class="uml-divider" />
+    <text x="15" y="55" class="uml-text">- elevation_grid: GridMap</text>
+    <text x="15" y="75" class="uml-text">- flood_basins: List[Polygon]</text>
+    <line x1="0" y1="90" x2="270" y2="90" class="uml-divider" />
+    <text x="15" y="110" class="uml-text">+ calculate_safe_route(orig, dest)</text>
+    <text x="15" y="130" class="uml-text">+ compute_inundation_risk(pt)</text>
+    <text x="15" y="150" class="uml-text">+ get_elevation(lat, lng)</text>
+  </g>
+
+  <!-- ChatService / Copilot -->
+  <g transform="translate(920, 420)">
+    <rect width="210" height="190" class="uml-box-srv" />
+    <rect width="210" height="35" fill="#1e293b" rx="6" />
+    <text x="105" y="20" class="uml-header" style="fill: #f59e0b;">ChatService</text>
+    <text x="105" y="32" class="uml-sub">&lt;&lt;Disaster Copilot RAG&gt;&gt;</text>
+    <line x1="0" y1="35" x2="210" y2="35" class="uml-divider" />
+    <text x="15" y="55" class="uml-text">- _live_context: Dict</text>
+    <text x="15" y="75" class="uml-text">- _ndma_sop_rules: List</text>
+    <line x1="0" y1="90" x2="210" y2="90" class="uml-divider" />
+    <text x="15" y="110" class="uml-text">+ get_live_context(): Dict</text>
+    <text x="15" y="130" class="uml-text">+ process_message(query)</text>
+  </g>
+
+  <!-- Connectors -->
+  <!-- CommunityReport to AIService -->
+  <path d="M 580 230 L 620 230" class="uml-arrow" />
+  <!-- AIService to DualStreamForensicNet -->
+  <path d="M 890 230 L 920 230" class="uml-arrow" />
+  <!-- User to CommunityReport -->
+  <path d="M 280 210 L 320 210" class="uml-arrow" />
+</svg>
