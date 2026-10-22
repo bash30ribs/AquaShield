@@ -9,6 +9,7 @@ AquaShield is an open-source coastal safety and disaster response platform desig
 - [Project Specification & Architecture (Detailed Report)](docs/PROJECT_SPECIFICATION.md)
 - [System Diagrams & Prompts (DFD, Flowchart, UML, Block Diagram)](docs/SYSTEM_DIAGRAMS_AND_PROMPTS.md)
 - [Complete Project Report (.DOCX with Embedded Images)](docs/AquaShield_Project_Report.docx)
+- [Image & Visual Asset Generation Prompts Guide](docs/IMAGE_GENERATION_PROMPTS_FOR_DOCUMENT.md)
 - [Key Features](#key-features)
 - [System Architecture](#system-architecture)
 - [Tech Stack](#tech-stack)
