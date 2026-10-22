@@ -1,125 +1,267 @@
-# 🌊 AquaShield AI
+# AquaShield AI — Coastal Disaster Intelligence & Marine Safety Platform
 
-> **AI-Powered Coastal Disaster Intelligence and Marine Safety Platform**
-> 
-> *"Protecting Coastal Communities using AI, Computer Vision, Machine Learning, and Large Language Models."*
+AquaShield is an open-source coastal safety and disaster response platform designed for coastal residents, beachgoers, artisanal fishermen, and civil emergency volunteers. It pairs real-time oceanographic sensor telemetry with citizen hazard reporting, AI forensic image verification, safety-weighted evacuation routing, and offline SMS emergency protocols.
 
 ---
 
-## 📌 Overview
+## Table of Contents
 
-**AquaShield AI** is an intelligent coastal disaster management and marine safety platform designed specifically for coastal regions. The platform integrates Artificial Intelligence, Computer Vision, Geographic Information Systems (GIS), Machine Learning, Large Language Models (LLMs), and real-time weather sensors to provide predictive disaster intelligence, emergency response, marine animal rescue support, and verified citizen reporting.
-
-Unlike traditional alert-only warning systems, **AquaShield AI**:
-- 🛡️ **Verifies disaster reports** using multi-layer forensic AI (YOLOv11 + EfficientNet + Vision Transformers) to filter fake CGI/AI-generated images.
-- 🛣️ **Calculates safe evacuation routes** using a Modified A* + Dijkstra risk-weighted graph algorithm.
-- 📱 **Operates offline & via SMS** when cellular data or Wi-Fi networks fail during major cyclones or tsunamis.
-- 🐬 **Coordinates marine animal rescue** with automated NGO dispatching.
-- 💬 **Provides an AI Emergency Assistant** trained on NDMA and INCOIS disaster response SOPs.
-
----
-
-## ⚡ Key Features
-
-### 1. 🚨 Live Disaster Intelligence Dashboard
-- Real-time monitoring of coastal weather conditions (wind speed, wave height, temperature, visibility, pressure).
-- Interactive Chart.js analytics for disaster frequency trends, risk level distributions, and response time metrics.
-- Live feed auto-updates for active alerts across coastal zones.
-
-### 2. 🗺️ Interactive GIS Map
-- Leaflet-powered GIS map visualizing active disaster zones, hospitals, relief shelters, and marine rescue locations.
-- Includes a native SVG fallback radar for offline operation.
-
-### 3. 🤖 Multi-Layer AI Image Verification & Fraud Prevention
-- Upload disaster photos for instantaneous 4-layer forensic scanning.
-- Cross-references visual depth features against live INCOIS buoy ocean sensor data.
-- Detects synthetic AI/Midjourney textures, Pinterest stock imagery, and recycled historical disaster photos to prevent false panic.
-
-### 4. 🛣️ AI Safe Evacuation Route Recommendation
-- Evaluates shortest vs. safest evacuation routes.
-- Calculates elevation safety and risk reduction percentages to guide citizens away from flooded highways.
-
-### 5. 🐬 Marine Animal Rescue Module
-- Species detection and reporting for injured marine life (turtles, dolphins, whales, sea birds).
-- Automated routing to assigned marine conservation NGOs with ETA tracking.
-
-### 6. 📱 Emergency Offline PWA & SMS Gateway
-- **Service Worker (`sw.js`)**: Caches all critical frontend assets for offline operation during network collapse.
-- **SMS Emergency SOS (`sms:` URI)**: Tap to send instant SMS emergency alerts containing exact GPS coordinates (`lat`, `lng`), Google Maps link, and emergency type to NDMA, Coast Guard, Police, and Ambulance helplines without internet.
-
-### 7. 💬 AI Emergency Assistant (RAG Chatbot)
-- Interactive disaster response guide providing immediate SOP instructions for cyclones, tsunamis, high tides, and emergency first aid.
+- [Key Features](#key-features)
+- [System Architecture](#system-architecture)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+  - [Option A: 1-Click Python Launcher (Recommended)](#option-a-1-click-python-launcher-recommended)
+  - [Option B: Windows 1-Click Batch Script](#option-b-windows-1-click-batch-script)
+  - [Option C: Manual Virtual Environment Setup](#option-c-manual-virtual-environment-setup)
+- [Environment Configuration](#environment-configuration)
+- [Core Workflows & Usage](#core-workflows--usage)
+- [API Reference](#api-reference)
+- [Repository Structure](#repository-structure)
+- [Contributing & Standards](#contributing--standards)
+- [License](#license)
 
 ---
 
-## 🛠️ Tech Stack
+## Key Features
 
-| Layer | Technology |
+1. **Real-Time Coastal Safety Telemetry**
+   - Live monitoring of wave heights, wind velocity, barometric pressure, swell direction, and sea-surface temperature across key coastal sectors (e.g., Juhu, Girgaon Chowpatty, Aksa, Marine Drive).
+   - Traffic-light safety index (Safe, Caution, Hazard) paired with telemetry data.
+
+2. **Citizen Hazard Reporting & Forensic Verification**
+   - Crowdsourced observation submission for storm surge, high tides, oil slicks, and coastal flooding.
+   - Forensic image scanner designed to cross-reference timestamped observation imagery with sensor readings to mitigate outdated or synthetic reports.
+
+3. **Safety-Weighted Evacuation Routing**
+   - Route calculation engine utilizing risk-weighted shortest path algorithms to navigate away from inundated lowlands and flood zones toward verified relief shelters and medical hubs.
+
+4. **Marine Wildlife Rescue Dispatch**
+   - Rapid logging for stranded or injured marine fauna (sea turtles, cetaceans, marine avifauna) with automated dispatch routing to regional conservation NGOs.
+
+5. **Offline PWA & Low-Bandwidth SMS Gateway**
+   - Service Worker caching layer (`sw.js`) guarantees map availability and emergency checklists remain accessible when cell towers degrade.
+   - Integrated `sms:` URI dispatch sends GPS coordinates directly to emergency response helplines (112, Coast Guard, NDMA) without cellular data.
+
+6. **Interactive OpenAPI / Swagger Documentation**
+   - Auto-generated interactive API explorer available at `/docs` with strict Pydantic schema validation across all endpoints.
+
+---
+
+## System Architecture
+
+```mermaid
+graph TD
+    A[Coastal Citizen / Responder] -->|HTTPS / PWA| B[Frontend UI: HTML5, CSS3, Vanilla ES6+]
+    A -->|Offline SMS URI| C[Cellular Emergency Gateway / 112]
+    B -->|REST API Requests| D[FastAPI Backend Application]
+    D -->|Async ORM / Queries| E[(SQLite / PostgreSQL Engine)]
+    D -->|Forensic Verification Pipeline| F[Image Forensics & Model Engine]
+    D -->|Sensor Feed Ingestion| G[INCOIS / Weather Telemetry Adapters]
+    B -->|Service Worker Cache| H[sw.js Local Asset Cache]
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technologies |
 |---|---|
-| **Frontend** | HTML5, CSS3 (Glassmorphism), Vanilla JS (ES6+) |
-| **Mapping & GIS** | Leaflet.js, OpenStreetMap, SVG Radar Engine |
-| **Charts & Visualization** | Chart.js 4.4, Native Canvas Fallback Renderers |
-| **Backend Framework** | Python 3.13, FastAPI, Uvicorn |
-| **Database & ORM** | Async SQLAlchemy, SQLite / PostgreSQL |
-| **Offline & PWA** | Service Worker, Web App Manifest, Geolocation API |
-| **Emergency Messaging** | Native `sms:` URI Gateway, FastAPI Emergency Router |
+| **Frontend** | HTML5, Vanilla CSS3 (Custom Design System), ES6+ JavaScript |
+| **Mapping & GIS** | Leaflet.js, OpenStreetMap, SVG Radar Fallback Renderer |
+| **Data Visualizations** | Chart.js 4.4, Native HTML5 Canvas Fallbacks |
+| **Backend Framework** | Python 3.10+, FastAPI, Uvicorn (ASGI) |
+| **Database & ORM** | Async SQLAlchemy 2.0, aiosqlite / asyncpg |
+| **Validation & Settings** | Pydantic v2, Pydantic Settings |
+| **Offline & PWA** | Web App Manifest, Service Worker Cache API, Geolocation API |
 
 ---
 
-## 🚀 Quick Start Guide
+## Prerequisites
 
-### 1-Click Launch (Windows)
-Double-click **`START_AQUASHIELD.bat`** in the project directory. This script will:
-1. Check and install Python dependencies.
-2. Start the FastAPI backend server on `http://127.0.0.1:8000`.
-3. Open the live platform in your default web browser.
+Before running AquaShield, ensure your local environment meets the following requirements:
 
-### Manual Setup
+- **Python**: Version `3.10` or higher (`python --version`)
+- **Git**: Installed and configured (`git --version`)
+- **Web Browser**: Modern Chromium, Firefox, or WebKit browser with JavaScript and Geolocation enabled
+
+---
+
+## Quick Start
+
+### Option A: 1-Click Python Launcher (Recommended)
+
+AquaShield includes an automated launcher script (`run_app.py`) that checks required packages, auto-installs any missing dependencies, initializes the local database, and launches your browser:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/kolatkvarun6-lab/capstone-project.git
-cd capstone-project
+git clone https://github.com/bash30ribs/AquaShield.git
+cd AquaShield
 
-# 2. Install dependencies
-pip install fastapi uvicorn pydantic python-multipart sqlalchemy aiosqlite
-
-# 3. Start the FastAPI server
+# 2. Run the automated launcher
 python run_app.py
-# or
+```
+
+The application will start on `http://127.0.0.1:8000` and open in your default browser.
+
+---
+
+### Option B: Windows 1-Click Batch Script
+
+On Windows systems, execute the batch script directly from PowerShell or Command Prompt:
+
+```cmd
+START_AQUASHIELD.bat
+```
+
+---
+
+### Option C: Manual Virtual Environment Setup
+
+For standard developer workflow and backend customization:
+
+```bash
+# 1. Clone repository
+git clone https://github.com/bash30ribs/AquaShield.git
+cd AquaShield
+
+# 2. Create and activate a Python virtual environment
+python -m venv venv
+
+# On Linux / macOS:
+source venv/bin/activate
+
+# On Windows (PowerShell):
+.\venv\Scripts\Activate.ps1
+
+# 3. Install backend dependencies
+pip install --upgrade pip
+pip install -r backend/requirements.txt
+
+# 4. Start the FastAPI server with live reload
 uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Open your browser and navigate to `http://127.0.0.1:8000`.
+Access the application in your browser:
+- **Web Platform**: `http://127.0.0.1:8000`
+- **Interactive Swagger Docs**: `http://127.0.0.1:8000/docs`
+- **ReDoc Documentation**: `http://127.0.0.1:8000/redoc`
 
 ---
 
-## 📂 Project Structure
+## Environment Configuration
+
+AquaShield operates out-of-the-box using local SQLite storage. For production or integration with external weather buoys and SMS gateways, configure environment variables:
+
+1. Copy the example configuration file:
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
+2. Adjust settings in `backend/.env` as needed:
+   ```ini
+   APP_NAME=AquaShield AI
+   APP_VERSION=1.0.0
+   DEBUG=True
+   SECRET_KEY=your-secure-production-key-here
+   DATABASE_URL=sqlite+aiosqlite:///./aquashield.db
+   ```
+
+---
+
+## Core Workflows & Usage
+
+### 1. Checking Beach & Sector Safety
+- Navigate to the **Live Radar & Safety** view.
+- Choose a sector (e.g., Juhu, Girgaon, Aksa) to review current swell height, wind vectors, and the composite safety badge (Safe, Caution, Hazard).
+
+### 2. Submitting an Incident Observation
+- Open the **Report Observation** module.
+- Select the incident classification (e.g., High Tide Inundation, Cyclone Debris, Rip Current).
+- Add observation coordinates (auto-populated via the browser's Geolocation API) and upload imagery.
+
+### 3. Calculating Safe Evacuation Routes
+- Access the **Evacuation Routes** screen.
+- Provide your origin and designated refuge destination to generate a path that minimizes flood basin exposure.
+
+### 4. Logging Injured Marine Life
+- Access the **Marine Wildlife Rescue** screen.
+- Select the animal category (Turtle, Marine Mammal, Seabird), log condition notes, and dispatch the alert to affiliated response teams.
+
+### 5. Triggering Emergency SOS
+- In severe network degradation, use the **Emergency SOS** action.
+- When offline, AquaShield constructs a pre-formatted SMS emergency payload with GPS coordinates to trigger device-native messaging without data reception.
+
+---
+
+## API Reference
+
+The backend provides RESTful endpoints organized under modular routers:
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Health-check endpoint reporting server status and version |
+| `GET` | `/api/disasters` | Retrieve active disaster zones and hazard warnings |
+| `POST` | `/api/reports` | Submit verified citizen hazard observation |
+| `GET` | `/api/marine` | Fetch active marine animal rescue incidents |
+| `POST` | `/api/marine` | Register new marine animal rescue case |
+| `POST` | `/api/routes/calculate` | Compute safety-weighted evacuation routes |
+| `POST` | `/api/sos/broadcast` | Dispatch emergency SOS alert |
+| `POST` | `/api/chat` | Query disaster response SOP and protocol assistance |
+
+Full parameter schemas and request/response models are accessible at `/docs`.
+
+---
+
+## Repository Structure
 
 ```
-google_antigravity/
-├── index.html               # Main Single-Page Application (SPA) frontend
-├── style.css                # Water-themed ocean glassmorphism design system
-├── app.js                   # Main application logic & fallback rendering engines
-├── sw.js                    # Service Worker for offline PWA caching & background sync
+AquaShield/
+├── index.html               # Main SPA entry point and interface structure
+├── style.css                # CSS design system and responsive layout tokens
+├── app.js                   # Client-side state, Leaflet GIS integration, and fallback engines
+├── sw.js                    # PWA Service Worker for offline asset caching
 ├── manifest.json            # Web App Manifest for mobile installation
-├── run_app.py               # 1-Click Python launcher & browser opener
-├── START_AQUASHIELD.bat     # Windows batch script for 1-click startup
-│
+├── run_app.py               # Automated launcher and environment validator
+├── START_AQUASHIELD.bat     # Windows 1-click startup batch script
+├── robots.txt               # Crawler directives and search index governance
+├── sitemap.xml              # Search engine canonical URL map
+├── STANDARDS.md             # Codebase design system, typography, and architectural rules
+├── AGENTS.md                # Development integrity and engineering standards
+├── dataset/                 # Model evaluation and training datasets
+├── train_forensics.py       # Training pipeline for image forensics validation
 └── backend/
+    ├── requirements.txt     # Python backend dependencies
+    ├── .env.example         # Template environment configuration
     └── app/
-        ├── main.py          # FastAPI application entry point
-        ├── config.py        # Configuration & CORS settings
-        ├── database.py      # Async SQLAlchemy DB engine
-        │
-        ├── models/          # SQLAlchemy ORM models (User, Disaster, Report, Marine)
-        ├── schemas/         # Pydantic validation schemas
-        ├── services/        # AI forensic, route calculation & chat services
-        └── routers/         # API routers (disasters, reports, marine, routes, sos, chat, sms)
+        ├── main.py          # FastAPI application initialization & middleware
+        ├── config.py        # Configuration loading and environment management
+        ├── database.py      # Async SQLAlchemy engine and session factory
+        ├── models/          # ORM data models
+        ├── schemas/         # Pydantic request/response schemas
+        ├── services/        # Business logic, risk calculations, and forensic tools
+        └── routers/         # REST API route handlers
 ```
 
 ---
 
-## 📜 License
+## Contributing & Standards
 
-Distributed under the MIT License. See `LICENSE` for more information.
+1. **Adhere to [STANDARDS.md](STANDARDS.md)**:
+   - Use the domain palette (`#07111e`, `#0c1827`, `#f59e0b`, `#10b981`, `#ef4444`).
+   - Use the standardized 8px layout grid and defined typography scale (`Outfit` + `Inter`).
+2. **Follow [AGENTS.md](AGENTS.md)**:
+   - Ensure genuine functionality with zero artificial metrics or placeholder data.
+   - Maintain strict WCAG AA accessibility contrast ratios.
+3. **Submitting Changes**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   # Make changes and test locally via python run_app.py
+   git commit -m "feat: describe your change cleanly"
+   git push origin feature/your-feature-name
+   ```
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for full details.
