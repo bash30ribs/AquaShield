@@ -6,6 +6,8 @@ AquaShield is an open-source coastal safety and disaster response platform desig
 
 ## Table of Contents
 
+- [Project Specification & Architecture (Detailed Report)](docs/PROJECT_SPECIFICATION.md)
+- [System Diagrams & Prompts (DFD, Flowchart, UML, Block Diagram)](docs/SYSTEM_DIAGRAMS_AND_PROMPTS.md)
 - [Key Features](#key-features)
 - [System Architecture](#system-architecture)
 - [Tech Stack](#tech-stack)
@@ -216,6 +218,9 @@ Full parameter schemas and request/response models are accessible at `/docs`.
 
 ```
 AquaShield/
+├── docs/                    # Full project specification & system diagram prompts
+│   ├── PROJECT_SPECIFICATION.md
+│   └── SYSTEM_DIAGRAMS_AND_PROMPTS.md
 ├── index.html               # Main SPA entry point and interface structure
 ├── style.css                # CSS design system and responsive layout tokens
 ├── app.js                   # Client-side state, Leaflet GIS integration, and fallback engines
