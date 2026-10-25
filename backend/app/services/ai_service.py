@@ -310,13 +310,13 @@ class AIService:
             status = "quarantined"
             final_auth_pct = 14.2
             verdict = "2D ARTWORK / ANIME / DIGITAL ILLUSTRATION DETECTED"
-            action = "Quarantined — Artwork / cartoon rejected from Tactical Maritime Grid"
+            action = "Quarantined: Artwork / cartoon rejected from Tactical Maritime Grid"
             pipeline_name = "AquaShield Art-Spectral Vision Filter v2.1"
         elif metadata_tamper_flag:
             status = "quarantined"
             final_auth_pct = 22.4
             verdict = "DIGITAL TAMPERING / EDITING SOFTWARE SIGNATURE"
-            action = "Quarantined — Image contains Photoshop/AI metadata header"
+            action = "Quarantined: Image contains Photoshop/AI metadata header"
             pipeline_name = "AquaShield Dual-Stream EfficientNet-ELA Neural Network v2.1"
         elif dl_auth_prob is not None:
             exif_w = 0.95 if has_exif else 0.70
@@ -338,7 +338,7 @@ class AIService:
             final_auth_pct = round(min(99.4, max(12.0, raw_auth_score * 100.0)), 1)
             pipeline_name = "AquaShield Spectral-ELA Vision Forensics Engine v2.0"
             status = "verified" if final_auth_pct >= 70.0 else "advisory"
-            verdict = "AUTHENTIC OPTICAL FIELD CAPTURE" if status == "verified" else "MODERATE CONFIDENCE — UNVERIFIED SENSOR EXIF"
+            verdict = "AUTHENTIC OPTICAL FIELD CAPTURE" if status == "verified" else "MODERATE CONFIDENCE - UNVERIFIED SENSOR EXIF"
             action = "Verified and logged to grid" if status == "verified" else "Logged with standard priority"
 
         return {
@@ -375,7 +375,7 @@ class AIService:
                 "ela_score": 18.5,
                 "noise_entropy": 31.0,
                 "verdict": "DIGITAL SPLICING / HIGH ELA INCONSISTENCY",
-                "action": "Quarantined — Image compression signature indicates multi-source splicing",
+                "action": "Quarantined: Image compression signature indicates multi-source splicing",
                 "forensics": {
                     "has_exif_metadata": False,
                     "camera_device": "Unknown Optical Sensor",
@@ -399,7 +399,7 @@ class AIService:
                 "ela_score": 11.2,
                 "noise_entropy": 16.0,
                 "verdict": "2D ARTWORK / SYNTHETIC MEDIA DETECTED",
-                "action": "Quarantined — Non-real world optical capture rejected from tactical grid",
+                "action": "Quarantined: Non-real world optical capture rejected from tactical grid",
                 "forensics": {
                     "has_exif_metadata": False,
                     "camera_device": "Digital Illustration Canvas",

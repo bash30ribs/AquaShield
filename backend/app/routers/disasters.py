@@ -16,7 +16,7 @@ from app.models.disaster import Disaster, DisasterType, SeverityLevel
 
 router = APIRouter(prefix="/api/disasters", tags=["Disasters"])
 
-# Static weather & buoy telemetry (sensor feed — not stored in DB)
+# Static weather & buoy telemetry (sensor feed: not stored in DB)
 _WEATHER = {
     "temperature":  "28.4°C",
     "wind_speed":   "72 km/h (38.8 kt)",
@@ -111,7 +111,7 @@ class DisasterCreateRequest(BaseModel):
 
 @router.post("")
 async def create_disaster(req: DisasterCreateRequest, db: AsyncSession = Depends(get_db)):
-    """Submit a new disaster event — persisted to the disasters table."""
+    """Submit a new disaster event: persisted to the disasters table."""
     try:
         dtype    = DisasterType(req.type.lower().replace(" ", "_"))
         severity = SeverityLevel(req.severity.lower())

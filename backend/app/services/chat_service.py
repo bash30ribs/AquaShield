@@ -298,7 +298,7 @@ class ChatService:
             
             ready_badge = "🟢 READY TO FILE" if structured["ready_to_file"] else "🟡 NEED MORE DETAILS"
             reply = (
-                f"📝 **AI Incident Scribe — Incident Dossier Generated:**\n\n"
+                f"📝 **AI Incident Scribe: Incident Dossier Generated:**\n\n"
                 f"• **Classification:** `{structured['hazard_type'].upper()}` ({ready_badge})\n"
                 f"• **Incident Title:** **{structured['title']}**\n"
                 f"• **Identified Location:** {structured['location']} (Lat: {structured['latitude']}, Lon: {structured['longitude']})\n"
@@ -369,7 +369,7 @@ class ChatService:
                 "• **Submission Methods:**\n"
                 "  1. **AI Guided Scribe:** You can simply type what you saw directly in this chat (e.g. *'I saw black oily water near Gateway of India'*), and the AI will auto-format and file your complaint!\n"
                 "  2. **Manual Form:** Click **'Submit Incident Report'** or open the Field Reports tab.\n"
-                "  3. Capture or upload a photo — the system automatically geotags exact GPS coordinates.\n"
+                "  3. Capture or upload a photo: the system automatically geotags exact GPS coordinates.\n"
                 "  4. The **Dual-Stream AI** verifies the image authenticity before routing to emergency dispatch.\n\n"
                 f"• **Current Status:** Tracking **{recent_count} active reports** in the incident registry."
             )

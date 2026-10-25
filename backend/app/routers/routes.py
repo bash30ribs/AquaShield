@@ -28,7 +28,11 @@ async def calculate_safe_route(
         try:
             body = await request.json()
             orig = orig or body.get("from_loc") or body.get("origin")
+            if not orig and body.get("origin_lat") is not None:
+                orig = f"Location ({body.get('origin_lat')}, {body.get('origin_lng')})"
             dest = dest or body.get("to_loc") or body.get("destination")
+            if not dest and body.get("destination_lat") is not None:
+                dest = f"Location ({body.get('destination_lat')}, {body.get('destination_lng')})"
             distype = distype or body.get("disaster") or body.get("disaster_type")
         except Exception:
             pass
@@ -36,7 +40,11 @@ async def calculate_safe_route(
         try:
             form = await request.form()
             orig = orig or form.get("from_loc") or form.get("origin")
+            if not orig and form.get("origin_lat"):
+                orig = f"Location ({form.get('origin_lat')}, {form.get('origin_lng')})"
             dest = dest or form.get("to_loc") or form.get("destination")
+            if not dest and form.get("destination_lat"):
+                dest = f"Location ({form.get('destination_lat')}, {form.get('destination_lng')})"
             distype = distype or form.get("disaster") or form.get("disaster_type")
         except Exception:
             pass
