@@ -46,9 +46,13 @@ def _make_hash(password: str, salt: str = "aquashield_salt") -> str:
 async def init_db():
     from app.models.user import User, UserRole
     from app.models.report import CommunityReport, ReportType, ReportStatus
+    from app.models.disaster import Disaster, DisasterType, SeverityLevel
+    from app.models.marine_rescue import MarineRescue, Species, RescueStatus
+    from app.models.complaint import ConversationalComplaint
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
 
     # Seed demo users & reports if table empty
     async with AsyncSessionLocal() as session:
@@ -169,3 +173,39 @@ async def init_db():
             ]
             session.add_all(sample_reports)
             await session.commit()
+
+        # Seed initial marine rescues if empty
+        marine_res = await session.execute(select(MarineRescue))
+        existing_rescues = marine_res.scalars().all()
+        if not existing_rescues:
+            sample_rescues = [
+                MarineRescue(
+                    id="MAR-001",
+                    species=Species.turtle,
+                    species_detail="Olive Ridley Turtle",
+                    injury_severity="Moderate",
+                    description="Juvenile turtle entangled in nylon ghost net on Versova beach, dehydrated but responsive.",
+                    beach_name="Versova North Beach",
+                    latitude=19.1310,
+                    longitude=72.8120,
+                    ngo_assigned="Sea Turtle Conservation Foundation",
+                    status=RescueStatus.ngo_alerted,
+                    created_at=datetime.utcnow()
+                ),
+                MarineRescue(
+                    id="MAR-002",
+                    species=Species.dolphin,
+                    species_detail="Bottlenose Dolphin",
+                    injury_severity="Low",
+                    description="Stranded in intertidal sandbar during sudden low tide. Monitored by local civil defense lifeguards.",
+                    beach_name="Juhu Beach Intertidal Zone",
+                    latitude=19.0988,
+                    longitude=72.8264,
+                    ngo_assigned="Wildlife SOS Marine Wing",
+                    status=RescueStatus.in_rescue,
+                    created_at=datetime.utcnow()
+                )
+            ]
+            session.add_all(sample_rescues)
+            await session.commit()
+

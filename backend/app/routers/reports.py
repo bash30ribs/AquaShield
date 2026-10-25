@@ -123,6 +123,25 @@ async def submit_community_report(
     await db.commit()
     await db.refresh(new_report)
 
+    # Broadcast new verified report to connected emergency dashboard nodes
+    try:
+        from app.routers.broadcast import manager
+        await manager.broadcast({
+            "event": "new_incident_report",
+            "report": {
+                "id": new_report.id,
+                "title": new_report.title,
+                "type": new_report.report_type.value,
+                "latitude": new_report.latitude,
+                "longitude": new_report.longitude,
+                "ai_verified": new_report.ai_verified,
+                "is_fake": new_report.is_fake
+            }
+        })
+    except Exception:
+        pass
+
+
     return {
         "status": "success",
         "message": "Report logged and analyzed by AquaShield AI Forensic Suite",

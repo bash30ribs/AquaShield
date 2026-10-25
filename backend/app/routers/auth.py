@@ -45,7 +45,9 @@ class RegisterRequest(BaseModel):
     region: Optional[str] = "Coastal Zone"
 
 class LoginRequest(BaseModel):
-    identifier: str  # Can be Login ID (badge), Email, or User ID
+    identifier: Optional[str] = None  # Can be Login ID (badge), Email, or User ID
+    email: Optional[str] = None
+    username: Optional[str] = None
     password: str
 
 class UserResponse(BaseModel):
@@ -118,7 +120,9 @@ async def register_user(req: RegisterRequest, db: AsyncSession = Depends(get_db)
 
 @router.post("/login", response_model=UserResponse)
 async def login_user(req: LoginRequest, db: AsyncSession = Depends(get_db)):
-    ident = req.identifier.strip()
+    ident = (req.identifier or req.email or req.username or "").strip()
+    if not ident:
+        raise HTTPException(status_code=400, detail="Missing login identifier (badge_id, email, or username).")
     
     # Query by badge_id, email, or id
     stmt = select(User).where(

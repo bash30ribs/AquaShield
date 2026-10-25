@@ -344,6 +344,8 @@ class AIService:
         return {
             "status": status,
             "authenticity_score": final_auth_pct,
+            "ela_score": round(ela_score * 100.0, 1),
+            "noise_entropy": round(noise_score * 100.0, 1),
             "verdict": verdict,
             "action": action,
             "forensics": {
@@ -368,6 +370,8 @@ class AIService:
         return {
             "status": "verified",
             "authenticity_score": 94.2,
+            "ela_score": 92.4,
+            "noise_entropy": 88.1,
             "verdict": "AUTHENTIC OPTICAL FIELD CAPTURE",
             "action": "Verified and escalated to Sector Tactical Command",
             "forensics": {

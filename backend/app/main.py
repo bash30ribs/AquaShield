@@ -68,6 +68,7 @@ app.include_router(broadcast_router)
 app.include_router(auth_router)
 
 
+@app.get("/health")
 @app.get("/api/health")
 def health_check():
     return {"status": "online", "system": settings.app_name, "version": settings.app_version}

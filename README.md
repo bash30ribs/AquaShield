@@ -7,6 +7,7 @@ AquaShield is an open-source coastal safety and disaster response platform desig
 ## Table of Contents
 
 - [Project Specification & Architecture (Detailed Report)](docs/PROJECT_SPECIFICATION.md)
+- [Academic & Technical Subject Integration](#academic--technical-subject-integration)
 - [System Diagrams & Prompts (DFD, Flowchart, UML, Block Diagram)](docs/SYSTEM_DIAGRAMS_AND_PROMPTS.md)
 - [Complete Project Report (.DOCX with Embedded Images)](docs/AquaShield_Project_Report.docx)
 - [Image & Visual Asset Generation Prompts Guide](docs/IMAGE_GENERATION_PROMPTS_FOR_DOCUMENT.md)
@@ -24,6 +25,22 @@ AquaShield is an open-source coastal safety and disaster response platform desig
 - [Repository Structure](#repository-structure)
 - [Contributing & Standards](#contributing--standards)
 - [License](#license)
+
+---
+
+## Academic & Technical Subject Integration
+
+AquaShield AI is engineered across four core academic and technical disciplines:
+
+| Subject Pillar | Technical Scope & Implementation | Key Files & Endpoints |
+|---|---|---|
+| **1. System & Subject Integration** | Decoupled 3-tier architecture unifying PWA offline caching (`sw.js`), FastAPI ASGI server (9 feature routers), Async SQLAlchemy 2.0 ORM, WebSocket emergency broadcast mesh, and native SMS URI fallback without network dependency. | [`backend/app/main.py`](backend/app/main.py)<br>[`backend/app/routers/`](backend/app/routers/)<br>`GET /api/health`<br>`sw.js` & `manifest.json` |
+| **2. Data Analysis & Visualization** | Oceanographic buoy telemetry ingestion, swell height and wave period time-series, Coastal Hazard Index (CHI) calculation, topographic elevation-weighted route optimization (bypassing lowlands <5m), Chart.js telemetry curves, and Leaflet / MapLibre 3D GIS vector radars. | [`backend/app/routers/disasters.py`](backend/app/routers/disasters.py)<br>[`backend/app/services/route_service.py`](backend/app/services/route_service.py)<br>`GET /api/disasters`<br>`POST /api/routes/calculate` |
+| **3. Internet Security System** | Defense-in-depth ASGI headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Permissions-Policy: geolocation=(self)`), strict Pydantic v2 input sanitization mitigating SQLi/XSS, PBKDF2 HMAC-SHA256 password hashing with salt, and stateless JWT token authorization. | [`backend/app/main.py`](backend/app/main.py)<br>[`backend/app/routers/auth.py`](backend/app/routers/auth.py)<br>`POST /api/auth/login`<br>`POST /api/auth/register` |
+| **4. Machine Learning Fundamentals** | End-to-end computer vision forensic scanner deploying `DualStreamForensicNet` (PyTorch EfficientNet-B0 dual-stream for RGB visual features + Error Level Analysis JPEG compression gradients), Laplacian frequency noise entropy, and fluid sheen spectral classifiers to detect synthetic/AI disaster images. | [`backend/app/services/ai_service.py`](backend/app/services/ai_service.py)<br>[`backend/app/models/aquashield_forensic_dualstream.pth`](backend/app/models/aquashield_forensic_dualstream.pth)<br>`POST /api/ai/verify-image`<br>`POST /api/reports` |
+
+---
+
 
 ---
 

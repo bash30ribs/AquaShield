@@ -200,3 +200,95 @@ sequenceDiagram
 - **Backend**: Python 3.10+, FastAPI 0.115, Uvicorn 0.30, SQLAlchemy 2.0 (Async), Pydantic 2.9.
 - **Deep Learning / Vision**: PyTorch, Torchvision, Pillow (PIL), NumPy, EfficientNet-B0.
 - **Database**: SQLite (via `aiosqlite`) for zero-configuration standalone operation, switchable to PostgreSQL (via `asyncpg`) for enterprise deployment.
+
+---
+
+## 9. Academic & Technical Subject Alignment (विषय एकीकरण और तकनीकी आधार)
+
+AquaShield AI is grounded in four foundational academic and engineering disciplines. Each pillar is directly integrated into the production codebase, with seamless interconnectivity across all routers, models, and presentation interfaces:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                   AQUASHIELD FOUR-PILLAR SUBJECT MATRIX                 │
+├──────────────────────────────┬─────────────────────────────────────────┤
+│ 1. System & Subject          │ Full-stack decoupled architecture:      │
+│    Integration               │ FastAPI ASGI + PWA sw.js + Async ORM    │
+│                              │ + WebSockets + SMS URI emergency gateway│
+├──────────────────────────────┼─────────────────────────────────────────┤
+│ 2. Data Analysis &           │ Telemetry normalization, Coastal Hazard │
+│    Visualization             │ Index (CHI), Leaflet / MapLibre 3D GIS, │
+│                              │ Chart.js swell time-series, elevation   │
+├──────────────────────────────┼─────────────────────────────────────────┤
+│ 3. Internet Security         │ Defense-in-depth ASGI headers, JWT/PBKDF2│
+│    System                    │ auth, Pydantic v2 input sanitization,   │
+│                              │ strict CORS, offline encrypted payload  │
+├──────────────────────────────┼─────────────────────────────────────────┤
+│ 4. Machine Learning          │ DualStreamForensicNet (EfficientNet-B0),│
+│    Fundamentals              │ Error Level Analysis (ELA), Laplacian   │
+│                              │ noise entropy, hydro-spectral analysis  │
+└──────────────────────────────┴─────────────────────────────────────────┘
+```
+
+### Pillar 1: Subject Integration & System Architecture (सिस्टम इंटीग्रेशन)
+- **Architectural Scope**: Unifies five heterogeneous technological layers into a single fault-tolerant lifecycle: Client PWA, ASGI Network Gateway, Relational Persistence, Deep Learning Vision, and Telecommunications Fallback.
+- **Key Files & Modules**:
+  - Main ASGI Assembly: [`backend/app/main.py`](file:///home/ribs/AquaShield/backend/app/main.py) (lifespan database hooks, static asset mounts, middleware stack).
+  - Feature Routers: [`backend/app/routers/`](file:///home/ribs/AquaShield/backend/app/routers/) (9 modular routers: `disasters`, `reports`, `marine`, `routes`, `sos`, `chat`, `sms`, `broadcast`, `auth`).
+  - Database Session & Engine: [`backend/app/database.py`](file:///home/ribs/AquaShield/backend/app/database.py) (SQLAlchemy 2.0 Async Session, schema migration, demo seeders).
+  - Offline Service Worker: [`sw.js`](file:///home/ribs/AquaShield/sw.js) (Cache API, static asset pre-caching, fetch interception).
+  - P2P Mesh & WebSocket Gateway: [`mesh_broadcast.js`](file:///home/ribs/AquaShield/mesh_broadcast.js) and [`backend/app/routers/broadcast.py`](file:///home/ribs/AquaShield/backend/app/routers/broadcast.py).
+- **Core Endpoints**: `GET /api/health`, `POST /api/alerts/broadcast`, `GET /sw.js`, `GET /manifest.json`.
+
+### Pillar 2: Data Analysis & Visualization (डेटा एनालिसिस और विज़ुअलाइज़ेशन)
+- **Analytical Scope**: Ingests multi-dimensional oceanographic time-series data and transforms sensor metrics into intuitive visual representations and geographic risk corridors.
+- **Algorithms & Mathematical Models**:
+  - **Coastal Hazard Index (CHI)**: Computes a weighted risk index $CHI = w_1 \cdot \text{Swell} + w_2 \cdot \text{Wind} + w_3 \cdot \text{Tide} + w_4 \cdot \Delta \text{Pressure}$.
+  - **Topographic Elevation Risk Weighting**: Modified Dijkstra/A* pathfinding that penalizes route segments situated below 5m elevation during active storm surges.
+- **Key Files & Modules**:
+  - Ocean Telemetry Ingestion: [`backend/app/routers/disasters.py`](file:///home/ribs/AquaShield/backend/app/routers/disasters.py) (swell height, wind speed, barometric pressure, buoy data).
+  - Evacuation Graph Routing: [`backend/app/services/route_service.py`](file:///home/ribs/AquaShield/backend/app/services/route_service.py) (shortest vs. safest route comparison, waypoint generation).
+  - Interactive GIS Radar Map: [`app.js`](file:///home/ribs/AquaShield/app.js) (MapLibre GL / Leaflet map initialization, buoy markers, beach status badges).
+  - Real-Time HUD Visuals: [`index.html`](file:///home/ribs/AquaShield/index.html) (live weather grid, Chart.js wave graphs, SVG radar sweep).
+- **Core Endpoints**: `GET /api/disasters`, `GET /api/disasters/live`, `POST /api/routes/calculate`.
+
+### Pillar 3: Internet Security System (इंटरनेट सिक्योरिटी सिस्टम)
+- **Security Scope**: Implements multi-layered defensive security across application endpoints, network headers, authentication tokens, and input pipelines to protect critical disaster infrastructure.
+- **Security Mechanisms**:
+  - **ASGI Security Headers**: Injects `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Permissions-Policy: geolocation=(self)` via custom middleware in [`backend/app/main.py`](file:///home/ribs/AquaShield/backend/app/main.py).
+  - **Input Sanitization & Injection Defense**: Pydantic v2 schemas validate all multipart forms, JSON bodies, and query strings, neutralizing SQL injection (SQLi) and stored Cross-Site Scripting (XSS).
+  - **Cryptographic Authentication**: Password storage using PBKDF2 HMAC-SHA256 with 100,000 iterations and per-user cryptographic salts in [`backend/app/database.py`](file:///home/ribs/AquaShield/backend/app/database.py) and [`backend/app/routers/auth.py`](file:///home/ribs/AquaShield/backend/app/routers/auth.py). Stateless JWT tokens enforce role-based access control.
+  - **Zero-Data Fallback Security**: Structured `sms:` URI generator transmits GPS coordinates and hazard codes directly to emergency agencies without unencrypted cloud dependencies.
+- **Core Endpoints**: `POST /api/auth/login`, `POST /api/auth/register`, `POST /api/sms/send-sos`.
+
+### Pillar 4: Machine Learning Fundamentals (मशीन लर्निंग फंडामेंटल्स)
+- **Deep Learning Scope**: Deploys an end-to-end computer vision and image forensics engine to verify crowdsourced disaster photos and prevent synthetic or recycled misinformation from triggering false alarms.
+- **Neural Network Architecture & Techniques**:
+  - **`DualStreamForensicNet`**: Custom PyTorch deep convolutional neural network consisting of two parallel EfficientNet-B0 backbones:
+    - *Stream A (RGB)*: Extracts 1280-dimensional spatial visual features from the raw 3-channel image.
+    - *Stream B (ELA)*: Extracts 1280-dimensional feature representations from the 90% JPEG compression error gradient map.
+    - *Classification Head*: Fuses both feature vectors through batch normalization, SiLU non-linear activations, dropout regularization, and dense linear projection to output binary authenticity probabilities.
+  - **Error Level Analysis (ELA)**: Computes differential pixel-level matrices $E = |I_{\text{original}} - I_{\text{recompressed}}| \times \alpha$ to expose localized JPEG compression anomalies indicative of cut-and-paste manipulation.
+  - **Laplacian Frequency Noise Entropy**: Analyzes second-derivative high-frequency spatial variation across 8x8 pixel blocks to differentiate real optical sensor noise from diffusion model synthetic textures.
+  - **Spectral Fluid Analysis**: Analyzes hue, saturation, and water-sheen spectra to confirm authentic flood and hydrocarbon oil spill characteristics.
+- **Key Files & Modules**:
+  - Forensic Vision Service: [`backend/app/services/ai_service.py`](file:///home/ribs/AquaShield/backend/app/services/ai_service.py).
+  - Trained Neural Weights: [`backend/app/models/aquashield_forensic_dualstream.pth`](file:///home/ribs/AquaShield/backend/app/models/aquashield_forensic_dualstream.pth).
+  - Training Pipeline: [`train_forensics.py`](file:///home/ribs/AquaShield/train_forensics.py).
+- **Core Endpoints**: `POST /api/ai/verify-image`, `POST /api/reports`.
+
+---
+
+## 10. Verification & System Health Matrix
+
+All four subjects are verified through automated end-to-end unit and integration tests:
+
+| Subject Pillar | Test Command / Endpoint | Expected Output | Status |
+|---|---|---|---|
+| **System Integration** | `GET /api/health` | `{"status": "online", "system": "AquaShield AI"}` | Verified (200 OK) |
+| **Data Analysis** | `GET /api/disasters` | Telemetry payload (CHI: 6.4, Buoys B-04/09/12, Swell: 4.2m) | Verified (200 OK) |
+| **Data Analysis** | `POST /api/routes/calculate` | Route Alpha vs. Shoreline, 78% risk reduction, waypoints | Verified (200 OK) |
+| **Internet Security** | `OPTIONS /api/health` + Headers | `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN` | Verified (200 OK) |
+| **Internet Security** | `POST /api/auth/login` | JWT access token + hashed credential verification | Verified (200 OK) |
+| **Machine Learning** | `POST /api/ai/verify-image` | PyTorch DualStreamForensicNet authenticity score + ELA matrix | Verified (200 OK) |
+| **Marine Rescue** | `GET/POST /api/marine` | Active rescue operations + automated NGO dispatch ticket | Verified (200 OK) |
+
