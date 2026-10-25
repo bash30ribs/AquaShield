@@ -1727,6 +1727,15 @@
               </div>
             </div>
 
+            <!-- Quick Test Sample Presets -->
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--ds-bg-surface); padding: 10px 14px; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-subtle);">
+              <span style="font-size: 11px; font-family: var(--ds-font-mono); color: var(--ds-text-muted); font-weight: bold; letter-spacing: 0.05em;">QUICK BENCHMARK SAMPLES:</span>
+              <button type="button" onclick="loadSamplePreset('authentic')" style="font-size: 11px; padding: 5px 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 4px; cursor: pointer; font-weight: 500;">✓ Authentic Drone Capture</button>
+              <button type="button" onclick="loadSamplePreset('tampered')" style="font-size: 11px; padding: 5px 12px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 4px; cursor: pointer; font-weight: 500;">⚠ Spliced / Fake Flood</button>
+              <button type="button" onclick="loadSamplePreset('artwork')" style="font-size: 11px; padding: 5px 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 4px; cursor: pointer; font-weight: 500;">🎨 2D Digital Artwork</button>
+              <button type="button" onclick="loadSamplePreset('oil')" style="font-size: 11px; padding: 5px 12px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; cursor: pointer; font-weight: 500;">🛢️ Petroleum Hydrocarbon Sheen</button>
+            </div>
+
             <!-- 2. Staging Card (Selected Image Preview with Manual Trigger) -->
             <div id="scanner-stage-card" style="display: none; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-xl); padding: 20px;">
               <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
@@ -1764,6 +1773,18 @@
                     </div>
                     <span id="scanner-time-tag" style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-muted);">--ms</span>
                   </div>
+
+                  <!-- Dynamic Authenticity Score Meter -->
+                  <div style="margin: 8px 0 12px; background: var(--ds-bg-base); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--ds-border-subtle);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                      <span style="font-family: var(--ds-font-mono); font-size: 11px; color: var(--ds-text-secondary); text-transform: uppercase;">Authenticity Confidence Score</span>
+                      <span id="scanner-score-val" style="font-family: var(--ds-font-mono); font-size: 14px; font-weight: bold; color: #10b981;">94.2%</span>
+                    </div>
+                    <div style="height: 6px; width: 100%; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                      <div id="scanner-score-bar" style="height: 100%; width: 94.2%; background: #10b981; border-radius: 3px; transition: width 0.5s ease, background 0.3s ease;"></div>
+                    </div>
+                  </div>
+
                   <h4 id="scanner-threat-title" style="font-family: var(--ds-font-display); font-size: var(--ds-text-xl); font-weight: bold; color: var(--ds-text-primary); margin-bottom: 8px;">
                     Scanning Image...
                   </h4>
@@ -1843,15 +1864,15 @@
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) auto; gap: 12px; align-items: flex-end;">
                 <div>
                   <label style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary); display: block; margin-bottom: 4px; font-weight: 500;">Current Coastal Location</label>
-                  <input type="text" id="evac-from-input" value="Juhu Beach Area" style="width: 100%; padding: 8px 12px; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-default); color: var(--ds-text-primary); border-radius: var(--ds-radius-md); font-size: var(--ds-text-sm); font-family: var(--ds-font-body);">
+                  <input type="text" id="evac-from-input" value="Juhu Beach Area" onchange="computeEvacuationRoute()" onkeyup="if(event.key==='Enter') computeEvacuationRoute()" style="width: 100%; padding: 8px 12px; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-default); color: var(--ds-text-primary); border-radius: var(--ds-radius-md); font-size: var(--ds-text-sm); font-family: var(--ds-font-body);">
                 </div>
                 <div>
                   <label style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary); display: block; margin-bottom: 4px; font-weight: 500;">Destination Shelter</label>
-                  <input type="text" id="evac-to-input" value="High Ground Relief Shelter" style="width: 100%; padding: 8px 12px; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-default); color: var(--ds-text-primary); border-radius: var(--ds-radius-md); font-size: var(--ds-text-sm); font-family: var(--ds-font-body);">
+                  <input type="text" id="evac-to-input" value="High Ground Relief Shelter" onchange="computeEvacuationRoute()" onkeyup="if(event.key==='Enter') computeEvacuationRoute()" style="width: 100%; padding: 8px 12px; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-default); color: var(--ds-text-primary); border-radius: var(--ds-radius-md); font-size: var(--ds-text-sm); font-family: var(--ds-font-body);">
                 </div>
                 <div>
                   <label style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary); display: block; margin-bottom: 4px; font-weight: 500;">Disaster Threat Type</label>
-                  <select id="evac-disaster-select" style="width: 100%; padding: 8px 12px; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-default); color: var(--ds-text-primary); border-radius: var(--ds-radius-md); font-size: var(--ds-text-sm); font-family: var(--ds-font-body);">
+                  <select id="evac-disaster-select" onchange="computeEvacuationRoute()" style="width: 100%; padding: 8px 12px; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-default); color: var(--ds-text-primary); border-radius: var(--ds-radius-md); font-size: var(--ds-text-sm); font-family: var(--ds-font-body);">
                     <option value="Cyclone Surge">Cyclone Storm Surge (+4.2m swell)</option>
                     <option value="High Tide Inundation">High Tide Inundation</option>
                     <option value="Tsunami Warning">Tsunami Warning</option>
@@ -2025,6 +2046,19 @@
               <button class="aq-btn-primary" onclick="runAllPillarDiagnostics()" style="padding: 10px 20px; font-weight: bold; background: var(--ds-color-brand); color: var(--ds-bg-base); border: none; border-radius: var(--ds-radius-md); cursor: pointer; font-family: var(--ds-font-mono); font-size: 12px;">
                 ⚡ Run Live Diagnostics
               </button>
+            </div>
+
+            <!-- Composite Integration Health Score Banner -->
+            <div style="display: flex; gap: 14px; align-items: center; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-md); padding: 12px 18px; flex-wrap: wrap;">
+              <span style="font-family: var(--ds-font-mono); font-size: 11px; color: var(--ds-text-secondary); text-transform: uppercase; font-weight: bold;">
+                Platform Health Score:
+              </span>
+              <span id="pillars-health-score" style="font-family: var(--ds-font-mono); font-size: 16px; font-weight: bold; color: #10b981; background: rgba(16,185,129,0.12); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(16,185,129,0.3);">
+                100% HEALTHY
+              </span>
+              <span id="pillars-health-meta" style="font-size: 12px; color: var(--ds-text-muted); margin-left: auto; font-family: var(--ds-font-mono);">
+                4/4 Disciplines Operational · 0 Discrepancies
+              </span>
             </div>
 
             <!-- 4 Pillars Grid -->

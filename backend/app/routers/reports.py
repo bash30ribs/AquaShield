@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,14 +38,39 @@ class ReportJSONRequest(BaseModel):
     image_url: Optional[str] = None
 
 @router.post("/ai/verify-image")
-async def verify_image(file: Optional[UploadFile] = File(None)):
-    if file and file.filename:
+@router.get("/ai/verify-image")
+async def verify_image(
+    request: Request,
+    sample: Optional[str] = None
+):
+    content_type = request.headers.get("content-type", "")
+    sample_key = sample or ""
+
+    if "multipart/form-data" in content_type:
         try:
-            content = await file.read()
-            return AIService.analyze_image_bytes(content, file.filename)
+            form = await request.form()
+            upload_file = form.get("file")
+            if upload_file and hasattr(upload_file, "read"):
+                content = await upload_file.read()
+                filename = getattr(upload_file, "filename", "upload.jpg")
+                return AIService.analyze_image_bytes(content, filename)
+            sample_key = form.get("sample_type") or form.get("sample") or sample_key
         except Exception as e:
             return {"status": "error", "error": str(e)}
-    return AIService.analyze_disaster_image("sample_camera_capture.jpg")
+    elif "application/json" in content_type:
+        try:
+            body = await request.json()
+            sample_key = body.get("sample_type") or body.get("sample") or body.get("filename") or sample_key
+        except Exception:
+            pass
+    elif "form" in content_type:
+        try:
+            form = await request.form()
+            sample_key = form.get("sample_type") or form.get("sample") or form.get("filename") or sample_key
+        except Exception:
+            pass
+
+    return AIService.analyze_disaster_image(sample_key or "authentic_camera_capture.jpg")
 
 @router.post("/reports")
 async def submit_community_report(
