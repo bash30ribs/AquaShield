@@ -160,8 +160,9 @@
     :focus-visible { outline: 2px solid var(--ds-color-brand); outline-offset: 3px; }
     ::selection { background: rgba(245, 158, 11, 0.25); color: var(--ds-text-primary); }
 
-    .aq-nav-links { display: flex; }
-    .aq-nav-right { display: flex; }
+    .aq-nav-links { display: flex; align-items: center; flex-shrink: 0; white-space: nowrap; }
+    .aq-nav-right { display: flex; align-items: center; flex-shrink: 0; white-space: nowrap; }
+    .aq-mode-switch { display: inline-flex; align-items: center; flex-shrink: 0; white-space: nowrap; }
     .aq-hamburger { display: none !important; }
     .aq-caps-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--ds-space-4); }
     .aq-tech-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--ds-space-5); }
@@ -179,7 +180,7 @@
     .aq-card:hover .aq-card-img { transform: scale(1.04); }
     .aq-card-img { transition: transform 600ms cubic-bezier(0.4,0,0.2,1); }
 
-    .aq-nav-link { position: relative; }
+    .aq-nav-link { position: relative; flex-shrink: 0; white-space: nowrap; }
     .aq-nav-link::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--ds-color-brand); transform: scaleX(0); transform-origin: left; transition: transform 200ms ease; }
     .aq-nav-link:hover { color: var(--ds-text-primary) !important; }
     .aq-nav-link:hover::after { transform: scaleX(1); }
@@ -231,6 +232,10 @@
     }
     .aq-reveal-right.aq-revealed { opacity: 1; transform: translateX(0); }
 
+    @media(max-width:1220px){
+      .aq-nav-links { display:none !important; }
+      .aq-hamburger { display:flex !important; }
+    }
     @media(max-width:1100px){
       .aq-caps-grid { grid-template-columns: repeat(2,1fr); }
       .aq-tech-grid { grid-template-columns: repeat(2,1fr); }
@@ -242,9 +247,7 @@
       .aq-news-grid { grid-template-columns: 1fr; }
     }
     @media(max-width:768px){
-      .aq-nav-links { display:none !important; }
       .aq-nav-right { display:none !important; }
-      .aq-hamburger { display:flex !important; }
       .aq-caps-grid { grid-template-columns: 1fr; }
       .aq-stats-grid { grid-template-columns: 1fr 1fr; }
       .aq-footer-grid { grid-template-columns: 1fr 1fr; }
@@ -252,6 +255,86 @@
     }
     @media(max-width:480px){
       .aq-footer-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Interactive Modals (Report, Auth, Legal, Standards) ─────────── */
+    .aq-dialog-overlay,
+    .aq-modal-backdrop {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 9999 !important;
+      background: rgba(7, 17, 30, 0.94);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      display: none !important;
+      align-items: center;
+      justify-content: center;
+      padding: var(--ds-space-4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 240ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .aq-dialog-overlay.active,
+    .aq-modal-backdrop.active {
+      display: flex !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+
+    .aq-dialog-container,
+    .aq-modal-card {
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      background: var(--ds-bg-surface);
+      border: 1px solid var(--ds-border-brand);
+      border-radius: var(--ds-radius-2xl);
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85), 0 0 30px var(--ds-color-brand-glow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: aq-modal-pop 260ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .aq-modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--ds-border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .aq-modal-tag {
+      font-family: var(--ds-font-mono);
+      font-size: 10px;
+      color: var(--ds-color-brand);
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .aq-modal-title {
+      font-family: var(--ds-font-display);
+      font-size: var(--ds-text-xl);
+      font-weight: var(--ds-weight-bold);
+      color: var(--ds-text-primary);
+      margin: 0;
+    }
+
+    .aq-modal-close {
+      background: transparent;
+      border: none;
+      color: var(--ds-text-secondary);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: var(--ds-radius-sm);
+      transition: all var(--ds-transition-fast);
+    }
+    .aq-modal-close:hover {
+      color: var(--ds-text-primary);
+      background: rgba(148, 163, 184, 0.12);
     }
 
     /* ── Integrated Command HUD Modal ─────────────────────────────────── */
@@ -362,10 +445,10 @@
 
   <!-- ── Top Navigation Bar ──────────────────────────────────────────── -->
   <header style="position: fixed; inset: 0 0 auto 0; z-index: 200; height: var(--ds-nav-height); background: rgba(7,17,30,0.92); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--ds-border-subtle); transition: background 350ms ease;" id="navbar">
-    <div style="max-width: var(--ds-max-width); margin: 0 auto; height: 100%; padding: 0 var(--ds-space-6); display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-4);">
+    <div style="max-width: var(--ds-max-width); margin: 0 auto; height: 100%; padding: 0 var(--ds-space-6); display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-4); flex-wrap: nowrap;">
       
       <!-- Brand & Mode Switcher -->
-      <div style="display: flex; align-items: center; gap: 14px;">
+      <div style="display: flex; align-items: center; gap: 14px; flex-shrink: 0;">
         <a href="#" style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
           <div style="width: 36px; height: 36px; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-brand); display: flex; align-items: center; justify-content: center; background: rgba(245, 158, 11, 0.1);">
             <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
@@ -380,48 +463,46 @@
         </a>
 
         <!-- Community / Officer Mode Switcher -->
-        <div class="aq-mode-switch" style="display: inline-flex; align-items: center; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-full); padding: 3px; gap: 2px;">
-          <button class="aq-mode-btn active" id="btn-mode-citizen" onclick="setAppMode('citizen')" style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: var(--ds-radius-full); font-size: 11px; font-weight: 700; background: var(--ds-color-brand); color: var(--ds-bg-base); cursor: pointer; border: none; white-space: nowrap;">
-            <span>🏖️</span> Community
+        <div class="aq-mode-switch" style="display: inline-flex; align-items: center; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-full); padding: 3px; gap: 2px; flex-shrink: 0;">
+          <button class="aq-mode-btn active" id="btn-mode-citizen" onclick="setAppMode('citizen')" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: var(--ds-radius-full); font-size: 11px; font-weight: 700; background: var(--ds-color-brand); color: var(--ds-bg-base); cursor: pointer; border: none; white-space: nowrap;">
+            Community
           </button>
-          <button class="aq-mode-btn" id="btn-mode-officer" onclick="setAppMode('officer')" style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: var(--ds-radius-full); font-size: 11px; font-weight: 600; background: transparent; color: var(--ds-text-secondary); cursor: pointer; border: none; white-space: nowrap;">
-            <span>🛡️</span> Officer HUD
+          <button class="aq-mode-btn" id="btn-mode-officer" onclick="setAppMode('officer')" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: var(--ds-radius-full); font-size: 11px; font-weight: 600; background: transparent; color: var(--ds-text-secondary); cursor: pointer; border: none; white-space: nowrap;">
+            Officer HUD
           </button>
         </div>
       </div>
 
       <!-- Navigation Links -->
-      <nav class="aq-nav-links" style="align-items: center; gap: 6px;">
-        <a href="#beaches-section" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 12px; border-radius: var(--ds-radius-md);">🏖️ Beaches</a>
-        <a href="#radar-map" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-color-brand-light); padding: 8px 12px; border-radius: var(--ds-radius-md);">🗺️ Map</a>
-        <a href="#field-reports-section" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 12px; border-radius: var(--ds-radius-md);">📋 Reports</a>
-        <a href="javascript:void(0)" onclick="openCommandCenter('pillars')" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-color-brand-light); padding: 8px 12px; border-radius: var(--ds-radius-md); display: inline-flex; align-items: center; gap: 4px;">
-          <span>⚡</span> Subject Integration
+      <nav class="aq-nav-links" style="align-items: center; gap: 4px; flex-shrink: 0; white-space: nowrap;">
+        <a href="#beaches-section" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 10px; border-radius: var(--ds-radius-md);">Beaches</a>
+        <a href="#radar-map" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-color-brand-light); padding: 8px 10px; border-radius: var(--ds-radius-md);">Radar Map</a>
+        <a href="#field-reports-section" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 10px; border-radius: var(--ds-radius-md);">Field Reports</a>
+        <a href="javascript:void(0)" onclick="openCommandCenter('pillars')" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-color-brand-light); padding: 8px 10px; border-radius: var(--ds-radius-md); display: inline-flex; align-items: center;">
+          Subject Integration
         </a>
-        <a href="javascript:void(0)" onclick="openStandardsModal()" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: #10b981; padding: 8px 12px; border-radius: var(--ds-radius-md); display: inline-flex; align-items: center; gap: 5px;">
-          <span>✓</span> Standards
+        <a href="javascript:void(0)" onclick="openStandardsModal()" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: #10b981; padding: 8px 10px; border-radius: var(--ds-radius-md); display: inline-flex; align-items: center;">
+          Standards
         </a>
         <a href="javascript:void(0)" onclick="openPrivacyModal()" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: 8px 10px; border-radius: var(--ds-radius-md);">Legal</a>
-        <a href="#emergency-section" class="aq-nav-link" style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: #ef4444; padding: 8px 12px; border-radius: var(--ds-radius-md);">🆘 Emergency 112</a>
       </nav>
 
-
       <!-- Action Buttons -->
-      <div class="aq-nav-right" style="align-items: center; gap: var(--ds-space-3); flex-shrink: 0;">
+      <div class="aq-nav-right" style="align-items: center; gap: var(--ds-space-3); flex-shrink: 0; white-space: nowrap;">
         <button class="aq-btn-primary" onclick="openReportModal()"
-          style="display: flex; align-items: center; gap: 6px; font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-bold); color: var(--ds-bg-base); background: var(--ds-color-brand); padding: 7px 16px; border-radius: var(--ds-radius-md);">
-          <span style="font-size: 15px; font-weight: bold;">+</span> Report Hazard
+          style="display: flex; align-items: center; gap: 6px; font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-bold); color: var(--ds-bg-base); background: var(--ds-color-brand); padding: 7px 14px; border-radius: var(--ds-radius-md); white-space: nowrap;">
+          <span style="font-size: 15px; font-weight: bold; line-height: 1;">+</span> Report Hazard
         </button>
 
         <button class="aq-btn-ghost" onclick="openEmergencyModal()"
-          style="display: flex; align-items: center; gap: 6px; font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-bold); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.08); padding: 7px 14px; border-radius: var(--ds-radius-md);">
-          <span>🆘</span> SOS 112
+          style="display: flex; align-items: center; gap: 6px; font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-bold); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.08); padding: 7px 12px; border-radius: var(--ds-radius-md); white-space: nowrap;">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #ef4444; display: inline-block; box-shadow: 0 0 6px #ef4444;"></span> SOS 112
         </button>
 
         <div id="nav-user-container">
           <button class="aq-btn-ghost" onclick="openAuthModal()"
-            style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-medium); color: var(--ds-text-primary); border: 1px solid var(--ds-border-default); padding: 7px 12px; border-radius: var(--ds-radius-md);">
-            🔑 Login
+            style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-medium); color: var(--ds-text-primary); border: 1px solid var(--ds-border-default); padding: 7px 12px; border-radius: var(--ds-radius-md); white-space: nowrap;">
+            Login
           </button>
         </div>
       </div>
@@ -438,22 +519,23 @@
 
     <!-- Mobile Drawer Menu -->
     <div id="mobile-menu" style="display: none; background: rgba(7,17,30,0.98); backdrop-filter: blur(20px); border-top: 1px solid var(--ds-border-subtle); padding: var(--ds-space-5) var(--ds-space-6); flex-direction: column; gap: var(--ds-space-2);">
-      <a href="#beaches-section" onclick="toggleMobileMenu()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-primary); padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle);">🏖️ Beaches & Swell Conditions</a>
-      <a href="#radar-map" onclick="toggleMobileMenu()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-primary); padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle);">🗺️ Interactive Safety Map</a>
-      <a href="#field-reports-section" onclick="toggleMobileMenu()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-primary); padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle);">📋 Community Field Reports</a>
+      <a href="#beaches-section" onclick="toggleMobileMenu()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-primary); padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle);">Beaches & Swell Conditions</a>
+      <a href="#radar-map" onclick="toggleMobileMenu()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-primary); padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle);">Interactive Safety Map</a>
+      <a href="#field-reports-section" onclick="toggleMobileMenu()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-primary); padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle);">Community Field Reports</a>
+      <a href="javascript:void(0)" onclick="openCommandCenter('pillars'); toggleMobileMenu();" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-color-brand-light); padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle);">Subject Integration</a>
       <a href="javascript:void(0)" onclick="openStandardsModal(); toggleMobileMenu();" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: #10b981; padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle); display: flex; align-items: center; justify-content: space-between;">
-        <span>📐 Standards & Architecture</span>
+        <span>Standards & Architecture</span>
         <span style="font-size: 11px; background: rgba(16,185,129,0.15); color: #10b981; padding: 2px 8px; border-radius: 99px;">16/16 Passed</span>
       </a>
-      <a href="javascript:void(0)" onclick="openPrivacyModal(); toggleMobileMenu();" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle);">🔒 Privacy Policy & Data Rights</a>
-      <a href="javascript:void(0)" onclick="openTermsModal(); toggleMobileMenu();" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle);">📜 Terms & Conditions</a>
-      <a href="#emergency-section" onclick="toggleMobileMenu()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: #ef4444; padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle);">🆘 Emergency 112 & Shelters</a>
+      <a href="javascript:void(0)" onclick="openPrivacyModal(); toggleMobileMenu();" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle);">Privacy Policy & Data Rights</a>
+      <a href="javascript:void(0)" onclick="openTermsModal(); toggleMobileMenu();" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: var(--ds-text-secondary); padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle);">Terms & Conditions</a>
+      <a href="#emergency-section" onclick="toggleMobileMenu()" style="font-family: var(--ds-font-body); font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium); color: #ef4444; padding: var(--ds-space-3) 0; border-bottom: 1px solid var(--ds-border-subtle);">Emergency 112 & Shelters</a>
       <div style="display: flex; gap: 8px; margin-top: 10px;">
         <button onclick="openReportModal(); toggleMobileMenu();" class="aq-btn-primary" style="flex: 1; padding: 10px; font-weight: bold; font-size: 13px; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: var(--ds-radius-md);">
           + Report Hazard
         </button>
         <button onclick="openEmergencyModal(); toggleMobileMenu();" class="aq-btn-ghost" style="padding: 10px 16px; font-weight: bold; font-size: 13px; color: #ef4444; border: 1px solid rgba(239,68,68,0.4); border-radius: var(--ds-radius-md);">
-          🆘 SOS
+          SOS 112
         </button>
       </div>
     </div>
@@ -492,14 +574,20 @@
         <!-- Interactive Search Bar with "Near Me" GPS Button -->
         <div class="aq-search-hero-box" style="width: 100%; max-width: 680px; margin: 0 auto 20px;">
           <div class="aq-search-input-wrap" style="display: flex; align-items: center; background: var(--ds-bg-card); border: 2px solid var(--ds-border-strong); border-radius: var(--ds-radius-xl); padding: 6px 8px 6px 16px; box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 20px rgba(245, 158, 11, 0.15);">
-            <span style="font-size: 18px; margin-right: 8px; color: var(--ds-color-brand);">🔍</span>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="margin-right: 8px; flex-shrink: 0;">
+              <path d="M9 15C12.3137 15 15 12.3137 15 9C15 5.68629 12.3137 3 9 3C5.68629 3 3 5.68629 3 9C3 12.3137 5.68629 15 9 15Z" stroke="var(--ds-color-brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M17 17L13.25 13.25" stroke="var(--ds-color-brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
             <input type="text" id="citizen-search-input" class="aq-search-input" 
               style="flex: 1; background: transparent; border: none; font-family: var(--ds-font-body); font-size: var(--ds-text-base); color: var(--ds-text-primary); outline: none; padding: 8px 6px;"
-              placeholder="Search your beach or coast (e.g., Juhu, Bandra, Marine Drive, Versova, Aksa)..." 
+              placeholder="Search coastal sectors (e.g., Juhu, Bandra, Marine Drive, Versova, Aksa)..." 
               oninput="handleCitizenSearch(this.value)" autocomplete="off">
             <button class="aq-geo-btn" onclick="findBeachesNearMe()" title="Find beaches closest to your GPS coordinates"
               style="display: inline-flex; align-items: center; gap: 6px; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); color: var(--ds-color-brand-light); font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: bold; padding: 8px 14px; border-radius: var(--ds-radius-lg); cursor: pointer; white-space: nowrap;">
-              <span>📍</span> Near Me
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+              </svg>
+              Near Me
             </button>
           </div>
         </div>
@@ -508,7 +596,7 @@
         <div class="aq-filter-chips" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px;">
           <button class="aq-filter-chip active" data-filter="all" onclick="filterBeaches('all', this)"
             style="display: inline-flex; align-items: center; gap: 6px; background: var(--ds-color-brand); border: 1px solid var(--ds-color-brand); color: var(--ds-bg-base); font-weight: 700; border-radius: 99px; padding: 6px 14px; font-size: var(--ds-text-xs); cursor: pointer;">
-            🌐 All Beaches
+            All Beaches
           </button>
           <button class="aq-filter-chip" data-filter="safe" onclick="filterBeaches('safe', this)"
             style="display: inline-flex; align-items: center; gap: 6px; background: var(--ds-bg-card); border: 1px solid var(--ds-border-default); color: var(--ds-text-secondary); border-radius: 99px; padding: 6px 14px; font-size: var(--ds-text-xs); cursor: pointer;">
@@ -520,7 +608,7 @@
           </button>
           <button class="aq-filter-chip" data-filter="rescue" onclick="filterBeaches('rescue', this)"
             style="display: inline-flex; align-items: center; gap: 6px; background: var(--ds-bg-card); border: 1px solid var(--ds-border-default); color: var(--ds-text-secondary); border-radius: 99px; padding: 6px 14px; font-size: var(--ds-text-xs); cursor: pointer;">
-            <span>🐢</span> Marine Rescue Patrol
+            <span style="color: var(--ds-color-brand-light); font-size:12px;">◆</span> Marine Wildlife Patrol
           </button>
           <button class="aq-filter-chip" data-filter="hazard" onclick="filterBeaches('hazard', this)"
             style="display: inline-flex; align-items: center; gap: 6px; background: var(--ds-bg-card); border: 1px solid var(--ds-border-default); color: var(--ds-text-secondary); border-radius: 99px; padding: 6px 14px; font-size: var(--ds-text-xs); cursor: pointer;">
@@ -534,7 +622,12 @@
           <!-- Card 1: Beach Safety -->
           <div class="aq-action-card" onclick="scrollToSection('beaches-section')"
             style="background: var(--ds-bg-card); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-xl); padding: 18px 20px; display: flex; align-items: flex-start; gap: 14px; cursor: pointer; transition: all 0.2s ease;">
-            <div class="aq-action-icon" style="width: 44px; height: 44px; border-radius: var(--ds-radius-lg); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 20px;">🌊</div>
+            <div class="aq-action-icon" style="width: 44px; height: 44px; border-radius: var(--ds-radius-lg); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ds-color-brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12c1.5-2 4-2 6 0s4.5 2 6 0 4.5-2 6 0"/>
+                <path d="M2 16c1.5-2 4-2 6 0s4.5 2 6 0 4.5-2 6 0"/>
+              </svg>
+            </div>
             <div>
               <div class="aq-action-title" style="font-family: var(--ds-font-display); font-size: var(--ds-text-base); font-weight: bold; color: var(--ds-text-primary); margin-bottom: 3px;">Beach Conditions & Swell</div>
               <div class="aq-action-desc" style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary); line-height: 1.5;">Live wave height, high/low tide timings, and swim safety ratings for local beaches.</div>
@@ -545,7 +638,12 @@
           <!-- Card 2: 30-Sec Quick Report -->
           <div class="aq-action-card" onclick="openReportModal()"
             style="background: var(--ds-bg-card); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-xl); padding: 18px 20px; display: flex; align-items: flex-start; gap: 14px; cursor: pointer; transition: all 0.2s ease;">
-            <div class="aq-action-icon" style="width: 44px; height: 44px; border-radius: var(--ds-radius-lg); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 20px;">📸</div>
+            <div class="aq-action-icon" style="width: 44px; height: 44px; border-radius: var(--ds-radius-lg); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ds-color-brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </div>
             <div>
               <div class="aq-action-title" style="font-family: var(--ds-font-display); font-size: var(--ds-text-base); font-weight: bold; color: var(--ds-text-primary); margin-bottom: 3px;">Quick 30-Sec Report</div>
               <div class="aq-action-desc" style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary); line-height: 1.5;">Seen high water, an oil sheen, debris, or a stranded turtle? Log with 1 photo.</div>
@@ -556,7 +654,13 @@
           <!-- Card 3: Emergency Helpline -->
           <div class="aq-action-card" onclick="openEmergencyModal()"
             style="background: var(--ds-bg-card); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-xl); padding: 18px 20px; display: flex; align-items: flex-start; gap: 14px; cursor: pointer; transition: all 0.2s ease;">
-            <div class="aq-action-icon" style="width: 44px; height: 44px; border-radius: var(--ds-radius-lg); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 20px;">🆘</div>
+            <div class="aq-action-icon" style="width: 44px; height: 44px; border-radius: var(--ds-radius-lg); background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
             <div>
               <div class="aq-action-title" style="font-family: var(--ds-font-display); font-size: var(--ds-text-base); font-weight: bold; color: var(--ds-text-primary); margin-bottom: 3px;">Emergency 112 & Shelters</div>
               <div class="aq-action-desc" style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary); line-height: 1.5;">Immediate dialers for Coast Guard (1554), NDMA, and elevated flood shelters.</div>
@@ -584,8 +688,9 @@
           </div>
           <div style="display: flex; gap: 8px; align-items: center;">
             <span id="beach-count-badge" style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-subtle); padding: 6px 14px; border-radius: var(--ds-radius-full);">8 Beaches Monitored</span>
-            <button class="aq-btn-ghost" onclick="findBeachesNearMe()" style="font-size: var(--ds-text-xs); color: var(--ds-color-brand-light); border: 1px solid var(--ds-border-brand); padding: 6px 14px; border-radius: var(--ds-radius-full); font-weight: 600;">
-              📍 Sort by Distance
+            <button class="aq-btn-ghost" onclick="findBeachesNearMe()" style="font-size: var(--ds-text-xs); color: var(--ds-color-brand-light); border: 1px solid var(--ds-border-brand); padding: 6px 14px; border-radius: var(--ds-radius-full); font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Sort by Distance
             </button>
           </div>
         </div>
@@ -600,7 +705,7 @@
                 <h3 class="aq-beach-name">Juhu Beach</h3>
                 <div class="aq-beach-location">Western Suburbs, Mumbai</div>
               </div>
-              <span class="aq-status-badge safe">✓ Safe to Swim</span>
+              <span class="aq-status-badge safe">Safe to Swim</span>
             </div>
             <div class="aq-beach-metrics">
               <div class="aq-metric-item">
@@ -618,8 +723,8 @@
             </div>
             <p class="aq-beach-desc">Gentle swell and wide sandy beach. Safe for walking and shallow swimming. Lifeguards actively stationed at main watch towers.</p>
             <div class="aq-beach-actions">
-              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-juhu')">🌊 Check Safety & Swell</button>
-              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(19.0988, 72.8264, 'beach-juhu')" title="Center on Live Map">🗺️ Map</button>
+              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-juhu')">Check Safety & Swell</button>
+              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(19.0988, 72.8264, 'beach-juhu')" title="Center on Live Map">Map View</button>
               <button class="aq-beach-btn ghost" onclick="openReportModalWithCoords(19.0988, 72.8264, 'Juhu Beach')" title="Log Incident at Juhu Beach">+ Report</button>
             </div>
           </div>
@@ -631,7 +736,7 @@
                 <h3 class="aq-beach-name">Girgaon Chowpatty</h3>
                 <div class="aq-beach-location">South Mumbai, Marine Lines</div>
               </div>
-              <span class="aq-status-badge safe">✓ Calm & Safe</span>
+              <span class="aq-status-badge safe">Calm & Safe</span>
             </div>
             <div class="aq-beach-metrics">
               <div class="aq-metric-item">
@@ -649,8 +754,8 @@
             </div>
             <p class="aq-beach-desc">Calm sheltered bay waters protected by Malabar Hill. Ideal for families and evening walking. Bacteria counts well within recreational safety norms.</p>
             <div class="aq-beach-actions">
-              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-girgaon')">🌊 Check Safety & Swell</button>
-              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(18.9548, 72.8147, 'beach-girgaon')" title="Center on Live Map">🗺️ Map</button>
+              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-girgaon')">Check Safety & Swell</button>
+              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(18.9548, 72.8147, 'beach-girgaon')" title="Center on Live Map">Map View</button>
               <button class="aq-beach-btn ghost" onclick="openReportModalWithCoords(18.9548, 72.8147, 'Girgaon Chowpatty')" title="Log Incident at Girgaon Chowpatty">+ Report</button>
             </div>
           </div>
@@ -662,7 +767,7 @@
                 <h3 class="aq-beach-name">Marine Drive Promenade</h3>
                 <div class="aq-beach-location">South Mumbai Promenade</div>
               </div>
-              <span class="aq-status-badge caution">⚠ High Tide Swell</span>
+              <span class="aq-status-badge caution">High Tide Swell</span>
             </div>
             <div class="aq-beach-metrics">
               <div class="aq-metric-item">
@@ -680,8 +785,8 @@
             </div>
             <p class="aq-beach-desc">Strong tidal surge over barrier tetrapods during high tide. Promenade walkway fully open, but avoid climbing onto water-facing rocks.</p>
             <div class="aq-beach-actions">
-              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-marine-drive')">🌊 Check Safety & Swell</button>
-              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(18.9430, 72.8230, 'beach-marine-drive')" title="Center on Live Map">🗺️ Map</button>
+              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-marine-drive')">Check Safety & Swell</button>
+              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(18.9430, 72.8230, 'beach-marine-drive')" title="Center on Live Map">Map View</button>
               <button class="aq-beach-btn ghost" onclick="openReportModalWithCoords(18.9430, 72.8230, 'Marine Drive Promenade')" title="Log Incident at Marine Drive">+ Report</button>
             </div>
           </div>
@@ -693,7 +798,7 @@
                 <h3 class="aq-beach-name">Bandra Bandstand</h3>
                 <div class="aq-beach-location">Bandra West, Mumbai</div>
               </div>
-              <span class="aq-status-badge caution">⚠ Rocky Surge</span>
+              <span class="aq-status-badge caution">Rocky Surge</span>
             </div>
             <div class="aq-beach-metrics">
               <div class="aq-metric-item">
@@ -711,8 +816,8 @@
             </div>
             <p class="aq-beach-desc">Rocky intertidal shoreline with periodic strong wave surge. Paved promenade open; stay clear of wet slippery rocks near the sea wall.</p>
             <div class="aq-beach-actions">
-              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-bandra')">🌊 Check Safety & Swell</button>
-              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(19.0540, 72.8220, 'beach-bandra')" title="Center on Live Map">🗺️ Map</button>
+              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-bandra')">Check Safety & Swell</button>
+              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(19.0540, 72.8220, 'beach-bandra')" title="Center on Live Map">Map View</button>
               <button class="aq-beach-btn ghost" onclick="openReportModalWithCoords(19.0540, 72.8220, 'Bandra Bandstand')" title="Log Incident at Bandra Bandstand">+ Report</button>
             </div>
           </div>
@@ -724,7 +829,7 @@
                 <h3 class="aq-beach-name">Versova Beach</h3>
                 <div class="aq-beach-location">Andheri West, Mumbai</div>
               </div>
-              <span class="aq-status-badge safe">✓ Turtle Patrol Active</span>
+              <span class="aq-status-badge safe">Turtle Patrol Active</span>
             </div>
             <div class="aq-beach-metrics">
               <div class="aq-metric-item">
@@ -742,8 +847,8 @@
             </div>
             <p class="aq-beach-desc">Cleaned coastal sector monitored by community volunteers. Active Olive Ridley sea turtle nesting corridor. Swimming permitted in designated flags.</p>
             <div class="aq-beach-actions">
-              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-versova')">🌊 Check Safety & Swell</button>
-              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(19.1310, 72.8120, 'beach-versova')" title="Center on Live Map">🗺️ Map</button>
+              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-versova')">Check Safety & Swell</button>
+              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(19.1310, 72.8120, 'beach-versova')" title="Center on Live Map">Map View</button>
               <button class="aq-beach-btn ghost" onclick="openReportModalWithCoords(19.1310, 72.8120, 'Versova Beach')" title="Log Incident at Versova Beach">+ Report</button>
             </div>
           </div>
@@ -755,7 +860,7 @@
                 <h3 class="aq-beach-name">Aksa Beach</h3>
                 <div class="aq-beach-location">Malad West, Mumbai</div>
               </div>
-              <span class="aq-status-badge hazard">🚨 Rip Currents Warning</span>
+              <span class="aq-status-badge hazard">Rip Currents Warning</span>
             </div>
             <div class="aq-beach-metrics">
               <div class="aq-metric-item">
@@ -773,8 +878,8 @@
             </div>
             <p class="aq-beach-desc">Hazardous undertow and quicksand pockets. Deep swimming is strictly prohibited today. Visitors advised to stay on dry upper shore.</p>
             <div class="aq-beach-actions">
-              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-aksa')">🌊 Check Safety & Swell</button>
-              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(19.1760, 72.7950, 'beach-aksa')" title="Center on Live Map">🗺️ Map</button>
+              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-aksa')">Check Safety & Swell</button>
+              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(19.1760, 72.7950, 'beach-aksa')" title="Center on Live Map">Map View</button>
               <button class="aq-beach-btn ghost" onclick="openReportModalWithCoords(19.1760, 72.7950, 'Aksa Beach')" title="Log Incident at Aksa Beach">+ Report</button>
             </div>
           </div>
@@ -786,7 +891,7 @@
                 <h3 class="aq-beach-name">Colaba Point & Harbor</h3>
                 <div class="aq-beach-location">South Mumbai Coast</div>
               </div>
-              <span class="aq-status-badge safe">✓ Safe Navigation</span>
+              <span class="aq-status-badge safe">Safe Navigation</span>
             </div>
             <div class="aq-beach-metrics">
               <div class="aq-metric-item">
@@ -804,8 +909,8 @@
             </div>
             <p class="aq-beach-desc">Stable navigation and calm water conditions. Ferry services operating normally between Gateway of India and Alibaug / Mandwa.</p>
             <div class="aq-beach-actions">
-              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-colaba')">🌊 Check Safety & Swell</button>
-              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(18.8980, 72.8120, 'beach-colaba')" title="Center on Live Map">🗺️ Map</button>
+              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-colaba')">Check Safety & Swell</button>
+              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(18.8980, 72.8120, 'beach-colaba')" title="Center on Live Map">Map View</button>
               <button class="aq-beach-btn ghost" onclick="openReportModalWithCoords(18.8980, 72.8120, 'Colaba Point')" title="Log Incident at Colaba">+ Report</button>
             </div>
           </div>
@@ -817,7 +922,7 @@
                 <h3 class="aq-beach-name">Alibaug & Varsoli Beach</h3>
                 <div class="aq-beach-location">Raigad Coastal Belt</div>
               </div>
-              <span class="aq-status-badge safe">✓ Safe & Open</span>
+              <span class="aq-status-badge safe">Safe & Open</span>
             </div>
             <div class="aq-beach-metrics">
               <div class="aq-metric-item">
@@ -835,8 +940,8 @@
             </div>
             <p class="aq-beach-desc">Expansive flat white sand beach with gentle waves. Safe for family bathing, boating, and beach walks. Zero hazard advisories active.</p>
             <div class="aq-beach-actions">
-              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-alibaug')">🌊 Check Safety & Swell</button>
-              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(18.6410, 72.8720, 'beach-alibaug')" title="Center on Live Map">🗺️ Map</button>
+              <button class="aq-beach-btn primary" onclick="openBeachDrawer('beach-alibaug')">Check Safety & Swell</button>
+              <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(18.6410, 72.8720, 'beach-alibaug')" title="Center on Live Map">Map View</button>
               <button class="aq-beach-btn ghost" onclick="openReportModalWithCoords(18.6410, 72.8720, 'Alibaug Varsoli Beach')" title="Log Incident at Alibaug">+ Report</button>
             </div>
           </div>
@@ -887,7 +992,7 @@
             <!-- Global Geocoder Search -->
             <div style="position: relative; flex: 1; min-width: 280px; max-width: 480px;">
               <input type="text" id="homepage-map-search" 
-                placeholder="🔍 Search any coastal city, harbor, port, or coordinates..." 
+                placeholder="Search coastal city, harbor, port, or coordinates..." 
                 oninput="handleHomepageMapSearch(this.value)" 
                 autocomplete="off"
                 style="width: 100%; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-md); padding: 8px 14px; font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-primary); outline: none;" />
@@ -896,20 +1001,20 @@
 
             <!-- Sector Jump Pills -->
             <div style="display: flex; gap: 6px; overflow-x: auto; max-width: 100%; padding-bottom: 2px;">
-              <button class="aq-type-pill selected" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('world', this)">🌐 Global</button>
-              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('mumbai', this)">🇮🇳 Mumbai</button>
-              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('bengal', this)">🌊 Bay of Bengal</button>
-              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('florida', this)">🇺🇸 Florida</button>
-              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('singapore', this)">🏝️ Singapore</button>
-              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('mediterranean', this)">🇪🇺 Gibraltar</button>
+              <button class="aq-type-pill selected" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('world', this)">Global</button>
+              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('mumbai', this)">Mumbai</button>
+              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('bengal', this)">Bay of Bengal</button>
+              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('florida', this)">Florida</button>
+              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('singapore', this)">Singapore</button>
+              <button class="aq-type-pill" style="padding: 5px 12px; font-size: 0.72rem; border-radius: 99px; white-space: nowrap;" onclick="homepageJumpSector('mediterranean', this)">Gibraltar</button>
             </div>
 
             <!-- Base Layer Switcher Dock -->
             <div style="display: flex; gap: 4px; background: var(--ds-bg-surface); padding: 3px; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-subtle);">
-              <button class="aq-map-layer-btn active" id="hp-layer-dark" onclick="switchHomepageBaseLayer('dark')" title="Tactical Dark Radar" style="padding: 5px 10px; font-size: 11px;">🌑 Dark</button>
-              <button class="aq-map-layer-btn" id="hp-layer-sat" onclick="switchHomepageBaseLayer('satellite')" title="Esri World Satellite" style="padding: 5px 10px; font-size: 11px;">🛰️ Satellite</button>
-              <button class="aq-map-layer-btn" id="hp-layer-nautical" onclick="switchHomepageBaseLayer('nautical')" title="OpenSea Nautical" style="padding: 5px 10px; font-size: 11px;">⚓ Nautical</button>
-              <button class="aq-map-layer-btn" id="hp-layer-street" onclick="switchHomepageBaseLayer('street')" title="Daylight Recon" style="padding: 5px 10px; font-size: 11px;">☀️ Daylight</button>
+              <button class="aq-map-layer-btn active" id="hp-layer-dark" onclick="switchHomepageBaseLayer('dark')" title="Tactical Dark Radar" style="padding: 5px 10px; font-size: 11px;">Dark</button>
+              <button class="aq-map-layer-btn" id="hp-layer-sat" onclick="switchHomepageBaseLayer('satellite')" title="Esri World Satellite" style="padding: 5px 10px; font-size: 11px;">Satellite</button>
+              <button class="aq-map-layer-btn" id="hp-layer-nautical" onclick="switchHomepageBaseLayer('nautical')" title="OpenSea Nautical" style="padding: 5px 10px; font-size: 11px;">Nautical</button>
+              <button class="aq-map-layer-btn" id="hp-layer-street" onclick="switchHomepageBaseLayer('street')" title="Daylight Recon" style="padding: 5px 10px; font-size: 11px;">Daylight</button>
             </div>
           </div>
 
@@ -943,7 +1048,7 @@
           <!-- Bottom Status Strip -->
           <div style="padding: 10px 20px; background: var(--ds-bg-raised); border-top: 1px solid var(--ds-border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
             <div style="display: flex; align-items: center; gap: 16px; font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">
-              <span>💡 <strong style="color: var(--ds-text-primary);">Click anywhere on the map</strong> to drop a pin and report coastal hazards</span>
+              <span><strong style="color: var(--ds-text-primary);">Click anywhere on the map</strong> to drop a pin and report coastal hazards</span>
               <span style="display: inline-block; width: 1px; height: 14px; background: var(--ds-border-default);"></span>
               <span>100% Free Open Infrastructure (Esri, CARTO, OpenSeaMap)</span>
             </div>
@@ -1157,7 +1262,7 @@
 
         <div style="margin-top: 32px; display: flex; justify-content: center;">
           <button onclick="openCommandCenter('pillars')" class="aq-btn-primary" style="padding: 12px 28px; font-weight: bold; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: var(--ds-radius-md); border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 14px;">
-            ⚡ Inspect Four Core Subject Pillars &amp; Run Live Diagnostic Probe →
+            Inspect Four Core Subject Pillars &amp; Run Live Diagnostic Probe →
           </button>
         </div>
       </div>
@@ -1243,10 +1348,10 @@
         <!-- Filter Pills for Reports -->
         <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: var(--ds-space-6);" id="landing-report-filters">
           <button class="aq-filter-chip active" onclick="filterLandingReports('all', this)">All Incidents</button>
-          <button class="aq-filter-chip" onclick="filterLandingReports('flood', this)">🌊 Floods & Surge</button>
-          <button class="aq-filter-chip" onclick="filterLandingReports('marine_animal', this)">🐢 Marine Stranding</button>
-          <button class="aq-filter-chip" onclick="filterLandingReports('oil_spill', this)">🛢️ Oil & Pollution</button>
-          <button class="aq-filter-chip" onclick="filterLandingReports('cyclone_damage', this)">🚨 Structural Hazards</button>
+          <button class="aq-filter-chip" onclick="filterLandingReports('flood', this)">Floods & Surge</button>
+          <button class="aq-filter-chip" onclick="filterLandingReports('marine_animal', this)">Marine Stranding</button>
+          <button class="aq-filter-chip" onclick="filterLandingReports('oil_spill', this)">Oil & Pollution</button>
+          <button class="aq-filter-chip" onclick="filterLandingReports('cyclone_damage', this)">Structural Hazards</button>
         </div>
 
         <!-- Dynamically populated reports container -->
@@ -1280,7 +1385,7 @@
               <div style="font-size: 12px; color: var(--ds-text-secondary);">24/7 National Dispatch</div>
             </div>
             <a href="tel:112" class="aq-helpline-call">
-              <span>📞</span> 112
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> 112
             </a>
           </div>
 
@@ -1291,7 +1396,7 @@
               <div style="font-size: 12px; color: var(--ds-text-secondary);">Vessel distress & sea patrols</div>
             </div>
             <a href="tel:1554" class="aq-helpline-call">
-              <span>⚓</span> 1554
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg> 1554
             </a>
           </div>
 
@@ -1302,7 +1407,7 @@
               <div style="font-size: 12px; color: var(--ds-text-secondary);">Flood inundation & cyclone ops</div>
             </div>
             <a href="tel:1077" class="aq-helpline-call">
-              <span>🌊</span> 1077
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20"/><path d="M20 12v8H4v-8"/><path d="m4 4 8-2 8 2v4H4z"/></svg> 1077
             </a>
           </div>
 
@@ -1313,7 +1418,7 @@
               <div style="font-size: 12px; color: var(--ds-text-secondary);">NGO Rapid Response Team</div>
             </div>
             <a href="tel:+919820288120" class="aq-helpline-call">
-              <span>🐢</span> Call NGO
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Call NGO
             </a>
           </div>
 
@@ -1488,16 +1593,16 @@
         </div>
 
         <div class="aq-hud-tabs">
-          <button class="aq-hud-tab active" onclick="switchHudTab('overview')">◈ Overview</button>
-          <button class="aq-hud-tab" onclick="switchHudTab('map')">◎ Tactical Map</button>
-          <button class="aq-hud-tab" onclick="switchHudTab('reports')">📋 Field Reports</button>
-          <button class="aq-hud-tab" onclick="switchHudTab('scanner')">◇ AI Threat Scanner</button>
-          <button class="aq-hud-tab" onclick="switchHudTab('chat')">✦ Copilot Chat</button>
-          <button class="aq-hud-tab" onclick="switchHudTab('evac')">↗ Evacuation</button>
-          <button class="aq-hud-tab" onclick="switchHudTab('marine')">🐢 Marine Rescue</button>
-          <button class="aq-hud-tab" onclick="switchHudTab('pillars')" style="color: var(--ds-color-brand-light); font-weight: 600;">⚡ Subject Pillars</button>
-          <button class="aq-hud-tab" onclick="switchHudTab('standards')">📐 Standards (16)</button>
-          <button class="aq-hud-tab" onclick="switchHudTab('sos')" style="color: var(--ds-color-brand); font-weight: bold;">! Emergency SOS</button>
+          <button class="aq-hud-tab active" onclick="switchHudTab('overview')">Overview</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('map')">Tactical Map</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('reports')">Field Reports</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('scanner')">AI Threat Scanner</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('chat')">Copilot Chat</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('evac')">Evacuation</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('marine')">Marine Rescue</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('pillars')" style="color: var(--ds-color-brand-light); font-weight: 600;">Subject Pillars</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('standards')">Standards (16)</button>
+          <button class="aq-hud-tab" onclick="switchHudTab('sos')" style="color: var(--ds-color-brand); font-weight: bold;">Emergency SOS</button>
         </div>
 
 
@@ -1549,7 +1654,7 @@
                   </button>
                   <button class="aq-btn-ghost" onclick="switchHudTab('reports')"
                     style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-color-brand-light); border: 1px solid var(--ds-border-brand); padding: 8px 18px; border-radius: var(--ds-radius-md);">
-                    📋 View Field Reports
+                    View Field Reports
                   </button>
                   <button class="aq-btn-ghost" onclick="switchHudTab('scanner')"
                     style="font-family: var(--ds-font-body); font-size: var(--ds-text-sm); color: var(--ds-text-primary); border: 1px solid var(--ds-border-default); padding: 8px 18px; border-radius: var(--ds-radius-md);">
@@ -1616,36 +1721,36 @@
             <!-- Top Left: Global Search & Telemetry Bar -->
             <div class="aq-map-control-bar">
               <div class="aq-map-search-box">
-                <span style="font-size: 14px; margin-right: 8px; color: var(--ds-color-brand);">🔍</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; color: var(--ds-color-brand); flex-shrink: 0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input type="text" id="global-map-search" class="aq-map-search-input" placeholder="Search any city, coastal sector, port, or coordinates worldwide..." oninput="handleMapSearch(this.value)" autocomplete="off">
                 <div class="aq-search-results-dropdown" id="map-search-results"></div>
               </div>
 
               <!-- Quick Sector Jumps -->
               <div class="aq-sector-pills-bar">
-                <button class="aq-type-pill selected" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('world', this)">🌐 Global View</button>
-                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('mumbai', this)">🇮🇳 Mumbai / Arabian Sea</button>
-                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('bengal', this)">🌊 Bay of Bengal</button>
-                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('florida', this)">🇺🇸 Florida / Caribbean</button>
-                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('singapore', this)">🏝️ Malacca Strait</button>
-                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('mediterranean', this)">🇪🇺 Mediterranean</button>
-                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('tokyo', this)">🗾 Tokyo Bay</button>
+                <button class="aq-type-pill selected" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('world', this)">Global View</button>
+                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('mumbai', this)">Mumbai / Arabian Sea</button>
+                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('bengal', this)">Bay of Bengal</button>
+                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('florida', this)">Florida / Caribbean</button>
+                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('singapore', this)">Malacca Strait</button>
+                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('mediterranean', this)">Mediterranean</button>
+                <button class="aq-type-pill" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 99px; flex-direction: row; white-space: nowrap;" onclick="jumpMapSector('tokyo', this)">Tokyo Bay</button>
               </div>
             </div>
 
             <!-- Top Right: Global Map Layer Switcher -->
             <div class="aq-map-layer-dock">
               <button class="aq-map-layer-btn active" id="layer-btn-dark" onclick="switchMapBaseLayer('dark')">
-                🌙 Tactical Dark
+                Tactical Dark
               </button>
               <button class="aq-map-layer-btn" id="layer-btn-sat" onclick="switchMapBaseLayer('satellite')">
-                🛰️ Satellite
+                Satellite
               </button>
               <button class="aq-map-layer-btn" id="layer-btn-nautical" onclick="switchMapBaseLayer('nautical')">
-                ⚓ Nautical Bathymetry
+                Nautical Bathymetry
               </button>
               <button class="aq-map-layer-btn" id="layer-btn-street" onclick="switchMapBaseLayer('street')">
-                🗺️ Daylight
+                Daylight
               </button>
             </div>
 
@@ -1694,10 +1799,10 @@
             <!-- Filter chips -->
             <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;" id="hud-report-filters">
               <button class="aq-type-pill selected" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('all', this)">All Incidents</button>
-              <button class="aq-type-pill" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('flood', this)">🌊 Floods & Surge</button>
-              <button class="aq-type-pill" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('marine_animal', this)">🐢 Marine Stranding</button>
-              <button class="aq-type-pill" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('oil_spill', this)">🛢️ Oil Spills</button>
-              <button class="aq-type-pill" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('cyclone_damage', this)">🚨 Structural Hazards</button>
+              <button class="aq-type-pill" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('flood', this)">Floods & Surge</button>
+              <button class="aq-type-pill" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('marine_animal', this)">Marine Stranding</button>
+              <button class="aq-type-pill" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('oil_spill', this)">Oil Spills</button>
+              <button class="aq-type-pill" style="padding: 6px 14px; flex-direction: row; border-radius: 99px;" onclick="filterReports('cyclone_damage', this)">Structural Hazards</button>
             </div>
 
             <!-- Reports List Table Container -->
@@ -1733,10 +1838,10 @@
             <!-- Quick Test Sample Presets -->
             <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--ds-bg-surface); padding: 10px 14px; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-subtle);">
               <span style="font-size: 11px; font-family: var(--ds-font-mono); color: var(--ds-text-muted); font-weight: bold; letter-spacing: 0.05em;">QUICK BENCHMARK SAMPLES:</span>
-              <button type="button" onclick="loadSamplePreset('authentic')" style="font-size: 11px; padding: 5px 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 4px; cursor: pointer; font-weight: 500;">✓ Authentic Drone Capture</button>
-              <button type="button" onclick="loadSamplePreset('tampered')" style="font-size: 11px; padding: 5px 12px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 4px; cursor: pointer; font-weight: 500;">⚠ Spliced / Fake Flood</button>
-              <button type="button" onclick="loadSamplePreset('artwork')" style="font-size: 11px; padding: 5px 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 4px; cursor: pointer; font-weight: 500;">🎨 2D Digital Artwork</button>
-              <button type="button" onclick="loadSamplePreset('oil')" style="font-size: 11px; padding: 5px 12px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; cursor: pointer; font-weight: 500;">🛢️ Petroleum Hydrocarbon Sheen</button>
+              <button type="button" onclick="loadSamplePreset('authentic')" style="font-size: 11px; padding: 5px 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 4px; cursor: pointer; font-weight: 500;">Authentic Drone Capture</button>
+              <button type="button" onclick="loadSamplePreset('tampered')" style="font-size: 11px; padding: 5px 12px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 4px; cursor: pointer; font-weight: 500;">Spliced / Fake Flood</button>
+              <button type="button" onclick="loadSamplePreset('artwork')" style="font-size: 11px; padding: 5px 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 4px; cursor: pointer; font-weight: 500;">2D Digital Artwork</button>
+              <button type="button" onclick="loadSamplePreset('oil')" style="font-size: 11px; padding: 5px 12px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; cursor: pointer; font-weight: 500;">Petroleum Hydrocarbon Sheen</button>
             </div>
 
             <!-- 2. Staging Card (Selected Image Preview with Manual Trigger) -->
@@ -1755,7 +1860,7 @@
                   </div>
                   <div style="display: flex; gap: 10px;">
                     <button id="scanner-run-btn" class="aq-btn-primary" style="font-size: var(--ds-text-xs); padding: 8px 18px; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 6px; font-weight: bold; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px;" onclick="executeManualScannerRun()">
-                      ⚡ Run Dual-Stream AI Forensic Scan
+                      Run Dual-Stream AI Forensic Scan
                     </button>
                     <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 8px 14px; border: 1px solid var(--ds-border-default); border-radius: 6px; color: var(--ds-text-primary); cursor: pointer;" onclick="resetScanner()">
                       Choose Different Photo
@@ -1816,10 +1921,10 @@
             </div>
             <div style="padding: 0 var(--ds-space-6) 10px; display: flex; gap: 8px; overflow-x: auto;">
               <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 4px 10px; white-space: nowrap; border: 1px solid var(--ds-color-brand); border-radius: 4px; color: var(--ds-color-brand); font-weight: bold; background: rgba(245, 158, 11, 0.08);" onclick="quickAskCopilot('I saw high floodwater rising near Marine Drive')">
-                🎙️ Report Incident with AI
+                Report Incident with AI
               </button>
               <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 4px 10px; white-space: nowrap; border: 1px solid var(--ds-border-default); border-radius: 4px; color: var(--ds-text-secondary);" onclick="quickAskCopilot('What are the emergency helpline numbers?')">
-                📞 Emergency Helplines
+                Emergency Helplines
               </button>
               <button class="aq-btn-ghost" style="font-size: var(--ds-text-xs); padding: 4px 10px; white-space: nowrap; border: 1px solid var(--ds-border-default); border-radius: 4px; color: var(--ds-text-secondary);" onclick="quickAskCopilot('Check wave height on Buoy B-12')">
                 Buoy B-12 Status
@@ -1858,7 +1963,7 @@
             <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-lg); padding: 20px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                 <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); font-weight: bold; letter-spacing: 0.08em;">
-                  ⚡ INTERACTIVE CORRIDOR CALCULATOR (API: POST /api/routes/calculate)
+                  INTERACTIVE CORRIDOR CALCULATOR (API: POST /api/routes/calculate)
                 </div>
                 <span id="evac-calc-status-badge" style="font-family: var(--ds-font-mono); font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; padding: 2px 8px; border-radius: 4px;">
                   Elevation Engine Ready
@@ -2047,7 +2152,7 @@
                 </p>
               </div>
               <button class="aq-btn-primary" onclick="runAllPillarDiagnostics()" style="padding: 10px 20px; font-weight: bold; background: var(--ds-color-brand); color: var(--ds-bg-base); border: none; border-radius: var(--ds-radius-md); cursor: pointer; font-family: var(--ds-font-mono); font-size: 12px;">
-                ⚡ Run Live Diagnostics
+                Run Live Diagnostics
               </button>
             </div>
 
@@ -2297,27 +2402,27 @@
           <label class="aq-form-label">Incident Classification *</label>
           <div class="aq-type-grid" id="report-type-selector">
             <div class="aq-type-pill selected" data-type="flood" onclick="selectReportType('flood', this)">
-              <span style="font-size: 16px;">🌊</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c3-2 6 2 9 0s6-2 9 0"/><path d="M2 17c3-2 6 2 9 0s6-2 9 0"/></svg>
               <span>Flood / Surge</span>
             </div>
             <div class="aq-type-pill" data-type="marine_animal" onclick="selectReportType('marine_animal', this)">
-              <span style="font-size: 16px;">🐢</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               <span>Marine Stranding</span>
             </div>
             <div class="aq-type-pill" data-type="oil_spill" onclick="selectReportType('oil_spill', this)">
-              <span style="font-size: 16px;">🛢️</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
               <span>Oil / Sheen Spill</span>
             </div>
             <div class="aq-type-pill" data-type="cyclone_damage" onclick="selectReportType('cyclone_damage', this)">
-              <span style="font-size: 16px;">🚨</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
               <span>Cyclone Damage</span>
             </div>
             <div class="aq-type-pill" data-type="road_blockage" onclick="selectReportType('road_blockage', this)">
-              <span style="font-size: 16px;">🚧</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
               <span>Road / Harbor Block</span>
             </div>
             <div class="aq-type-pill" data-type="missing_person" onclick="selectReportType('missing_person', this)">
-              <span style="font-size: 16px;">⚓</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/></svg>
               <span>Vessel / SOS</span>
             </div>
           </div>
@@ -2335,8 +2440,9 @@
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
             <label class="aq-form-label">Incident Geolocation (Click anywhere on map to pin)</label>
             <div style="display: flex; gap: 6px;">
-              <button type="button" class="aq-btn-ghost" style="padding: 2px 8px; font-size: 0.68rem; color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); border-radius: 4px;" onclick="autoDetectLocation()">
-                📍 Auto-Detect GPS
+              <button type="button" class="aq-btn-ghost" style="padding: 2px 8px; font-size: 0.68rem; color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;" onclick="autoDetectLocation()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg>
+                Auto-Detect GPS
               </button>
             </div>
           </div>
@@ -2431,7 +2537,11 @@
     <div class="aq-dialog-container">
       <div class="aq-dialog-header">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 20px;">🔑</span>
+          <div style="width: 32px; height: 32px; border-radius: var(--ds-radius-md); background: rgba(245, 158, 11, 0.12); border: 1px solid var(--ds-border-brand); display: flex; align-items: center; justify-content: center; color: var(--ds-color-brand);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 2l-2 2m-1.5 1.5L16 7l-1.5-1.5L13 7l-2-2 1.5-1.5L11 2m-3 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/>
+            </svg>
+          </div>
           <div>
             <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-lg); font-weight: bold; color: var(--ds-text-primary);">
               AquaShield Operator & Scout Access
@@ -2447,9 +2557,9 @@
       <div class="aq-dialog-body">
         <!-- Auth Tabs -->
         <div style="display: flex; gap: 8px; background: var(--ds-bg-raised); padding: 4px; border-radius: var(--ds-radius-md); border: 1px solid var(--ds-border-subtle);">
-          <button class="aq-hud-tab active" id="tab-btn-login" style="flex: 1; text-align: center;" onclick="switchAuthTab('login')">🔑 Sign In</button>
-          <button class="aq-hud-tab" id="tab-btn-register" style="flex: 1; text-align: center;" onclick="switchAuthTab('register')">📝 Register Scout</button>
-          <button class="aq-hud-tab" id="tab-btn-demo" style="flex: 1; text-align: center;" onclick="switchAuthTab('demo')">⚡ Instant Demo Accounts</button>
+          <button class="aq-hud-tab active" id="tab-btn-login" style="flex: 1; text-align: center;" onclick="switchAuthTab('login')">Sign In</button>
+          <button class="aq-hud-tab" id="tab-btn-register" style="flex: 1; text-align: center;" onclick="switchAuthTab('register')">Register Scout</button>
+          <button class="aq-hud-tab" id="tab-btn-demo" style="flex: 1; text-align: center;" onclick="switchAuthTab('demo')">Instant Demo Accounts</button>
         </div>
 
         <!-- 1. Sign In Form -->
@@ -2532,7 +2642,7 @@
               </div>
             </div>
             <button class="aq-btn-primary" style="padding: 6px 14px; font-size: var(--ds-text-xs); background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 4px;" onclick="instantDemoLogin('SENTINEL-7049', 'Sentinel@2026')">
-              ⚡ 1-Click Login
+              1-Click Access
             </button>
           </div>
 
@@ -2548,7 +2658,7 @@
               </div>
             </div>
             <button class="aq-btn-primary" style="padding: 6px 14px; font-size: var(--ds-text-xs); background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 4px;" onclick="instantDemoLogin('RESCUE-9012', 'Rescue@2026')">
-              ⚡ 1-Click Login
+              1-Click Access
             </button>
           </div>
 
@@ -2564,7 +2674,7 @@
               </div>
             </div>
             <button class="aq-btn-primary" style="padding: 6px 14px; font-size: var(--ds-text-xs); background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 4px;" onclick="instantDemoLogin('NDMA-3301', 'Ndma@2026')">
-              ⚡ 1-Click Login
+              1-Click Access
             </button>
           </div>
 
@@ -2580,7 +2690,7 @@
               </div>
             </div>
             <button class="aq-btn-primary" style="padding: 6px 14px; font-size: var(--ds-text-xs); background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 4px;" onclick="instantDemoLogin('CITIZEN-1084', 'Citizen@2026')">
-              ⚡ 1-Click Login
+              1-Click Access
             </button>
           </div>
         </div>
@@ -2589,7 +2699,7 @@
   </div>
 
   <!-- ── Privacy Policy Modal ──────────────────────────────────────── -->
-  <div class="aq-modal-backdrop" id="privacy-modal" onclick="if(event.target===this)closePrivacyModal()">
+  <div class="aq-modal-backdrop" id="privacy-modal" style="display: none;" onclick="if(event.target===this)closePrivacyModal()">
     <div class="aq-modal-card" style="max-width: 680px; max-height: 85vh; overflow-y: auto;">
       <div class="aq-modal-header" style="position: sticky; top: 0; background: var(--ds-bg-surface); z-index: 2;">
         <div>
@@ -2620,7 +2730,7 @@
   </div>
 
   <!-- ── Terms of Service Modal ───────────────────────────────────────── -->
-  <div class="aq-modal-backdrop" id="terms-modal" onclick="if(event.target===this)closeTermsModal()">
+  <div class="aq-modal-backdrop" id="terms-modal" style="display: none;" onclick="if(event.target===this)closeTermsModal()">
     <div class="aq-modal-card" style="max-width: 680px; max-height: 85vh; overflow-y: auto;">
       <div class="aq-modal-header" style="position: sticky; top: 0; background: var(--ds-bg-surface); z-index: 2;">
         <div>
@@ -2651,7 +2761,7 @@
   </div>
 
   <!-- ── Standards & Architectural Integrity Modal (The Complete Guide to Building It Right) ── -->
-  <div class="aq-modal-backdrop" id="standards-modal" onclick="if(event.target===this)closeStandardsModal()">
+  <div class="aq-modal-backdrop" id="standards-modal" style="display: none;" onclick="if(event.target===this)closeStandardsModal()">
     <div class="aq-standards-modal-card">
       <div class="aq-standards-header">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px;">

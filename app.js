@@ -332,6 +332,7 @@ function closeCommandCenter() {
 function openPrivacyModal() {
   const modal = document.getElementById('privacy-modal');
   if (modal) {
+    modal.style.display = 'flex';
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
   }
@@ -341,6 +342,7 @@ function closePrivacyModal() {
   const modal = document.getElementById('privacy-modal');
   if (modal) {
     modal.classList.remove('active');
+    modal.style.display = 'none';
     document.body.style.overflow = 'auto';
   }
 }
@@ -348,6 +350,7 @@ function closePrivacyModal() {
 function openTermsModal() {
   const modal = document.getElementById('terms-modal');
   if (modal) {
+    modal.style.display = 'flex';
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
   }
@@ -357,6 +360,7 @@ function closeTermsModal() {
   const modal = document.getElementById('terms-modal');
   if (modal) {
     modal.classList.remove('active');
+    modal.style.display = 'none';
     document.body.style.overflow = 'auto';
   }
 }
@@ -364,6 +368,7 @@ function closeTermsModal() {
 function openStandardsModal(category = 'all') {
   const modal = document.getElementById('standards-modal');
   if (modal) {
+    modal.style.display = 'flex';
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
     if (category !== 'all') {
@@ -379,6 +384,7 @@ function closeStandardsModal() {
   const modal = document.getElementById('standards-modal');
   if (modal) {
     modal.classList.remove('active');
+    modal.style.display = 'none';
     document.body.style.overflow = 'auto';
   }
 }
@@ -685,7 +691,7 @@ function switchHomepageBaseLayer(layerName) {
   const activeBtn = document.getElementById(`hp-layer-${mapKey}`);
   if (activeBtn) activeBtn.classList.add('active');
 
-  showToast('🗺️ Layer Updated', `Switched to MapLibre ${layerName.toUpperCase()} vector/raster layer.`, 'info');
+  showToast('Layer Updated', `Switched to MapLibre ${layerName.toUpperCase()} vector/raster layer.`, 'info');
 }
 
 function homepageJumpSector(sector, btn) {
@@ -759,7 +765,7 @@ function renderHomepageSearchResults(results, container) {
 
   container.innerHTML = results.map(r => `
     <div class="aq-search-result-item" onclick="selectHomepageSearchResult(${r.lat}, ${r.lon}, '${escape(r.name)}', ${r.zoom || 12})" style="padding:8px 12px; border-bottom:1px solid rgba(148,163,184,0.1); cursor:pointer;">
-      <strong style="color:#f1f5f9; font-size:12px; display:block;">📍 ${r.name.split(',')[0]}</strong>
+      <strong style="color:#f1f5f9; font-size:12px; display:block;">${r.name.split(',')[0]}</strong>
       <span style="color:#94a3b8; font-size:10px;">${r.name.split(',').slice(1, 4).join(',')} (${r.lat.toFixed(2)}°, ${r.lon.toFixed(2)}°)</span>
     </div>
   `).join('');
@@ -925,7 +931,7 @@ function switchMapBaseLayer(layerName) {
   const activeBtn = document.getElementById(`layer-btn-${layerName}`);
   if (activeBtn) activeBtn.classList.add('active');
 
-  showToast('🗺️ Map Layer Changed', `Switched view to MapLibre ${layerName.toUpperCase()} layer.`, 'info');
+  showToast('Map Layer Changed', `Switched view to MapLibre ${layerName.toUpperCase()} layer.`, 'info');
 }
 
 let searchDebounceTimer = null;
@@ -973,7 +979,7 @@ function renderSearchResults(results, container) {
 
   container.innerHTML = results.map(r => `
     <div class="aq-search-result-item" onclick="selectSearchResult(${r.lat}, ${r.lon}, '${escape(r.name)}', ${r.zoom || 12})">
-      <strong style="color:#f1f5f9; font-size:12px;">📍 ${r.name.split(',')[0]}</strong>
+      <strong style="color:#f1f5f9; font-size:12px;">${r.name.split(',')[0]}</strong>
       <span style="color:#94a3b8; font-size:10px;">${r.name.split(',').slice(1, 4).join(',')} (${r.lat.toFixed(2)}°, ${r.lon.toFixed(2)}°)</span>
     </div>
   `).join('');
@@ -1086,7 +1092,7 @@ function simulateEmergencyMarker() {
 
   const popup = new maplibregl.Popup({ offset: 14 }).setHTML(`
     <div style="background:#07111e;color:#f1f5f9;padding:6px;border:1px solid #ef4444;">
-      <strong style="color: #ef4444;">⚠ EMERGENCY DISTRESS BEACON</strong><br>
+      <strong style="color: #ef4444;">EMERGENCY DISTRESS BEACON</strong><br>
       <span style="font-size:12px;">Vessel: Fishing Trawler 'Sagar 4'</span><br>
       <span style="font-size:11px;color:#94a3b8;">Nature: Engine Failure & Heavy Swell</span><br>
       <span style="font-size:11px;color:#fbbf24;">Coast Guard Cutter Intercepting.</span>
@@ -1103,13 +1109,13 @@ function simulateEmergencyMarker() {
 }
 
 function plotReportsOnMap(reports) {
-  const icons = {
-    flood: '🌊',
-    marine_animal: '🐢',
-    oil_spill: '🛢️',
-    cyclone_damage: '🚨',
-    road_blockage: '🚧',
-    missing_person: '⚓'
+  const typeColors = {
+    flood: '#38bdf8',
+    marine_animal: '#10b981',
+    oil_spill: '#f59e0b',
+    cyclone_damage: '#ef4444',
+    road_blockage: '#fbbf24',
+    missing_person: '#a855f7'
   };
 
   // Plot on Homepage Map
@@ -1119,11 +1125,11 @@ function plotReportsOnMap(reports) {
 
     reports.forEach(r => {
       if (!r.latitude || !r.longitude) return;
-      const emoji = icons[r.type] || '⚠';
+      const color = typeColors[r.type] || '#f59e0b';
 
       const el = document.createElement('div');
       el.className = 'maplibre-report-marker';
-      el.innerHTML = emoji;
+      el.innerHTML = `<span style="width: 10px; height: 10px; border-radius: 50%; background: ${color}; display: block; box-shadow: 0 0 6px ${color};"></span>`;
       el.style.borderColor = r.ai_verified ? '#f59e0b' : '#94a3b8';
 
       const popup = new maplibregl.Popup({ offset: 14 }).setHTML(`
@@ -1153,11 +1159,11 @@ function plotReportsOnMap(reports) {
 
     reports.forEach(r => {
       if (!r.latitude || !r.longitude) return;
-      const emoji = icons[r.type] || '⚠';
+      const color = typeColors[r.type] || '#f59e0b';
 
       const el = document.createElement('div');
       el.className = 'maplibre-report-marker';
-      el.innerHTML = emoji;
+      el.innerHTML = `<span style="width: 10px; height: 10px; border-radius: 50%; background: ${color}; display: block; box-shadow: 0 0 6px ${color};"></span>`;
       el.style.borderColor = r.ai_verified ? '#f59e0b' : '#94a3b8';
 
       const popup = new maplibregl.Popup({ offset: 14 }).setHTML(`
@@ -1215,8 +1221,8 @@ function initReportPickerMap(initialLat = 19.054, initialLng = 72.822) {
 
   // Draggable Amber Marker
   const el = document.createElement('div');
-  el.style.cssText = 'width: 22px; height: 22px; background: #f59e0b; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 14px #f59e0b; display:flex; align-items:center; justify-content:center; color:#07111e; font-size:11px; font-weight:bold; cursor:grab;';
-  el.innerHTML = '📍';
+  el.style.cssText = 'width: 22px; height: 22px; background: #f59e0b; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 14px #f59e0b; display:flex; align-items:center; justify-content:center; cursor:grab;';
+  el.innerHTML = '<span style="width: 8px; height: 8px; border-radius: 50%; background: #07111e; display: block;"></span>';
 
   reportPickerMarker = new maplibregl.Marker({
     element: el,
@@ -1329,7 +1335,7 @@ function renderUserNav() {
     container.innerHTML = `
       <button class="aq-btn-ghost" onclick="openAuthModal()"
         style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-medium); color: var(--ds-text-primary); border: 1px solid var(--ds-border-default); padding: 6px 12px; border-radius: var(--ds-radius-md);">
-        🔑 Scout Login
+        Login
       </button>
     `;
   }
@@ -1408,9 +1414,9 @@ async function handleLoginSubmit(e) {
     renderUserNav();
     updateReportModalReporterInfo();
     closeAuthModal();
-    showToast('🔑 Authentication Successful', `Logged in as ${currentUser.name} (${currentUser.badge_id})`, 'success');
+    showToast('Authentication Successful', `Logged in as ${currentUser.name} (${currentUser.badge_id})`, 'success');
   } catch (err) {
-    showToast('✕ Authorization Failed', err.message, 'error');
+    showToast('Authorization Failed', err.message, 'error');
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = 'Authorize & Access Terminal ↗';
@@ -1447,9 +1453,9 @@ async function handleRegisterSubmit(e) {
     renderUserNav();
     updateReportModalReporterInfo();
     closeAuthModal();
-    showToast('🎉 Scout Enrolled Successfully', `Your Login ID is ${currentUser.badge_id}. Welcome aboard, ${currentUser.name}!`, 'success');
+    showToast('Scout Enrolled Successfully', `Your Login ID is ${currentUser.badge_id}. Welcome aboard, ${currentUser.name}!`, 'success');
   } catch (err) {
-    showToast('✕ Registration Failed', err.message, 'error');
+    showToast('Registration Failed', err.message, 'error');
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = 'Register & Generate Login Badge ↗';
@@ -1476,9 +1482,9 @@ async function instantDemoLogin(identifier, password) {
     renderUserNav();
     updateReportModalReporterInfo();
     closeAuthModal();
-    showToast('⚡ 1-Click Access Granted', `Switched operator session to ${currentUser.name} (${currentUser.badge_id})`, 'success');
+    showToast('1-Click Access Granted', `Switched operator session to ${currentUser.name} (${currentUser.badge_id})`, 'success');
   } catch (err) {
-    showToast('✕ Login Error', err.message, 'error');
+    showToast('Login Error', err.message, 'error');
   }
 }
 
@@ -1543,13 +1549,13 @@ function updateUrgencyLabel(val) {
 
 function autoDetectLocation() {
   if ('geolocation' in navigator) {
-    showToast('📍 Detecting GPS', 'Querying browser geolocation sensor...', 'info');
+    showToast('Detecting GPS', 'Querying browser geolocation sensor...', 'info');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = parseFloat(pos.coords.latitude.toFixed(6));
         const lng = parseFloat(pos.coords.longitude.toFixed(6));
         setReportPickerCoords(lat, lng);
-        showToast('✓ GPS Location Locked', `Coordinates: ${lat}, ${lng}`, 'success');
+        showToast('GPS Location Locked', `Coordinates: ${lat}, ${lng}`, 'success');
       },
       (err) => {
         showToast('Location Warning', 'Using default coastal sector coordinates.', 'warning');
@@ -1628,7 +1634,7 @@ async function handleReportSubmit(e) {
       resultBox.style.display = 'block';
     }
 
-    showToast('🚨 Incident Report Broadcasted', `Report ${rep.id} verified and added to Global Tactical Map`, 'success');
+    showToast('Incident Report Broadcasted', `Report ${rep.id} verified and added to Global Tactical Map`, 'success');
 
     // Reload reports and close modal
     loadReports();
@@ -1739,26 +1745,29 @@ function renderReportsList(reports) {
     return;
   }
 
-  const emojiMap = {
-    flood: '🌊',
-    marine_animal: '🐢',
-    oil_spill: '🛢️',
-    cyclone_damage: '🚨',
-    road_blockage: '🚧',
-    missing_person: '⚓'
-  };
+  function getCategorySvg(type) {
+    const svgs = {
+      flood: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c3-2 6 2 9 0s6-2 9 0"/><path d="M2 17c3-2 6 2 9 0s6-2 9 0"/></svg>`,
+      marine_animal: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+      oil_spill: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`,
+      cyclone_damage: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
+      road_blockage: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`,
+      missing_person: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/></svg>`
+    };
+    return svgs[type] || `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+  }
 
   container.innerHTML = reports.map(r => `
     <div style="background: var(--ds-bg-card); border: 1px solid ${r.ai_verified ? 'var(--ds-border-brand)' : 'var(--ds-border-default)'}; border-radius: var(--ds-radius-lg); padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
       <div style="display: flex; gap: 14px; align-items: flex-start; flex: 1; min-width: 280px;">
-        <div style="font-size: 24px; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-md); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-          ${emojiMap[r.type] || '⚠'}
+        <div style="color: var(--ds-color-brand); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-md); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          ${getCategorySvg(r.type)}
         </div>
         <div>
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
             <span class="aq-user-badge" style="font-size: 0.65rem;">${r.id}</span>
             <span style="font-size: 0.68rem; color: ${r.ai_verified ? 'var(--ds-color-brand-light)' : 'var(--ds-text-muted)'}; font-weight: 600;">
-              ${r.ai_verified ? `✓ ${r.ai_confidence || 96}% AI CONFIRMED` : 'PENDING AUDIT'}
+              ${r.ai_verified ? `${r.ai_confidence || 96}% AI CONFIRMED` : 'PENDING AUDIT'}
             </span>
             <span style="font-size: 0.68rem; color: var(--ds-text-muted);">· Urgency: ${r.urgency_rank || 5}/10</span>
           </div>
@@ -1769,7 +1778,7 @@ function renderReportsList(reports) {
             ${r.description}
           </p>
           <div style="font-size: 0.68rem; color: var(--ds-text-muted);">
-            📍 ${r.address || 'Coastal Shoreline'} · Reporter: <strong style="color: var(--ds-text-primary);">${r.reporter_name || 'Citizen'}</strong> (${r.reporter_badge || 'CITIZEN'})
+            ${r.address || 'Coastal Shoreline'} · Reporter: <strong style="color: var(--ds-text-primary);">${r.reporter_name || 'Citizen'}</strong> (${r.reporter_badge || 'CITIZEN'})
           </div>
         </div>
       </div>
@@ -1787,14 +1796,17 @@ function renderLandingFieldReports(reports) {
   const container = document.getElementById('landing-reports-container');
   if (!container) return;
 
-  const emojiMap = {
-    flood: '🌊',
-    marine_animal: '🐢',
-    oil_spill: '🛢️',
-    cyclone_damage: '🚨',
-    road_blockage: '🚧',
-    missing_person: '⚓'
-  };
+  function getCategorySvg(type) {
+    const svgs = {
+      flood: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c3-2 6 2 9 0s6-2 9 0"/><path d="M2 17c3-2 6 2 9 0s6-2 9 0"/></svg>`,
+      marine_animal: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+      oil_spill: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`,
+      cyclone_damage: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
+      road_blockage: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`,
+      missing_person: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/></svg>`
+    };
+    return svgs[type] || `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+  }
 
   const labelMap = {
     flood: 'Tidal Surge / Flood',
@@ -1808,7 +1820,9 @@ function renderLandingFieldReports(reports) {
   if (!reports || reports.length === 0) {
     container.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; background: var(--ds-bg-surface); border: 1px dashed var(--ds-border-default); border-radius: var(--ds-radius-xl);">
-        <div style="font-size: 28px; margin-bottom: 8px;">📋</div>
+        <div style="width: 48px; height: 48px; margin: 0 auto 12px; border-radius: 50%; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); display: flex; align-items: center; justify-content: center; color: var(--ds-color-brand);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12h6m-6 4h6m-6-8h6"/></svg>
+        </div>
         <div style="font-weight: 700; font-size: 15px; color: var(--ds-text-primary);">No active incident reports in this category</div>
         <p style="font-size: 13px; color: var(--ds-text-secondary); margin: 6px 0 14px;">Shoreline conditions in this category are nominal. Observed an issue?</p>
         <button class="aq-btn-primary" onclick="openReportModal()" style="padding: 8px 18px; font-size: 12px; font-weight: bold; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 6px; border: none; cursor: pointer;">
@@ -1824,7 +1838,6 @@ function renderLandingFieldReports(reports) {
 
   container.innerHTML = displayReports.map(r => {
     const typeLabel = labelMap[r.type] || (r.type ? r.type.toUpperCase().replace('_', ' ') : 'COASTAL HAZARD');
-    const emoji = emojiMap[r.type] || '⚠';
     const confData = confirmations[r.id];
     const userConfirmed = confData?.userConfirmed || false;
     const confCount = (confData?.count || 0) + (r.upvotes || 1);
@@ -1835,7 +1848,7 @@ function renderLandingFieldReports(reports) {
           
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--ds-space-3);">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 18px;">${emoji}</span>
+              <span style="display: inline-flex; align-items: center; color: var(--ds-color-brand);">${getCategorySvg(r.type)}</span>
               <span style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); font-weight: var(--ds-weight-semibold);">${typeLabel}</span>
             </div>
             <span class="aq-user-badge" style="font-size: 0.65rem; background: rgba(245,158,11,0.1); border: 1px solid var(--ds-border-brand); color: var(--ds-color-brand-light);">${r.id}</span>
@@ -1852,7 +1865,7 @@ function renderLandingFieldReports(reports) {
           <div style="display: flex; align-items: center; justify-content: space-between; padding-top: var(--ds-space-3); border-top: 1px solid var(--ds-border-subtle); flex-wrap: wrap; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <button class="aq-report-confirm-btn ${userConfirmed ? 'confirmed' : ''}" onclick="confirmReport('${r.id}', this)" title="Confirm you also saw this incident">
-                <span>${userConfirmed ? '✓ Confirmed' : '👍 I See This Too'}</span>
+                <span>${userConfirmed ? 'Confirmed' : 'Confirm Incident'}</span>
                 <span style="font-family: var(--ds-font-mono); font-weight: bold; background: rgba(255,255,255,0.15); padding: 1px 6px; border-radius: 99px;">${confCount}</span>
               </button>
             </div>
@@ -1862,7 +1875,7 @@ function renderLandingFieldReports(reports) {
                 By ${r.reporter_name || 'Citizen'}
               </span>
               <button class="aq-btn-ghost" style="padding: 4px 10px; font-size: 0.72rem; color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); border-radius: 4px;" onclick="focusReportOnMap(${r.latitude}, ${r.longitude}, '${r.id}')">
-                📍 Track on Map
+                Track on Map
               </button>
             </div>
           </div>
@@ -2059,7 +2072,7 @@ function executeManualScannerRun() {
   .finally(() => {
     if (runBtn) {
       runBtn.disabled = false;
-      runBtn.textContent = '⚡ Run Dual-Stream AI Forensic Scan';
+      runBtn.textContent = 'Run Dual-Stream AI Forensic Scan';
     }
   });
 }
@@ -2275,10 +2288,10 @@ function appendChatMessage(text, sender, sources = [], draftReport = null) {
             <span style="font-family: var(--ds-font-mono); font-size: 0.7rem; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 4px; color: var(--ds-color-brand); font-weight: bold;">URGENCY ${draftReport.urgency}/10</span>
           </div>
           <div style="font-family: var(--ds-font-display); font-weight: bold; font-size: 0.95rem; color: #fff; margin-bottom: 4px;">${draftReport.title}</div>
-          <div style="font-size: 0.8rem; color: var(--ds-text-secondary); margin-bottom: 8px;">📍 ${draftReport.location} · Lat: ${draftReport.latitude.toFixed(3)}°, Lon: ${draftReport.longitude.toFixed(3)}°</div>
+          <div style="font-size: 0.8rem; color: var(--ds-text-secondary); margin-bottom: 8px;">${draftReport.location} · Lat: ${draftReport.latitude.toFixed(3)}°, Lon: ${draftReport.longitude.toFixed(3)}°</div>
           <div style="font-size: 0.78rem; color: #cbd5e1; background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 4px; margin-bottom: 12px; border-left: 2px solid var(--ds-color-brand);">${draftReport.professional_description}</div>
           <button onclick="submitGuidedComplaint('${draftJson}', this)" class="aq-btn-primary" style="width: 100%; padding: 10px 14px; font-size: var(--ds-text-xs); font-weight: bold; background: var(--ds-color-brand); color: #07111e; border-radius: var(--ds-radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <span>⚡ Confirm & File Report to Coast Guard Desk</span>
+            <span>Confirm & File Report to Coast Guard Desk</span>
           </button>
         </div>
       `;
@@ -2306,7 +2319,7 @@ function submitGuidedComplaint(encodedDraft, buttonEl) {
     const draft = JSON.parse(decodeURIComponent(encodedDraft));
     if (buttonEl) {
       buttonEl.disabled = true;
-      buttonEl.innerHTML = `<span>⏳ Submitting to Dispatch Desk...</span>`;
+      buttonEl.innerHTML = `<span>Submitting to Dispatch Desk...</span>`;
     }
 
     fetch('/api/chat/submit-guided-complaint', {
@@ -2320,9 +2333,9 @@ function submitGuidedComplaint(encodedDraft, buttonEl) {
         if (buttonEl) {
           buttonEl.style.background = '#10b981';
           buttonEl.style.color = '#fff';
-          buttonEl.innerHTML = `<span>✓ REPORT FILED (${data.report_id}) — DISPATCH NOTIFIED</span>`;
+          buttonEl.innerHTML = `<span>REPORT FILED (${data.report_id}) : DISPATCH NOTIFIED</span>`;
         }
-        showToast(`✓ Incident ${data.report_id} verified and dispatched to Coast Guard!`);
+        showToast(`Incident ${data.report_id} verified and dispatched to Coast Guard!`);
         loadReports();
       } else {
         throw new Error(data.message || 'Submission failed');
@@ -2331,7 +2344,7 @@ function submitGuidedComplaint(encodedDraft, buttonEl) {
     .catch(err => {
       if (buttonEl) {
         buttonEl.disabled = false;
-        buttonEl.innerHTML = `<span>⚡ Retry Submission</span>`;
+        buttonEl.innerHTML = `<span>Retry Submission</span>`;
       }
       showToast(`Submission error: ${err.message}`);
     });
@@ -2349,7 +2362,7 @@ function launchAiGuidedScribe() {
     input.focus();
   }
   appendChatMessage(
-    "👋 **Welcome to AI Incident Scribe.**\n\nDescribe the coastal incident or hazard you witnessed in your own words (e.g. *what you saw, where it was, water depth, or animal distress*). I will convert your observation into a structured incident report and dispatch it to emergency teams!",
+    "**Welcome to AI Incident Scribe.**\n\nDescribe the coastal incident or hazard you witnessed in your own words (e.g. *what you saw, where it was, water depth, or animal distress*). I will convert your observation into a structured incident report and dispatch it to emergency teams!",
     'bot'
   );
 }
@@ -2452,7 +2465,11 @@ function renderBeachCards(beaches) {
   if (!beaches || beaches.length === 0) {
     container.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; background: var(--ds-bg-surface); border: 1px dashed var(--ds-border-default); border-radius: var(--ds-radius-xl);">
-        <div style="font-size: 28px; margin-bottom: 8px;">🏖️</div>
+        <div style="width: 44px; height: 44px; margin: 0 auto 12px; border-radius: var(--ds-radius-lg); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); display: flex; align-items: center; justify-content: center; color: var(--ds-color-brand);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+        </div>
         <div style="font-weight: 700; font-size: 16px; color: var(--ds-text-primary);">No beaches match your search</div>
         <p style="font-size: 13px; color: var(--ds-text-secondary); margin: 6px 0 16px;">Try searching for "Juhu", "Girgaon", "Safe", or click "All Beaches".</p>
         <button class="aq-btn-primary" onclick="filterBeaches('all', document.querySelector('.aq-filter-chip[data-filter=all]'))" style="padding: 8px 18px; font-size: 12px; font-weight: bold; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 6px; border: none; cursor: pointer;">
@@ -2465,8 +2482,8 @@ function renderBeachCards(beaches) {
 
   container.innerHTML = beaches.map(b => {
     const statusClass = b.status === 'safe' ? 'safe' : (b.status === 'caution' ? 'caution' : 'hazard');
-    const statusIcon = b.status === 'safe' ? '✓' : (b.status === 'caution' ? '⚠' : '🚨');
-    const distBadge = b.distanceText ? `<span style="font-family: var(--ds-font-mono); font-size: 11px; color: var(--ds-color-brand-light); background: rgba(245,158,11,0.1); border: 1px solid var(--ds-border-brand); padding: 2px 8px; border-radius: 99px;">📍 ${b.distanceText}</span>` : '';
+    const statusIcon = b.status === 'safe' ? '✓' : (b.status === 'caution' ? '▲' : '✕');
+    const distBadge = b.distanceText ? `<span style="font-family: var(--ds-font-mono); font-size: 11px; color: var(--ds-color-brand-light); background: rgba(245,158,11,0.1); border: 1px solid var(--ds-border-brand); padding: 2px 8px; border-radius: 99px;">${b.distanceText}</span>` : '';
 
     return `
       <div class="aq-beach-card aq-reveal aq-revealed" data-id="${b.id}">
@@ -2502,10 +2519,10 @@ function renderBeachCards(beaches) {
 
         <div class="aq-beach-actions">
           <button class="aq-beach-btn primary" onclick="openBeachDrawer('${b.id}')">
-            🌊 Check Safety & Swell
+            Check Safety & Swell
           </button>
           <button class="aq-beach-btn ghost" onclick="focusBeachOnMap(${b.lat}, ${b.lng}, '${b.id}')" title="Center on Live Map">
-            🗺️ Map
+            Map View
           </button>
           <button class="aq-beach-btn ghost" onclick="openReportModalWithCoords(${b.lat}, ${b.lng}, '${b.name.replace(/'/g, "\\'")}')" title="Log Incident at ${b.name}">
             + Report
@@ -2539,9 +2556,9 @@ function plotBeachesOnHomepageMap() {
         </div>
         <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">${b.location}</div>
         <div style="display: flex; gap: 8px; font-family: var(--ds-font-mono); font-size: 11px; background: rgba(255,255,255,0.05); padding: 5px 8px; border-radius: 4px; margin-bottom: 8px;">
-          <span>🌊 ${b.wave}</span>
-          <span>🌡️ ${b.temp}</span>
-          <span>🏊 ${b.lifeguards}</span>
+          <span>Swell: ${b.wave}</span>
+          <span>Temp: ${b.temp}</span>
+          <span>Guards: ${b.lifeguards}</span>
         </div>
         <button onclick="openBeachDrawer('${b.id}')" style="width: 100%; padding: 6px; font-size: 11px; font-weight: bold; background: var(--ds-color-brand); color: var(--ds-bg-base); border: none; border-radius: 4px; cursor: pointer;">
           View Full Beach Swell & Details →
@@ -2569,7 +2586,7 @@ function focusBeachOnMap(lat, lng, beachId) {
     hpMapEl.scrollIntoView({ behavior: 'smooth' });
     homepageTacticalMap.flyTo({ center: [lng, lat], zoom: 13.5, pitch: 30, duration: 1200 });
     const b = BEACHES_DATA.find(x => x.id === beachId);
-    if (b) showToast('📍 Beach Focused', `Zoomed to ${b.name}. Current swell: ${b.wave}.`, 'info');
+    if (b) showToast('Beach Focused', `Zoomed to ${b.name}. Current swell: ${b.wave}.`, 'info');
   }
 }
 
@@ -2636,7 +2653,7 @@ function calculateHaversineKm(lat1, lon1, lat2, lon2) {
 }
 
 function findBeachesNearMe() {
-  showToast('📍 Detecting Location', 'Requesting GPS access to find your closest beach...', 'info');
+  showToast('Detecting Location', 'Requesting GPS access to find your closest beach...', 'info');
 
   const applyCoordinates = (lat, lng) => {
     userCoordinates = { lat, lng };
@@ -2656,7 +2673,7 @@ function findBeachesNearMe() {
     scrollToSection('beaches-section');
 
     const closest = withDist[0];
-    showToast('✓ Closest Beach Found', `${closest.name} is nearest to you (${closest.distanceText}). Status: ${closest.statusText}.`, 'success');
+    showToast('Closest Beach Found', `${closest.name} is nearest to you (${closest.distanceText}). Status: ${closest.statusText}.`, 'success');
 
     if (homepageTacticalMap) {
       homepageTacticalMap.flyTo({ center: [closest.lng, closest.lat], zoom: 13, pitch: 25, duration: 1200 });
@@ -2672,7 +2689,7 @@ function findBeachesNearMe() {
         // Fallback to central Mumbai coast
         console.warn('Geolocation unavailable, defaulting to Mumbai Coast', err);
         applyCoordinates(19.0144, 72.8479);
-        showToast('📍 Mumbai Coastal Reference', 'Using Central Mumbai GPS reference for distance ranking.', 'info');
+        showToast('Mumbai Coastal Reference', 'Using Central Mumbai GPS reference for distance ranking.', 'info');
       },
       { timeout: 7000, enableHighAccuracy: true }
     );
@@ -2784,7 +2801,7 @@ function setAppMode(mode) {
       btnOfficer.style.fontWeight = '700';
     }
     openCommandCenter('overview');
-    showToast('🛡️ Officer HUD Engaged', 'Switched to Operations HUD: Telemetry, AIS Vessels & CASIA2 Forensics active.', 'info');
+    showToast('Officer HUD Engaged', 'Switched to Operations HUD: Telemetry, AIS Vessels & CASIA2 Forensics active.', 'info');
   } else {
     if (btnOfficer) {
       btnOfficer.classList.remove('active');
@@ -2800,7 +2817,7 @@ function setAppMode(mode) {
     }
     closeCommandCenter();
     scrollToSection('beaches-section');
-    showToast('🏖️ Citizen View', 'Switched to Community View: Live beach conditions and 1-tap hazard reporting.', 'info');
+    showToast('Citizen View', 'Switched to Community View: Live beach conditions and 1-tap hazard reporting.', 'info');
   }
 }
 
@@ -2830,9 +2847,9 @@ function confirmReport(reportId, btnEl) {
 
   if (btnEl) {
     btnEl.classList.add('confirmed');
-    btnEl.innerHTML = `<span>✓ Confirmed</span> <span class="conf-badge">${currentCount}</span>`;
+    btnEl.innerHTML = `<span>Confirmed</span> <span class="conf-badge">${currentCount}</span>`;
   }
-  showToast('✓ Incident Confirmed', 'Thank you! Your validation alerts lifeguards and local beachgoers.', 'success');
+  showToast('Incident Confirmed', 'Thank you! Your validation alerts lifeguards and local beachgoers.', 'success');
 }
 
 function filterLandingReports(category, btn) {
@@ -2907,7 +2924,7 @@ async function computeEvacuationRoute() {
 
   if (feedbackEl) {
     feedbackEl.style.display = 'block';
-    feedbackEl.textContent = '⚡ Querying A* elevation graph engine at POST /api/routes/calculate...';
+    feedbackEl.textContent = 'Querying A* elevation graph engine at POST /api/routes/calculate...';
   }
   if (statusBadge) {
     statusBadge.textContent = 'Computing Graph...';
@@ -3011,7 +3028,7 @@ async function loadMarineRescues() {
             <span style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: rgba(245,158,11,0.15); color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand);">${op.severity} Severity</span>
           </div>
           <div style="font-size: 12px; color: var(--ds-text-secondary); margin-bottom: 4px;">
-            📍 Sector: ${op.location} · Assigned NGO: <strong style="color: var(--ds-text-primary);">${op.ngo}</strong>
+            Sector: ${op.location} · Assigned NGO: <strong style="color: var(--ds-text-primary);">${op.ngo}</strong>
           </div>
           <div style="font-size: 11px; color: var(--ds-text-muted); font-family: var(--ds-font-mono);">
             Status: ${op.status} · Rapid Response Team Dispatched
@@ -3019,7 +3036,7 @@ async function loadMarineRescues() {
         </div>
         <div style="display: flex; gap: 8px;">
           <a href="tel:+919820288120" style="padding: 6px 14px; font-size: 11px; font-weight: bold; background: var(--ds-bg-raised); color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); border-radius: 4px; text-decoration: none;">
-            Call NGO Hotline ✆
+            Call NGO Hotline
           </a>
         </div>
       </div>

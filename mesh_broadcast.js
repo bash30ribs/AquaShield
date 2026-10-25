@@ -168,7 +168,7 @@ class EmergencyMeshEngine {
     // Show toast and vibration
     if (source !== 'Server Sync' && source !== 'Local Generation') {
       if (window.showToast) {
-        window.showToast(`🚨 FLOOD ALERT: ${alert.message}`, 'sos');
+        window.showToast(`FLOOD ALERT: ${alert.message}`, 'sos');
       }
       this.triggerAlertVibration();
     }
