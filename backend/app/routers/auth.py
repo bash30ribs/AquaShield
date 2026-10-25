@@ -37,7 +37,8 @@ def verify_password(plain_password: str, stored_hash: str) -> bool:
 
 # Pydantic Schemas
 class RegisterRequest(BaseModel):
-    name: str
+    name: Optional[str] = None
+    username: Optional[str] = None
     email: str
     password: str
     role: Optional[str] = "citizen"
@@ -90,7 +91,7 @@ async def register_user(req: RegisterRequest, db: AsyncSession = Depends(get_db)
     new_user = User(
         id=user_id,
         badge_id=badge_id,
-        name=req.name.strip(),
+        name=(req.name or req.username or "Citizen Operator").strip(),
         email=req.email.strip().lower(),
         phone=req.phone,
         password_hash=pw_hash,

@@ -49,6 +49,8 @@ async def init_db():
     from app.models.disaster import Disaster, DisasterType, SeverityLevel
     from app.models.marine_rescue import MarineRescue, Species, RescueStatus
     from app.models.complaint import ConversationalComplaint
+    from app.models.sos_event import SOSEvent, SOSStatus                  # new
+    from app.models.broadcast_alert import BroadcastAlert                 # new
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -207,5 +209,92 @@ async def init_db():
                 )
             ]
             session.add_all(sample_rescues)
+            await session.commit()
+
+        # ── Seed disasters table if empty ────────────────────────────────────
+        disaster_res = await session.execute(select(Disaster))
+        if not disaster_res.scalars().all():
+            seed_disasters = [
+                Disaster(
+                    id          = str(uuid.uuid4()),
+                    type        = DisasterType.cyclone,
+                    severity    = SeverityLevel.severe,
+                    title       = "Cyclone Biparjoy — Maharashtra Coast",
+                    description = "Fishermen advised not to venture into deep sea. Wind 95 km/h, swells 4.2m.",
+                    latitude    = 16.7,
+                    longitude   = 73.3,
+                    region      = "Maharashtra Coast",
+                    state       = "Maharashtra",
+                    radius_km   = 120.0,
+                    source      = "IMD / INCOIS",
+                    is_active   = True,
+                    started_at  = datetime.utcnow(),
+                    created_at  = datetime.utcnow(),
+                ),
+                Disaster(
+                    id          = str(uuid.uuid4()),
+                    type        = DisasterType.high_tide,
+                    severity    = SeverityLevel.high,
+                    title       = "High Waves Advisory — Kerala & Goa",
+                    description = "Rough sea conditions with swell heights up to 3.8m. Beach access restricted.",
+                    latitude    = 9.9,
+                    longitude   = 76.3,
+                    region      = "Kerala & Goa",
+                    state       = "Kerala",
+                    radius_km   = 80.0,
+                    source      = "INCOIS Buoy Network",
+                    is_active   = True,
+                    started_at  = datetime.utcnow(),
+                    created_at  = datetime.utcnow(),
+                ),
+                Disaster(
+                    id          = str(uuid.uuid4()),
+                    type        = DisasterType.rainfall,
+                    severity    = SeverityLevel.moderate,
+                    title       = "Heavy Rainfall Warning — Karnataka",
+                    description = "Localized coastal waterlogging in low-lying sectors.",
+                    latitude    = 13.1,
+                    longitude   = 74.8,
+                    region      = "Karnataka",
+                    state       = "Karnataka",
+                    radius_km   = 50.0,
+                    source      = "IMD Regional Centre",
+                    is_active   = True,
+                    started_at  = datetime.utcnow(),
+                    created_at  = datetime.utcnow(),
+                ),
+                Disaster(
+                    id          = str(uuid.uuid4()),
+                    type        = DisasterType.tsunami,
+                    severity    = SeverityLevel.safe,
+                    title       = "Tsunami Watch Cleared — Tamil Nadu",
+                    description = "Seismic ocean activity normal, green swim flags active.",
+                    latitude    = 13.0,
+                    longitude   = 80.2,
+                    region      = "Tamil Nadu",
+                    state       = "Tamil Nadu",
+                    radius_km   = 30.0,
+                    source      = "NIOT / INCOIS",
+                    is_active   = True,
+                    started_at  = datetime.utcnow(),
+                    created_at  = datetime.utcnow(),
+                ),
+            ]
+            session.add_all(seed_disasters)
+            await session.commit()
+
+        # ── Seed broadcast_alerts with the initial alert if empty ────────────
+        bc_res = await session.execute(select(BroadcastAlert))
+        if not bc_res.scalars().all():
+            session.add(BroadcastAlert(
+                id          = "ALERT-INIT0001",
+                alert_type  = "Cyclone Warning",
+                message     = "RED ALERT: Cyclone Biparjoy approaching Maharashtra coast. Wind speed 95 km/h. Evacuate to high ground immediately.",
+                sender      = "NDMA Authority",
+                location    = "Ratnagiri & South Konkan",
+                severity    = "CRITICAL",
+                origin_mode = "Online Server Broadcast",
+                created_at  = datetime.utcnow(),
+            ))
             await session.commit()
 

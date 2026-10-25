@@ -74,26 +74,63 @@ async def verify_image(
 
 @router.post("/reports")
 async def submit_community_report(
-    title: Optional[str] = Form(None),
-    report_type: str = Form("flood"),
-    description: str = Form(...),
-    latitude: Optional[float] = Form(18.94),
-    longitude: Optional[float] = Form(72.82),
-    address: Optional[str] = Form("Coastal Shoreline"),
-    urgency_rank: Optional[int] = Form(5),
-    user_id: Optional[str] = Form(None),
-    reporter_name: Optional[str] = Form(None),
-    reporter_badge: Optional[str] = Form(None),
-    image_url: Optional[str] = Form(None),
-    file: Optional[UploadFile] = File(None),
+    request: Request,
     db: AsyncSession = Depends(get_db)
 ):
+    title = None
+    report_type = "flood"
+    description = "Field incident observation"
+    latitude = 18.94
+    longitude = 72.82
+    address = "Coastal Shoreline"
+    urgency_rank = 5
+    user_id = None
+    reporter_name = None
+    reporter_badge = None
+    image_url = None
+    file = None
+
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        try:
+            data = await request.json()
+            title = data.get("title")
+            report_type = data.get("report_type") or data.get("disaster_type") or report_type
+            description = data.get("description") or description
+            latitude = float(data.get("latitude") or latitude)
+            longitude = float(data.get("longitude") or longitude)
+            address = data.get("address") or address
+            urgency_rank = int(data.get("urgency_rank") or urgency_rank)
+            user_id = data.get("user_id")
+            reporter_name = data.get("reporter_name")
+            reporter_badge = data.get("reporter_badge")
+            image_url = data.get("image_url")
+        except Exception:
+            pass
+    else:
+        try:
+            form = await request.form()
+            title = form.get("title")
+            report_type = form.get("report_type") or form.get("disaster_type") or report_type
+            description = form.get("description") or description
+            latitude = float(form.get("latitude") or latitude)
+            longitude = float(form.get("longitude") or longitude)
+            address = form.get("address") or address
+            urgency_rank = int(form.get("urgency_rank") or urgency_rank)
+            user_id = form.get("user_id")
+            reporter_name = form.get("reporter_name")
+            reporter_badge = form.get("reporter_badge")
+            image_url = form.get("image_url")
+            file = form.get("file")
+        except Exception:
+            pass
+
     saved_image_url = image_url
     filename = ""
     ai_analysis = None
 
     # Process file upload if provided
-    if file and file.filename:
+    if file and hasattr(file, "filename") and file.filename:
         filename = file.filename
         file_ext = os.path.splitext(filename)[1] or ".jpg"
         unique_name = f"report_{uuid.uuid4().hex[:8]}{file_ext}"

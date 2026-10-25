@@ -74,40 +74,25 @@ def health_check():
     return {"status": "operational", "system": settings.app_name, "version": settings.app_version}
 
 # ── Canonical Alias Routes ────────────────────────────────────────────────────
-# /api/broadcast → /api/alerts/broadcast (REST fallback for mesh broadcast)
-from fastapi import Form as _Form, Request as _Request
-from app.routers.broadcast import BROADCAST_HISTORY, manager as _broadcast_manager
+# /api/broadcast → delegate to DB-backed /api/alerts/broadcast
+from fastapi import Form as _Form, Request as _AliasRequest, Depends as _Depends
+from app.database import get_db as _get_db
+from sqlalchemy.ext.asyncio import AsyncSession as _AsyncSession
 from datetime import datetime as _dt
 
 @app.post("/api/broadcast")
-async def alias_broadcast(
-    alert_type: str = _Form("Flood"),
-    message: str = _Form("Emergency alert"),
-    sender: str = _Form("Citizen"),
-    location: str = _Form("Coastal Zone"),
-    severity: str = _Form("HIGH"),
-    mode: str = _Form("Online"),
-):
-    """Canonical shortcut → delegates to broadcast router logic."""
-    alert_event = {
-        "id": f"alert-{len(BROADCAST_HISTORY)+1:03d}",
-        "type": alert_type,
-        "message": message,
-        "sender": sender,
-        "location": location,
-        "severity": severity,
-        "timestamp": _dt.utcnow().strftime("%H:%M:%S UTC"),
-        "origin_mode": mode,
-    }
-    BROADCAST_HISTORY.append(alert_event)
-    await _broadcast_manager.broadcast({"event": "new_alert", "alert": alert_event})
-    return {"status": "broadcasted", "nodes_notified": len(_broadcast_manager.active_connections), "alert": alert_event}
+async def alias_broadcast(request: _AliasRequest, db: _AsyncSession = _Depends(_get_db)):
+    """Canonical alias → fully delegates to DB-backed broadcast router."""
+    from app.routers.broadcast import create_broadcast_alert
+    return await create_broadcast_alert(request=request, db=db)
 
 @app.get("/api/broadcast")
-def alias_broadcast_history():
-    return {"status": "success", "alerts": BROADCAST_HISTORY}
+async def alias_broadcast_history(db: _AsyncSession = _Depends(_get_db)):
+    """Return broadcast history from DB."""
+    from app.routers.broadcast import get_broadcast_history
+    return await get_broadcast_history(db=db)
 
-# /api/sms → /api/sms/send-sos (alias accepting JSON body)
+# /api/sms → stateless SMS payload generator (no DB needed by design)
 from pydantic import BaseModel as _BaseModel
 from typing import Optional as _Optional
 
@@ -120,9 +105,9 @@ class _SMSPayload(_BaseModel):
 
 EMERGENCY_CONTACTS_ALIAS = [
     {"name": "NDMA Control Room", "number": "+911078"},
-    {"name": "Coast Guard", "number": "+911554"},
-    {"name": "Police Emergency", "number": "+91100"},
-    {"name": "Ambulance", "number": "+91108"},
+    {"name": "Coast Guard",       "number": "+911554"},
+    {"name": "Police Emergency",  "number": "+91100"},
+    {"name": "Ambulance",         "number": "+91108"},
     {"name": "Disaster Helpline", "number": "+911070"},
 ]
 
@@ -146,8 +131,8 @@ def alias_sms(payload: _SMSPayload):
         "emergency_contacts": EMERGENCY_CONTACTS_ALIAS,
         "sms_links": [
             {
-                "name": c["name"],
-                "number": c["number"],
+                "name":    c["name"],
+                "number":  c["number"],
                 "sms_uri": f"sms:{c['number']}?body={sms_body.replace(' ', '%20').replace(chr(10), '%0A')}",
             }
             for c in EMERGENCY_CONTACTS_ALIAS
