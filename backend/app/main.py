@@ -71,7 +71,88 @@ app.include_router(auth_router)
 @app.get("/health")
 @app.get("/api/health")
 def health_check():
-    return {"status": "online", "system": settings.app_name, "version": settings.app_version}
+    return {"status": "operational", "system": settings.app_name, "version": settings.app_version}
+
+# ── Canonical Alias Routes ────────────────────────────────────────────────────
+# /api/broadcast → /api/alerts/broadcast (REST fallback for mesh broadcast)
+from fastapi import Form as _Form, Request as _Request
+from app.routers.broadcast import BROADCAST_HISTORY, manager as _broadcast_manager
+from datetime import datetime as _dt
+
+@app.post("/api/broadcast")
+async def alias_broadcast(
+    alert_type: str = _Form("Flood"),
+    message: str = _Form("Emergency alert"),
+    sender: str = _Form("Citizen"),
+    location: str = _Form("Coastal Zone"),
+    severity: str = _Form("HIGH"),
+    mode: str = _Form("Online"),
+):
+    """Canonical shortcut → delegates to broadcast router logic."""
+    alert_event = {
+        "id": f"alert-{len(BROADCAST_HISTORY)+1:03d}",
+        "type": alert_type,
+        "message": message,
+        "sender": sender,
+        "location": location,
+        "severity": severity,
+        "timestamp": _dt.utcnow().strftime("%H:%M:%S UTC"),
+        "origin_mode": mode,
+    }
+    BROADCAST_HISTORY.append(alert_event)
+    await _broadcast_manager.broadcast({"event": "new_alert", "alert": alert_event})
+    return {"status": "broadcasted", "nodes_notified": len(_broadcast_manager.active_connections), "alert": alert_event}
+
+@app.get("/api/broadcast")
+def alias_broadcast_history():
+    return {"status": "success", "alerts": BROADCAST_HISTORY}
+
+# /api/sms → /api/sms/send-sos (alias accepting JSON body)
+from pydantic import BaseModel as _BaseModel
+from typing import Optional as _Optional
+
+class _SMSPayload(_BaseModel):
+    to: _Optional[str] = None
+    message: str = "Emergency SOS"
+    emergency_type: str = "General"
+    lat: float = 17.6868
+    lng: float = 83.2185
+
+EMERGENCY_CONTACTS_ALIAS = [
+    {"name": "NDMA Control Room", "number": "+911078"},
+    {"name": "Coast Guard", "number": "+911554"},
+    {"name": "Police Emergency", "number": "+91100"},
+    {"name": "Ambulance", "number": "+91108"},
+    {"name": "Disaster Helpline", "number": "+911070"},
+]
+
+@app.post("/api/sms")
+def alias_sms(payload: _SMSPayload):
+    """Canonical shortcut → SMS-ready payload with pre-formatted body."""
+    timestamp = _dt.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    sms_body = (
+        f"SOS EMERGENCY ALERT - AquaShield AI\n"
+        f"Type: {payload.emergency_type}\n"
+        f"Location: {payload.lat}, {payload.lng}\n"
+        f"Google Maps: https://maps.google.com/?q={payload.lat},{payload.lng}\n"
+        f"Time: {timestamp}\n"
+        f"Message: {payload.message}\n"
+        f"PLEASE SEND IMMEDIATE HELP"
+    )
+    return {
+        "status": "sms_ready",
+        "to": payload.to,
+        "sms_body": sms_body,
+        "emergency_contacts": EMERGENCY_CONTACTS_ALIAS,
+        "sms_links": [
+            {
+                "name": c["name"],
+                "number": c["number"],
+                "sms_uri": f"sms:{c['number']}?body={sms_body.replace(' ', '%20').replace(chr(10), '%0A')}",
+            }
+            for c in EMERGENCY_CONTACTS_ALIAS
+        ],
+    }
 
 # Serve root HTML & Static Assets
 from fastapi.staticfiles import StaticFiles
