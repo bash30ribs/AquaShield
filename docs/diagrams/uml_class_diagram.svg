@@ -140,12 +140,12 @@
     <text x="15" y="150" class="uml-text">+ get_elevation(lat, lng)</text>
   </g>
 
-  <!-- ChatService / Copilot -->
+  <!-- ChatService / Emergency SOP -->
   <g transform="translate(920, 420)">
     <rect width="210" height="190" class="uml-box-srv" />
     <rect width="210" height="35" fill="#1e293b" rx="6" />
     <text x="105" y="20" class="uml-header" style="fill: #f59e0b;">ChatService</text>
-    <text x="105" y="32" class="uml-sub">&lt;&lt;Disaster Copilot RAG&gt;&gt;</text>
+    <text x="105" y="32" class="uml-sub">&lt;&lt;Emergency SOP RAG&gt;&gt;</text>
     <line x1="0" y1="35" x2="210" y2="35" class="uml-divider" />
     <text x="15" y="55" class="uml-text">- _live_context: Dict</text>
     <text x="15" y="75" class="uml-text">- _ndma_sop_rules: List</text>

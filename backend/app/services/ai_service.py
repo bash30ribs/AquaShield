@@ -170,6 +170,30 @@ class AIService:
             is_artwork = True
             art_reason = "Vector / Cartoon Art (Quantized Color Palette)"
 
+        # ── 2B. Mobile Screenshot / Chat / UI Document Detector ─────────────
+        fn_lower = (filename or "").lower()
+        is_screenshot = False
+        screenshot_reason = ""
+        screenshot_keywords = ["screenshot", "screen_shot", "screen-shot", "wsp", "whatsapp", "wa_image", "wa00", "wa_", "img-wa", "snapchat", "telegram"]
+        has_screenshot_fn = any(k in fn_lower for k in screenshot_keywords)
+
+        # High proportion of pure flat white or pure dark UI background (> 235 or < 30)
+        white_pixels = float(np.mean((rgb_arr[:, :, 0] > 235) & (rgb_arr[:, :, 1] > 235) & (rgb_arr[:, :, 2] > 235)))
+        dark_ui_pixels = float(np.mean((rgb_arr[:, :, 0] < 32) & (rgb_arr[:, :, 1] < 32) & (rgb_arr[:, :, 2] < 32)))
+        pure_black_text = float(np.mean((rgb_arr[:, :, 0] < 50) & (rgb_arr[:, :, 1] < 50) & (rgb_arr[:, :, 2] < 50)))
+        aspect = h / w if w > 0 else 1.0
+        is_tall_screen = (1.55 <= aspect <= 2.45) or (1.55 <= (1.0 / aspect) <= 2.45)
+
+        if has_screenshot_fn and not has_exif:
+            is_screenshot = True
+            screenshot_reason = "Mobile Screen Capture (Filename & Header Signature)"
+        elif (white_pixels > 0.45 or dark_ui_pixels > 0.60) and not has_exif:
+            is_screenshot = True
+            screenshot_reason = "Screen Capture / Chat Document (Flat UI Background & Lack of Camera EXIF)"
+        elif is_tall_screen and white_pixels > 0.35 and pure_black_text > 0.03 and not has_exif:
+            is_screenshot = True
+            screenshot_reason = "Mobile Chat / App UI Screenshot (Text & Canvas Structure)"
+
         # ── 3. Error Level Analysis (ELA) ────────────────────────────────────
         ela_score = 0.85
         ela_mean_diff = 0.0
@@ -236,7 +260,11 @@ class AIService:
         water_ratio = 0.0
         oil_sheen_detected = False
 
-        if is_artwork:
+        if is_screenshot:
+            hazard_class = "Invalid (Screen Capture / Social Media / Text Document)"
+            hazard_severity = "Discarded"
+            hazard_confidence = "0.0%"
+        elif is_artwork:
             hazard_class = "None (Non-Real World Artwork / 2D Drawing)"
             hazard_severity = "Discarded"
             hazard_confidence = "0.0%"
@@ -287,7 +315,7 @@ class AIService:
         # ── 6. Dual-Stream Neural Network Inference ─────────────────────────
         dl_auth_prob = None
         model, device = get_torch_forensic_model()
-        if model is not None and ela_img is not None and not is_artwork:
+        if model is not None and ela_img is not None and not is_artwork and not is_screenshot:
             try:
                 import torch
                 from torchvision import transforms
@@ -306,7 +334,13 @@ class AIService:
                 print(f"[!] PyTorch inference error: {e}")
 
         # ── 7. Final Holistic Verdict Scoring ─────────────────────────────────
-        if is_artwork:
+        if is_screenshot:
+            status = "quarantined"
+            final_auth_pct = 11.2
+            verdict = "MOBILE SCREEN CAPTURE / SOCIAL MEDIA SCREENSHOT DETECTED"
+            action = f"Quarantined: {screenshot_reason or 'Mobile screen capture cannot be used as primary optical field evidence'}"
+            pipeline_name = "AquaShield Screen-Capture Vision Forensics Engine v2.1"
+        elif is_artwork:
             status = "quarantined"
             final_auth_pct = 14.2
             verdict = "2D ARTWORK / ANIME / DIGITAL ILLUSTRATION DETECTED"
@@ -350,8 +384,8 @@ class AIService:
             "action": action,
             "forensics": {
                 "has_exif_metadata": has_exif,
-                "camera_device": f"{camera_make or 'Unknown'} {camera_model or ''}".strip() or ("Digital Illustration Canvas" if is_artwork else "Standard Optical Sensor"),
-                "software_signature": software_detected or ("2D Art / Anime Engine" if is_artwork else "Clean (No AI/Editing Header)"),
+                "camera_device": f"{camera_make or 'Unknown'} {camera_model or ''}".strip() or ("Mobile Screen Capture Device" if is_screenshot else ("Digital Illustration Canvas" if is_artwork else "Standard Optical Sensor")),
+                "software_signature": software_detected or ("Screen Capture / Chat UI" if is_screenshot else ("2D Art / Anime Engine" if is_artwork else "Clean (No AI/Editing Header)")),
                 "ela_compression_variance": f"{ela_std_diff:.2f} (Quality Index: {int(ela_score*100)}%)",
                 "laplacian_noise_energy": f"{sharpness_variance:.1f}",
                 "water_surface_presence": f"{int(water_ratio*100)}%",

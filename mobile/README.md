@@ -22,9 +22,7 @@ Cross-platform mobile application for **AquaShield Sentinel — Real-Time Mariti
 4. **AI Threat Scanner**:
    - Computer vision spectral signature analysis.
    - Confidence ratings and tactical protocol recommendations.
-5. **Maritime AI Copilot**:
-   - Interactive terminal dispatch assistant with quick-action prompts.
-6. **Evacuation Corridors**:
+5. **Evacuation Corridors**:
    - High-ground shelter directory with elevation and logistics metadata.
 
 ---

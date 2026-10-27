@@ -773,105 +773,6 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   display: inline-block;
 }
 
-/* ── Sentinel AI Copilot Floating Launcher & Chat Enhancements ── */
-.aq-floating-copilot {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 990;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--ds-bg-raised);
-  border: 1px solid var(--ds-color-brand);
-  color: var(--ds-color-brand);
-  padding: 12px 20px;
-  border-radius: 9999px;
-  font-family: var(--ds-font-mono);
-  font-size: var(--ds-text-xs);
-  font-weight: bold;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 16px rgba(245, 158, 11, 0.2);
-  cursor: pointer;
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.aq-floating-copilot:hover {
-  background: var(--ds-color-brand);
-  color: var(--ds-bg-base);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), 0 0 24px rgba(245, 158, 11, 0.35);
-}
-
-.aq-copilot-pulse {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--ds-color-brand);
-  box-shadow: 0 0 8px var(--ds-color-brand);
-  animation: copilotGlow 2s infinite ease-in-out;
-}
-
-.aq-floating-copilot:hover .aq-copilot-pulse {
-  background: var(--ds-bg-base);
-  box-shadow: 0 0 8px #fff;
-}
-
-@keyframes copilotGlow {
-  0%, 100% { opacity: 0.4; transform: scale(0.9); }
-  50% { opacity: 1; transform: scale(1.2); }
-}
-
-.aq-chat-typing {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 14px;
-  border-radius: var(--ds-radius-md);
-  background: var(--ds-bg-raised);
-  border: 1px solid var(--ds-border-subtle);
-  color: var(--ds-text-muted);
-  font-size: var(--ds-text-xs);
-  font-family: var(--ds-font-mono);
-}
-
-.aq-chat-typing span {
-  width: 6px;
-  height: 6px;
-  background: var(--ds-color-brand);
-  border-radius: 50%;
-  animation: chatDotBlink 1.4s infinite ease-in-out both;
-}
-
-.aq-chat-typing span:nth-child(1) { animation-delay: -0.32s; }
-.aq-chat-typing span:nth-child(2) { animation-delay: -0.16s; }
-.aq-chat-typing span:nth-child(3) { animation-delay: 0s; }
-
-@keyframes chatDotBlink {
-  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
-  40% { transform: scale(1); opacity: 1; }
-}
-
-.aq-chat-sources {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid var(--ds-border-subtle);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
-}
-
-.aq-chat-source-tag {
-  font-family: var(--ds-font-mono);
-  font-size: 0.65rem;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  color: var(--ds-color-brand);
-}
 
 /* ==========================================================================
    Interactive Civic Tech & Citizen-Friendly UI Components
@@ -1618,6 +1519,234 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   margin-bottom: 2px;
 }
 
+/* ── Interactive Coastal Intelligence Dashboard ─────────────────────────────── */
+.aq-sector-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--ds-radius-full);
+  background: var(--ds-bg-surface);
+  border: 1px solid var(--ds-border-default);
+  color: var(--ds-text-secondary);
+  font-family: var(--ds-font-body);
+  font-size: var(--ds-text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 200ms ease;
+}
+
+.aq-sector-btn:hover {
+  border-color: var(--ds-border-brand);
+  color: var(--ds-text-primary);
+  background: var(--ds-bg-raised);
+}
+
+.aq-sector-btn.active {
+  background: var(--ds-bg-raised);
+  border-color: var(--ds-color-brand);
+  color: var(--ds-color-brand-light);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.22);
+}
+
+.aq-sector-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ds-text-muted);
+  transition: all 200ms ease;
+}
+
+.aq-sector-btn.active .aq-sector-dot {
+  background: var(--ds-color-brand);
+  box-shadow: 0 0 8px var(--ds-color-brand);
+}
+
+.aq-dash-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.aq-kpi-tile {
+  background: var(--ds-bg-surface);
+  border: 1px solid var(--ds-border-default);
+  border-radius: var(--ds-radius-lg);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: border-color 200ms ease, transform 200ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.aq-kpi-tile:hover {
+  border-color: var(--ds-border-brand);
+  transform: translateY(-2px);
+}
+
+.aq-kpi-tile::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.3), transparent);
+}
+
+.aq-kpi-label {
+  font-family: var(--ds-font-mono);
+  font-size: 0.65rem;
+  color: var(--ds-text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.aq-kpi-value {
+  font-family: var(--ds-font-display);
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--ds-text-primary);
+  line-height: 1.2;
+  margin: 4px 0 2px;
+}
+
+.aq-kpi-sub {
+  font-family: var(--ds-font-mono);
+  font-size: 0.7rem;
+  color: var(--ds-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.aq-dash-card {
+  background: var(--ds-bg-surface);
+  border: 1px solid var(--ds-border-default);
+  border-radius: var(--ds-radius-xl);
+  padding: 20px;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.aq-canvas-container {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  margin-top: 10px;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.aq-chart-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  cursor: crosshair;
+}
+
+.aq-chart-tooltip {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(7, 17, 30, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--ds-border-brand);
+  border-radius: var(--ds-radius-md);
+  padding: 8px 14px;
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  color: var(--ds-text-primary);
+  transition: opacity 120ms ease;
+  z-index: 50;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 16px rgba(245, 158, 11, 0.15);
+  white-space: nowrap;
+}
+
+/* Custom Styled Range Sliders for Simulator */
+.aq-sim-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: var(--ds-bg-raised);
+  border-radius: 99px;
+  outline: none;
+  border: 1px solid var(--ds-border-subtle);
+  cursor: pointer;
+}
+
+.aq-sim-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ds-color-brand);
+  border: 2px solid var(--ds-bg-base);
+  box-shadow: 0 0 10px var(--ds-color-brand);
+  cursor: pointer;
+  transition: transform 150ms ease;
+}
+
+.aq-sim-range::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.aq-sim-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ds-color-brand);
+  border: 2px solid var(--ds-bg-base);
+  box-shadow: 0 0 10px var(--ds-color-brand);
+  cursor: pointer;
+}
+
+/* Fleet Diagnostics Grid */
+.aq-fleet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.aq-fleet-card {
+  background: var(--ds-bg-raised);
+  border: 1px solid var(--ds-border-subtle);
+  border-radius: var(--ds-radius-lg);
+  padding: 14px 16px;
+  transition: all 200ms ease;
+  cursor: pointer;
+}
+
+.aq-fleet-card:hover {
+  border-color: var(--ds-border-brand);
+  background: var(--ds-bg-card-hover);
+  transform: translateY(-2px);
+}
+
+.aq-fleet-card.warning-state {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.aq-fleet-card.critical-state {
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+}
+
+/* Responsive Breakpoints for Dashboard */
+@media (max-width: 992px) {
+  .aq-dash-two-col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* Accessible Reduced Motion Support (Pillar 07) */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -1627,3 +1756,4 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
     scroll-behavior: auto !important;
   }
 }
+

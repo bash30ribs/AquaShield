@@ -1,5 +1,5 @@
 /**
- * AquaShield Sentinel — Platform & Tactical HUD Controller
+ * AquaShield Sentinel - Platform & Tactical HUD Controller
  * Global Production Map Engine, Precision Geocoding, User Auth & Field Incident Submissions
  */
 
@@ -10,6 +10,8 @@ let distressMarker = null;
 let reportMarkers = [];
 let allReportsData = [];
 let activeReportFilter = 'all';
+let activeStatusFilter = 'all';
+let activeSearchQuery = '';
 
 // Homepage Live Map State
 let homepageTacticalMap = null;
@@ -229,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try { initHomepageMap(); } catch (e) { console.error('initHomepageMap:', e); }
   try { initDisastersAndTelemetry(); } catch (e) { console.error('initDisastersAndTelemetry:', e); }
   try { loadMarineRescues(); } catch (e) { console.error('loadMarineRescues:', e); }
+  try { initInteractiveDashboard(); } catch (e) { console.error('initInteractiveDashboard:', e); }
 });
 
 
@@ -302,22 +305,12 @@ function initBuoyRoster() {
 }
 
 // ── Command HUD Modal Controller ─────────────────────────────────────────
-let chatWelcomeShown = false;
 function openCommandCenter(tab = 'overview') {
   const overlay = document.getElementById('command-overlay');
   if (overlay) {
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
     switchHudTab(tab);
-    // Inject styled welcome message once
-    if (!chatWelcomeShown) {
-      chatWelcomeShown = true;
-      appendChatMessage(
-        "Welcome to **Sentinel Command.**\n\nI am linked to real-time ocean telemetry, buoy feeds, disaster alerts, and emergency response protocols.\n\n**How I can help:**\n• **Report an Incident** — Describe what you saw and I will file an official structured report\n• **Buoy Telemetry** — Ask about wave heights, water temps, and buoy status\n• **Emergency Helplines** — Coast Guard, Police, NDMA contacts\n• **Storm Surge & Cyclone Risk** — Live threat assessments\n• **AI Photo Forensics** — How the Dual-Stream scanner works\n• **Evacuation Routes** — A* pathfinding corridor status",
-        'bot',
-        ['AquaShield Sensor Array', 'INCOIS/NDMA Grid']
-      );
-    }
   }
 }
 
@@ -447,6 +440,8 @@ function switchHudTab(tabName) {
     loadMarineRescues();
   } else if (tabName === 'pillars') {
     runAllPillarDiagnostics(false);
+  } else if (tabName === 'evac') {
+    computeEvacuationRoute(false);
   }
 }
 
@@ -630,7 +625,7 @@ function renderHomepageStaticLayers() {
 
     const popup = new maplibregl.Popup({ offset: 12 }).setHTML(`
       <div style="font-family: var(--ds-font-body); padding: 4px; background:#07111e; color:#f1f5f9;">
-        <strong style="color: #f59e0b; font-size: 13px;">${b.id} — ${b.name}</strong><br>
+        <strong style="color: #f59e0b; font-size: 13px;">${b.id} : ${b.name}</strong><br>
         <span style="font-size: 11px; color: #94a3b8;">Status: ${b.status.toUpperCase()}</span><br>
         <span style="font-size: 12px; font-weight: bold; color: #f1f5f9;">Wave Height: ${b.wave}</span><br>
         <span style="font-size: 11px; color: #94a3b8;">Surface Temp: ${b.temp}</span>
@@ -879,7 +874,7 @@ function renderModalStaticLayers() {
 
     const popup = new maplibregl.Popup({ offset: 12 }).setHTML(`
       <div style="font-family: var(--ds-font-body); padding: 6px; background: #07111e; color: #f1f5f9;">
-        <strong style="color: #f59e0b; font-size: 13px;">${b.id} — ${b.name}</strong><br>
+        <strong style="color: #f59e0b; font-size: 13px;">${b.id} : ${b.name}</strong><br>
         <span style="font-size: 11px; color: #94a3b8;">Status: ${b.status.toUpperCase()}</span><br>
         <span style="font-size: 12px; font-weight: bold; color: #f1f5f9;">Wave Height: ${b.wave}</span><br>
         <span style="font-size: 11px; color: #94a3b8;">Surface Temp: ${b.temp}</span>
@@ -1326,19 +1321,51 @@ function renderUserNav() {
 
   if (currentUser) {
     container.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-brand); border-radius: var(--ds-radius-full); padding: 3px 12px; cursor: pointer;" onclick="openAuthModal()">
-        <span class="aq-user-badge" style="font-size: 0.65rem; padding: 2px 6px; background: rgba(245,158,11,0.2);">${currentUser.badge_id || 'ID'}</span>
-        <span style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); color: var(--ds-text-primary); font-weight: 600;">${currentUser.name.split(' ')[0]}</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="aq-btn-primary" onclick="openAdminPortal()" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 11px; font-weight: bold; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 6px; border: none; cursor: pointer;">
+          <span class="aq-user-badge" style="background: rgba(0,0,0,0.3); color: #fff; font-size: 10px; padding: 1px 5px; border-radius: 3px;">${currentUser.badge_id || 'ID'}</span>
+          <span>Admin Center ↗</span>
+        </button>
+        <button class="aq-btn-ghost" onclick="logoutUser()" title="Logout" style="padding: 6px 8px; font-size: 11px; color: var(--ds-text-secondary); border: 1px solid var(--ds-border-default); border-radius: 6px; cursor: pointer;">
+          ⏻
+        </button>
       </div>
     `;
   } else {
     container.innerHTML = `
-      <button class="aq-btn-ghost" onclick="openAuthModal()"
-        style="font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-medium); color: var(--ds-text-primary); border: 1px solid var(--ds-border-default); padding: 6px 12px; border-radius: var(--ds-radius-md);">
-        Login
+      <button class="aq-btn-ghost" onclick="openAdminPortal()"
+        style="display: inline-flex; align-items: center; gap: 6px; font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: var(--ds-weight-semibold); color: var(--ds-color-brand-light); border: 1px solid var(--ds-border-brand); background: rgba(245, 158, 11, 0.08); padding: 7px 12px; border-radius: var(--ds-radius-md); white-space: nowrap; cursor: pointer;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Admin Login</span>
       </button>
     `;
   }
+}
+
+function openAdminPortal() {
+  if (currentUser) {
+    openCommandCenter('reports');
+    showToast('Admin Operations Center', `Active session: ${currentUser.name} (${currentUser.badge_id})`, 'info');
+  } else {
+    openAuthModal();
+  }
+}
+
+function fillAdminCredentials() {
+  const ident = document.getElementById('login-identifier');
+  const pass = document.getElementById('login-password');
+  if (ident) ident.value = 'admin';
+  if (pass) pass.value = 'hrishav';
+  showToast('Admin Credentials Autofilled', 'ID: admin · Password: hrishav', 'info');
+}
+
+function logoutUser() {
+  currentUser = null;
+  localStorage.removeItem('aquashield_user');
+  renderUserNav();
+  updateReportModalReporterInfo();
+  closeCommandCenter();
+  showToast('Logged Out', 'Operator session terminated.', 'info');
 }
 
 function updateReportModalReporterInfo() {
@@ -1415,6 +1442,7 @@ async function handleLoginSubmit(e) {
     updateReportModalReporterInfo();
     closeAuthModal();
     showToast('Authentication Successful', `Logged in as ${currentUser.name} (${currentUser.badge_id})`, 'success');
+    openCommandCenter('reports');
   } catch (err) {
     showToast('Authorization Failed', err.message, 'error');
   } finally {
@@ -1454,6 +1482,7 @@ async function handleRegisterSubmit(e) {
     updateReportModalReporterInfo();
     closeAuthModal();
     showToast('Scout Enrolled Successfully', `Your Login ID is ${currentUser.badge_id}. Welcome aboard, ${currentUser.name}!`, 'success');
+    openCommandCenter('reports');
   } catch (err) {
     showToast('Registration Failed', err.message, 'error');
   } finally {
@@ -1483,6 +1512,7 @@ async function instantDemoLogin(identifier, password) {
     updateReportModalReporterInfo();
     closeAuthModal();
     showToast('1-Click Access Granted', `Switched operator session to ${currentUser.name} (${currentUser.badge_id})`, 'success');
+    openCommandCenter('reports');
   } catch (err) {
     showToast('Login Error', err.message, 'error');
   }
@@ -1589,7 +1619,7 @@ async function handleReportSubmit(e) {
   const resultBox = document.getElementById('report-submit-result');
 
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Verifying with AI Vision Transformer...';
+  submitBtn.textContent = 'Verifying with AI Vision Forensics...';
 
   const formData = new FormData();
   formData.append('title', document.getElementById('report-form-title').value);
@@ -1621,20 +1651,45 @@ async function handleReportSubmit(e) {
     if (!res.ok) throw new Error(data.detail || 'Report submission failed');
 
     const rep = data.report;
-    if (resultBox) {
-      resultBox.innerHTML = `
-        <strong>✓ REPORT LOGGED & VERIFIED // ${rep.id}</strong><br>
-        <span style="font-size: 12px; color: var(--ds-color-brand-light);">
-          AI Spectral Confidence: ${rep.ai_confidence}% · Status: ${rep.status.toUpperCase()}
-        </span><br>
-        <span style="font-size: 11px; color: var(--ds-text-secondary);">
-          Eyewitness incident successfully broadcast to global radar and rescue dispatch.
-        </span>
-      `;
-      resultBox.style.display = 'block';
-    }
+    const isQuarantined = data.is_quarantined || !rep.ai_verified || rep.status === 'rejected';
 
-    showToast('Incident Report Broadcasted', `Report ${rep.id} verified and added to Global Tactical Map`, 'success');
+    if (resultBox) {
+      if (isQuarantined) {
+        resultBox.style.background = 'rgba(239, 68, 68, 0.12)';
+        resultBox.style.border = '1px solid #ef4444';
+        resultBox.style.borderRadius = 'var(--ds-radius-md)';
+        resultBox.style.padding = '14px';
+        resultBox.style.color = 'var(--ds-text-primary)';
+        resultBox.innerHTML = `
+          <strong style="color: #ef4444;">⚠️ REPORT QUARANTINED FOR OFFICER AUDIT // ${rep.id}</strong><br>
+          <span style="font-size: 12px; color: #f59e0b; font-weight: 600;">
+            ${rep.ai_details?.verdict || 'MOBILE SCREENSHOT / UNVERIFIED EVIDENCE DETECTED'} (${rep.ai_confidence}% Authenticity)
+          </span><br>
+          <span style="font-size: 11px; color: var(--ds-text-secondary); line-height: 1.4; display: block; margin-top: 4px;">
+            ${rep.ai_details?.action || 'Image did not pass optical sensor verification. Logged to Database under Quarantine for Officer review.'}
+          </span>
+        `;
+        resultBox.style.display = 'block';
+        showToast('Report Quarantined', `Report ${rep.id} quarantined: Non-optical screen capture or unverified evidence. Queued for Officer review.`, 'warning');
+      } else {
+        resultBox.style.background = 'rgba(16, 185, 129, 0.12)';
+        resultBox.style.border = '1px solid #10b981';
+        resultBox.style.borderRadius = 'var(--ds-radius-md)';
+        resultBox.style.padding = '14px';
+        resultBox.style.color = 'var(--ds-text-primary)';
+        resultBox.innerHTML = `
+          <strong style="color: #10b981;">✓ REPORT VERIFIED & BROADCAST // ${rep.id}</strong><br>
+          <span style="font-size: 12px; color: #10b981; font-weight: 600;">
+            Optical Authenticity: ${rep.ai_confidence}% · Status: VERIFIED ACTIVE
+          </span><br>
+          <span style="font-size: 11px; color: var(--ds-text-secondary); line-height: 1.4; display: block; margin-top: 4px;">
+            Eyewitness incident successfully committed to Database and broadcast to Tactical Maritime Grid.
+          </span>
+        `;
+        resultBox.style.display = 'block';
+        showToast('Incident Report Broadcasted', `Report ${rep.id} verified and added to Global Tactical Map`, 'success');
+      }
+    }
 
     // Reload reports and close modal
     loadReports();
@@ -1644,7 +1699,7 @@ async function handleReportSubmit(e) {
       if (resultBox) resultBox.style.display = 'none';
       const previewBox = document.getElementById('report-photo-preview');
       if (previewBox) previewBox.style.display = 'none';
-    }, 1800);
+    }, 2400);
 
   } catch (err) {
     showToast('Submission Error', err.message, 'error');
@@ -1654,7 +1709,7 @@ async function handleReportSubmit(e) {
   }
 }
 
-// ── Reports Feed & Filter Controller ─────────────────────────────────────
+// ── Reports Feed, KPI Counters & Filter Controller ───────────────────────
 async function loadReports() {
   try {
     const res = await fetch('/api/reports');
@@ -1662,7 +1717,8 @@ async function loadReports() {
     const data = await res.json();
     allReportsData = data.reports || [];
 
-    renderReportsList(allReportsData);
+    updateReportsKpiCounters(allReportsData);
+    applyReportFilters();
     renderLandingFieldReports(allReportsData);
     plotReportsOnMap(allReportsData);
   } catch (err) {
@@ -1680,6 +1736,7 @@ async function loadReports() {
           ai_confidence: 97.8,
           urgency_rank: 8,
           status: "verified",
+          is_fake: false,
           reporter_name: "Aarav Patil",
           reporter_badge: "CITIZEN-1084"
         },
@@ -1695,6 +1752,7 @@ async function loadReports() {
           ai_confidence: 99.2,
           urgency_rank: 9,
           status: "verified",
+          is_fake: false,
           reporter_name: "Dr. Ananya Iyer",
           reporter_badge: "RESCUE-9012"
         },
@@ -1710,26 +1768,83 @@ async function loadReports() {
           ai_confidence: 96.5,
           urgency_rank: 7,
           status: "verified",
+          is_fake: false,
           reporter_name: "Commander Rajesh Varma",
           reporter_badge: "SENTINEL-7049"
         }
       ];
-      renderReportsList(allReportsData);
+      updateReportsKpiCounters(allReportsData);
+      applyReportFilters();
       renderLandingFieldReports(allReportsData);
     }
   }
+}
+
+function updateReportsKpiCounters(reports) {
+  const totalEl = document.getElementById('report-kpi-total');
+  const pendingEl = document.getElementById('report-kpi-pending');
+  const verifiedEl = document.getElementById('report-kpi-verified');
+  const rejectedEl = document.getElementById('report-kpi-rejected');
+  const resolvedEl = document.getElementById('report-kpi-resolved');
+
+  if (totalEl) totalEl.textContent = reports.length;
+  if (pendingEl) pendingEl.textContent = reports.filter(r => r.status === 'pending').length;
+  if (verifiedEl) verifiedEl.textContent = reports.filter(r => r.status === 'verified').length;
+  if (rejectedEl) rejectedEl.textContent = reports.filter(r => r.status === 'rejected').length;
+  if (resolvedEl) resolvedEl.textContent = reports.filter(r => r.status === 'resolved').length;
+}
+
+function applyReportFilters() {
+  let list = allReportsData;
+  if (activeReportFilter && activeReportFilter !== 'all') {
+    list = list.filter(r => r.type === activeReportFilter);
+  }
+  if (activeStatusFilter && activeStatusFilter !== 'all') {
+    list = list.filter(r => r.status === activeStatusFilter);
+  }
+  if (activeSearchQuery && activeSearchQuery.trim() !== '') {
+    const q = activeSearchQuery.toLowerCase().trim();
+    list = list.filter(r =>
+      (r.id && r.id.toLowerCase().includes(q)) ||
+      (r.title && r.title.toLowerCase().includes(q)) ||
+      (r.description && r.description.toLowerCase().includes(q)) ||
+      (r.address && r.address.toLowerCase().includes(q)) ||
+      (r.reporter_name && r.reporter_name.toLowerCase().includes(q)) ||
+      (r.reporter_badge && r.reporter_badge.toLowerCase().includes(q))
+    );
+  }
+  renderReportsList(list);
 }
 
 function filterReports(category, btn) {
   activeReportFilter = category;
   document.querySelectorAll('#hud-report-filters .aq-type-pill').forEach(b => b.classList.remove('selected'));
   if (btn) btn.classList.add('selected');
+  applyReportFilters();
+}
 
-  const filtered = (category === 'all')
-    ? allReportsData
-    : allReportsData.filter(r => r.type === category);
+function filterReportsByStatus(status, btn) {
+  activeStatusFilter = status;
+  document.querySelectorAll('#hud-report-status-filters .aq-type-pill').forEach(b => b.classList.remove('selected'));
+  if (btn) btn.classList.add('selected');
+  applyReportFilters();
+}
 
-  renderReportsList(filtered);
+function handleReportSearch(query) {
+  activeSearchQuery = query;
+  applyReportFilters();
+}
+
+function getCategorySvgIcon(type) {
+  const svgs = {
+    flood: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c3-2 6 2 9 0s6-2 9 0"/><path d="M2 17c3-2 6 2 9 0s6-2 9 0"/></svg>`,
+    marine_animal: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+    oil_spill: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`,
+    cyclone_damage: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
+    road_blockage: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`,
+    missing_person: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/></svg>`
+  };
+  return svgs[type] || `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
 }
 
 function renderReportsList(reports) {
@@ -1738,58 +1853,339 @@ function renderReportsList(reports) {
 
   if (reports.length === 0) {
     container.innerHTML = `
-      <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-lg); padding: 24px; text-align: center; color: var(--ds-text-secondary);">
-        No incident reports matching this filter category.
+      <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-lg); padding: 32px 20px; text-align: center; color: var(--ds-text-secondary);">
+        <div style="font-size: 24px; margin-bottom: 8px;">📋</div>
+        <div style="font-weight: bold; color: var(--ds-text-primary); margin-bottom: 4px;">No incident complaints matching current filter</div>
+        <div style="font-size: 12px; color: var(--ds-text-muted);">Adjust status or hazard type filters above to view other incident complaints.</div>
       </div>
     `;
     return;
   }
 
-  function getCategorySvg(type) {
-    const svgs = {
-      flood: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c3-2 6 2 9 0s6-2 9 0"/><path d="M2 17c3-2 6 2 9 0s6-2 9 0"/></svg>`,
-      marine_animal: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
-      oil_spill: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`,
-      cyclone_damage: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
-      road_blockage: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`,
-      missing_person: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/></svg>`
+  container.innerHTML = reports.map(r => {
+    const isVerified = (r.status === 'verified');
+    const isRejected = (r.status === 'rejected' || r.is_fake);
+    const isResolved = (r.status === 'resolved');
+    const isPending = (r.status === 'pending');
+
+    let statusBadgeHtml = '';
+    if (isVerified) {
+      statusBadgeHtml = `<span style="font-size: 0.65rem; background: rgba(16,185,129,0.15); border: 1px solid #10b981; color: #10b981; font-weight: bold; padding: 2px 7px; border-radius: 4px;">✓ VERIFIED ACTIVE</span>`;
+    } else if (isRejected) {
+      statusBadgeHtml = `<span style="font-size: 0.65rem; background: rgba(239,68,68,0.15); border: 1px solid #ef4444; color: #ef4444; font-weight: bold; padding: 2px 7px; border-radius: 4px;">✕ QUARANTINED / FAKE</span>`;
+    } else if (isResolved) {
+      statusBadgeHtml = `<span style="font-size: 0.65rem; background: rgba(14,165,233,0.15); border: 1px solid #0ea5e9; color: #0ea5e9; font-weight: bold; padding: 2px 7px; border-radius: 4px;">⚓ RESOLVED</span>`;
+    } else {
+      statusBadgeHtml = `<span style="font-size: 0.65rem; background: rgba(245,158,11,0.15); border: 1px solid #f59e0b; color: #f59e0b; font-weight: bold; padding: 2px 7px; border-radius: 4px;">⏳ PENDING AUDIT</span>`;
+    }
+
+    const cardBorderColor = isVerified ? 'rgba(16,185,129,0.35)' : (isRejected ? 'rgba(239,68,68,0.35)' : 'var(--ds-border-default)');
+
+    return `
+      <div style="background: var(--ds-bg-card); border: 1px solid ${cardBorderColor}; border-radius: var(--ds-radius-lg); padding: 18px; display: flex; flex-direction: column; gap: 14px; transition: border-color 0.2s;">
+        <!-- Top row: Thumbnail + Details + Category Icon -->
+        <div style="display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
+          
+          <!-- Photo Thumbnail or Placeholder -->
+          ${r.image_url ? `
+            <div style="position: relative; width: 92px; height: 92px; flex-shrink: 0; border-radius: var(--ds-radius-md); overflow: hidden; border: 1px solid var(--ds-border-default); cursor: pointer; background: #000;" onclick="openEvidenceModal('${r.id}')" title="Click to inspect optical evidence in high resolution">
+              <img src="${r.image_url}" alt="${r.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\'width:92px;height:92px;display:flex;align-items:center;justify-content:center;background:var(--ds-bg-raised);color:var(--ds-text-muted);font-size:10px;\'>No Image</div>'">
+              <span style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.75); color: #fff; font-size: 9px; padding: 1px 4px; border-radius: 3px; font-family: var(--ds-font-mono);">🔍 Zoom</span>
+            </div>
+          ` : `
+            <div style="width: 92px; height: 92px; flex-shrink: 0; border-radius: var(--ds-radius-md); border: 1px dashed var(--ds-border-default); background: var(--ds-bg-raised); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--ds-text-muted); font-size: 10px; gap: 4px;">
+              <span style="font-size: 18px;">📷</span>
+              <span>No Photo</span>
+            </div>
+          `}
+
+          <!-- Complaint Description & Telemetry -->
+          <div style="flex: 1; min-width: 260px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
+              <span class="aq-user-badge" style="font-size: 0.65rem;">${r.id}</span>
+              ${statusBadgeHtml}
+              <span style="font-size: 0.68rem; color: ${isRejected ? '#ef4444' : (isVerified ? '#10b981' : '#f59e0b')}; font-weight: 600;">
+                ${r.ai_confidence || 0}% AUTHENTICITY ${r.is_fake ? '· FAKE FLAG' : ''}
+              </span>
+              <span style="font-size: 0.68rem; color: var(--ds-text-muted);">· Priority: ${r.urgency_rank || 5}/10</span>
+            </div>
+
+            <h4 style="font-family: var(--ds-font-display); font-size: 1.05rem; font-weight: bold; color: var(--ds-text-primary); margin-bottom: 4px;">
+              ${r.title}
+            </h4>
+            <p style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary); line-height: 1.5; margin-bottom: 8px;">
+              ${r.description}
+            </p>
+
+            <div style="font-size: 0.72rem; color: var(--ds-text-muted); display: flex; flex-direction: column; gap: 3px;">
+              <div>📍 <strong style="color: var(--ds-text-primary);">${r.address || 'Coastal Shoreline'}</strong> <span style="font-family: var(--ds-font-mono);">[${Number(r.latitude).toFixed(4)}, ${Number(r.longitude).toFixed(4)}]</span></div>
+              <div>👤 Filed by: <strong style="color: var(--ds-text-primary);">${r.reporter_name || 'Citizen'}</strong> (${r.reporter_badge || 'CITIZEN-0000'}) · 🕒 ${r.created_at ? new Date(r.created_at).toLocaleString() : 'Recent telemetry'}</div>
+            </div>
+          </div>
+
+          <!-- Category Icon Badge -->
+          <div style="color: var(--ds-color-brand); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-md); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="${r.type}">
+            ${getCategorySvgIcon(r.type)}
+          </div>
+        </div>
+
+        <!-- Bottom row: Admin Database Control Operations Toolbar -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; border-top: 1px solid var(--ds-border-subtle); padding-top: 10px;">
+          <div style="font-family: var(--ds-font-mono); font-size: 0.68rem; color: var(--ds-text-muted);">
+            DATABASE CONTROLS:
+          </div>
+
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+            ${r.image_url ? `
+              <button class="aq-btn-ghost" style="padding: 5px 10px; font-size: 0.72rem; color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); border-radius: 4px; font-weight: 600;" onclick="openEvidenceModal('${r.id}')">
+                🔍 Inspect Evidence
+              </button>
+            ` : ''}
+
+            <button class="aq-btn-ghost" style="padding: 5px 10px; font-size: 0.72rem; color: #10b981; border: 1px solid rgba(16,185,129,0.5); border-radius: 4px; font-weight: 600;" onclick="updateReportStatusInDb('${r.id}', 'verified')" title="Verify report and publish to tactical grid">
+              ✓ Verify
+            </button>
+
+            <button class="aq-btn-ghost" style="padding: 5px 10px; font-size: 0.72rem; color: #ef4444; border: 1px solid rgba(239,68,68,0.5); border-radius: 4px; font-weight: 600;" onclick="updateReportStatusInDb('${r.id}', 'rejected')" title="Reject complaint as screenshot or fraudulent">
+              ✕ Reject Fake
+            </button>
+
+            <button class="aq-btn-ghost" style="padding: 5px 10px; font-size: 0.72rem; color: #0ea5e9; border: 1px solid rgba(14,165,233,0.5); border-radius: 4px; font-weight: 600;" onclick="updateReportStatusInDb('${r.id}', 'resolved')" title="Mark incident as resolved on scene">
+              ⚓ Resolved
+            </button>
+
+            <button class="aq-btn-ghost" style="padding: 5px 10px; font-size: 0.72rem; color: #f59e0b; border: 1px solid rgba(245,158,11,0.5); border-radius: 4px; font-weight: 600;" onclick="escalateReportInDb('${r.id}')" title="Escalate to Indian Coast Guard SAR">
+              🚨 SAR Alert
+            </button>
+
+            <button class="aq-btn-primary" style="padding: 5px 10px; font-size: 0.72rem; background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 4px;" onclick="focusReportOnMap(${r.latitude}, ${r.longitude}, '${r.id}')">
+              Plot GIS ↗
+            </button>
+
+            <button class="aq-btn-ghost" style="padding: 5px 8px; font-size: 0.72rem; color: var(--ds-text-muted); border: 1px solid var(--ds-border-default); border-radius: 4px;" onclick="deleteReportFromDb('${r.id}')" title="Permanently delete complaint from database">
+              🗑
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Admin Direct Database Operations & Evidence Inspection Lightbox ──────
+async function updateReportStatusInDb(reportId, newStatus) {
+  try {
+    const res = await fetch(`/api/reports/${reportId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Status update failed');
+
+    // Update in memory array
+    const rep = allReportsData.find(r => r.id === reportId);
+    if (rep) {
+      rep.status = newStatus;
+      rep.ai_verified = (newStatus === 'verified');
+      rep.is_fake = (newStatus === 'rejected');
+    }
+
+    updateReportsKpiCounters(allReportsData);
+    applyReportFilters();
+    renderLandingFieldReports(allReportsData);
+
+    const statusLabels = {
+      verified: 'Verified & Approved',
+      rejected: 'Quarantined / Rejected as Fake',
+      resolved: 'Marked Resolved on Scene',
+      pending: 'Returned to Pending Audit'
     };
-    return svgs[type] || `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+    showToast('Database Updated', `Report ${reportId} updated to ${statusLabels[newStatus] || newStatus}`, 'success');
+
+    // If modal is open for this report, refresh modal contents
+    if (window.currentEvidenceReportId === reportId) {
+      openEvidenceModal(reportId);
+    }
+  } catch (err) {
+    showToast('Database Error', err.message, 'error');
+  }
+}
+
+async function deleteReportFromDb(reportId) {
+  if (!confirm(`Are you sure you want to permanently delete complaint ${reportId} from the database?`)) {
+    return;
+  }
+  try {
+    const res = await fetch(`/api/reports/${reportId}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Delete failed');
+
+    allReportsData = allReportsData.filter(r => r.id !== reportId);
+    updateReportsKpiCounters(allReportsData);
+    applyReportFilters();
+    renderLandingFieldReports(allReportsData);
+
+    showToast('Complaint Deleted', `Report ${reportId} permanently removed from database`, 'info');
+    closeEvidenceModal();
+  } catch (err) {
+    showToast('Delete Error', err.message, 'error');
+  }
+}
+
+async function escalateReportInDb(reportId) {
+  try {
+    const res = await fetch(`/api/reports/${reportId}/escalate`, {
+      method: 'POST'
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Escalation failed');
+
+    const rep = allReportsData.find(r => r.id === reportId);
+    if (rep) {
+      rep.status = 'verified';
+      rep.ai_verified = true;
+      rep.is_fake = false;
+      rep.urgency_rank = 10;
+    }
+
+    updateReportsKpiCounters(allReportsData);
+    applyReportFilters();
+    renderLandingFieldReports(allReportsData);
+
+    showToast('Coast Guard Alert Dispatched', `Incident ${reportId} escalated to Indian Coast Guard SAR (Priority 10/10)`, 'warning');
+    if (window.currentEvidenceReportId === reportId) {
+      openEvidenceModal(reportId);
+    }
+  } catch (err) {
+    showToast('Escalation Error', err.message, 'error');
+  }
+}
+
+function openEvidenceModal(reportId) {
+  const rep = allReportsData.find(r => r.id === reportId);
+  if (!rep) return;
+  window.currentEvidenceReportId = reportId;
+
+  const modal = document.getElementById('evidence-modal');
+  if (!modal) return;
+
+  const badgeEl = document.getElementById('evidence-modal-badge');
+  const titleEl = document.getElementById('evidence-modal-title');
+  const imgEl = document.getElementById('evidence-modal-img');
+  const noImgEl = document.getElementById('evidence-modal-no-img');
+  const rawLinkEl = document.getElementById('evidence-modal-open-raw');
+  const headingEl = document.getElementById('evidence-modal-heading');
+  const descEl = document.getElementById('evidence-modal-desc');
+  const addressEl = document.getElementById('evidence-modal-address');
+  const reporterEl = document.getElementById('evidence-modal-reporter');
+  const timeEl = document.getElementById('evidence-modal-time');
+  const urgencyEl = document.getElementById('evidence-modal-urgency');
+  const statusChipEl = document.getElementById('evidence-modal-status-chip');
+  const scoreEl = document.getElementById('evidence-modal-score');
+  const verdictEl = document.getElementById('evidence-modal-verdict-text');
+  const actionEl = document.getElementById('evidence-modal-action-text');
+  const actionsEl = document.getElementById('evidence-modal-actions');
+
+  if (badgeEl) badgeEl.textContent = `${rep.id} // ${(rep.type || 'HAZARD').toUpperCase()}`;
+  if (titleEl) titleEl.textContent = `Evidence Inspection: ${rep.title}`;
+  if (headingEl) headingEl.textContent = rep.title;
+  if (descEl) descEl.textContent = rep.description;
+  if (addressEl) addressEl.textContent = `${rep.address || 'Coastal Shoreline'} [${Number(rep.latitude).toFixed(4)}, ${Number(rep.longitude).toFixed(4)}]`;
+  if (reporterEl) reporterEl.textContent = `${rep.reporter_name || 'Citizen'} (${rep.reporter_badge || 'CITIZEN-0000'})`;
+  if (timeEl) timeEl.textContent = rep.created_at ? new Date(rep.created_at).toLocaleString() : 'Recent telemetry';
+  if (urgencyEl) urgencyEl.textContent = `${rep.urgency_rank || 5}/10 Priority`;
+
+  if (rep.image_url) {
+    if (imgEl) {
+      imgEl.src = rep.image_url;
+      imgEl.style.display = 'block';
+    }
+    if (noImgEl) noImgEl.style.display = 'none';
+    if (rawLinkEl) {
+      rawLinkEl.href = rep.image_url;
+      rawLinkEl.style.display = 'inline';
+    }
+  } else {
+    if (imgEl) imgEl.style.display = 'none';
+    if (noImgEl) noImgEl.style.display = 'block';
+    if (rawLinkEl) rawLinkEl.style.display = 'none';
   }
 
-  container.innerHTML = reports.map(r => `
-    <div style="background: var(--ds-bg-card); border: 1px solid ${r.ai_verified ? 'var(--ds-border-brand)' : 'var(--ds-border-default)'}; border-radius: var(--ds-radius-lg); padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
-      <div style="display: flex; gap: 14px; align-items: flex-start; flex: 1; min-width: 280px;">
-        <div style="color: var(--ds-color-brand); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-md); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-          ${getCategorySvg(r.type)}
-        </div>
-        <div>
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
-            <span class="aq-user-badge" style="font-size: 0.65rem;">${r.id}</span>
-            <span style="font-size: 0.68rem; color: ${r.ai_verified ? 'var(--ds-color-brand-light)' : 'var(--ds-text-muted)'}; font-weight: 600;">
-              ${r.ai_verified ? `${r.ai_confidence || 96}% AI CONFIRMED` : 'PENDING AUDIT'}
-            </span>
-            <span style="font-size: 0.68rem; color: var(--ds-text-muted);">· Urgency: ${r.urgency_rank || 5}/10</span>
-          </div>
-          <h4 style="font-family: var(--ds-font-display); font-size: var(--ds-text-base); font-weight: bold; color: var(--ds-text-primary); margin-bottom: 4px;">
-            ${r.title}
-          </h4>
-          <p style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary); line-height: 1.5; margin-bottom: 6px;">
-            ${r.description}
-          </p>
-          <div style="font-size: 0.68rem; color: var(--ds-text-muted);">
-            ${r.address || 'Coastal Shoreline'} · Reporter: <strong style="color: var(--ds-text-primary);">${r.reporter_name || 'Citizen'}</strong> (${r.reporter_badge || 'CITIZEN'})
-          </div>
-        </div>
-      </div>
+  // Status Chip
+  const statusStyles = {
+    verified: { label: 'VERIFIED ACTIVE', bg: 'rgba(16,185,129,0.15)', color: '#10b981', border: '#10b981' },
+    rejected: { label: 'QUARANTINED / FAKE', bg: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '#ef4444' },
+    resolved: { label: 'RESOLVED ON SCENE', bg: 'rgba(14,165,233,0.15)', color: '#0ea5e9', border: '#0ea5e9' },
+    pending: { label: 'PENDING AUDIT', bg: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '#f59e0b' }
+  };
+  const st = statusStyles[rep.status] || statusStyles.pending;
+  if (statusChipEl) {
+    statusChipEl.textContent = st.label;
+    statusChipEl.style.background = st.bg;
+    statusChipEl.style.color = st.color;
+    statusChipEl.style.border = `1px solid ${st.border}`;
+  }
 
-      <div style="display: flex; gap: 8px; align-items: center;">
-        <button class="aq-btn-primary" style="padding: 6px 14px; font-size: var(--ds-text-xs); background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 4px;" onclick="focusReportOnMap(${r.latitude}, ${r.longitude}, '${r.id}')">
-          Plot on GIS Map ↗
-        </button>
-      </div>
-    </div>
-  `).join('');
+  if (scoreEl) scoreEl.textContent = `${rep.ai_confidence || 0}%`;
+  if (verdictEl) {
+    if (rep.status === 'rejected' || rep.is_fake) {
+      verdictEl.textContent = 'FLAGGED AS NON-OPTICAL SCREENSHOT / TAMPERED EVIDENCE';
+      verdictEl.style.color = '#ef4444';
+    } else if (rep.status === 'verified') {
+      verdictEl.textContent = 'AUTHENTIC OPTICAL FIELD CAPTURE VERIFIED BY AI MODEL';
+      verdictEl.style.color = '#10b981';
+    } else {
+      verdictEl.textContent = 'UNVERIFIED INCIDENT REQUIRING OPERATOR AUDIT';
+      verdictEl.style.color = '#f59e0b';
+    }
+  }
+
+  if (actionEl) {
+    if (rep.status === 'rejected' || rep.is_fake) {
+      actionEl.textContent = 'Quarantined: Mobile screenshot or synthetic media detected. Cannot be deployed as verified incident proof.';
+      actionEl.style.color = '#ef4444';
+    } else if (rep.status === 'verified') {
+      actionEl.textContent = 'Live Broadcast: Verified incident broadcasted across all emergency dispatch and tactical radar nodes.';
+      actionEl.style.color = '#10b981';
+    } else {
+      actionEl.textContent = 'Operator Action Required: Inspect photograph and verify whether to publish to live tactical grid or quarantine.';
+      actionEl.style.color = '#f59e0b';
+    }
+  }
+
+  if (actionsEl) {
+    actionsEl.innerHTML = `
+      <button class="aq-btn-ghost" style="padding: 7px 14px; font-size: 0.75rem; color: #10b981; border: 1px solid rgba(16,185,129,0.5); border-radius: 4px; font-weight: bold;" onclick="updateReportStatusInDb('${rep.id}', 'verified')">
+        ✓ Verify & Publish
+      </button>
+      <button class="aq-btn-ghost" style="padding: 7px 14px; font-size: 0.75rem; color: #ef4444; border: 1px solid rgba(239,68,68,0.5); border-radius: 4px; font-weight: bold;" onclick="updateReportStatusInDb('${rep.id}', 'rejected')">
+        ✕ Reject / Flag Fake
+      </button>
+      <button class="aq-btn-ghost" style="padding: 7px 14px; font-size: 0.75rem; color: #0ea5e9; border: 1px solid rgba(14,165,233,0.5); border-radius: 4px; font-weight: bold;" onclick="updateReportStatusInDb('${rep.id}', 'resolved')">
+        ⚓ Mark Resolved
+      </button>
+      <button class="aq-btn-ghost" style="padding: 7px 14px; font-size: 0.75rem; color: #f59e0b; border: 1px solid rgba(245,158,11,0.5); border-radius: 4px; font-weight: bold;" onclick="escalateReportInDb('${rep.id}')">
+        🚨 SAR Escalate
+      </button>
+      <button class="aq-btn-primary" style="padding: 7px 14px; font-size: 0.75rem; background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 4px;" onclick="closeEvidenceModal(); focusReportOnMap(${rep.latitude}, ${rep.longitude}, '${rep.id}')">
+        Plot GIS Map ↗
+      </button>
+      <button class="aq-btn-ghost" style="padding: 7px 12px; font-size: 0.75rem; color: var(--ds-text-muted); border: 1px solid var(--ds-border-default); border-radius: 4px;" onclick="deleteReportFromDb('${rep.id}')" title="Permanently delete from database">
+        🗑 Delete
+      </button>
+    `;
+  }
+
+  modal.style.display = 'flex';
+}
+
+function closeEvidenceModal() {
+  const modal = document.getElementById('evidence-modal');
+  if (modal) modal.style.display = 'none';
+  window.currentEvidenceReportId = null;
 }
 
 function renderLandingFieldReports(reports) {
@@ -1844,6 +2240,14 @@ function renderLandingFieldReports(reports) {
 
     return `
       <div class="aq-card aq-reveal aq-revealed" style="display: flex; flex-direction: column; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-subtle); border-radius: var(--ds-radius-xl); overflow: hidden; transition: transform var(--ds-transition-fast), border-color var(--ds-transition-fast);">
+        ${r.image_url ? `
+          <div style="height: 140px; width: 100%; overflow: hidden; background: #000; position: relative; cursor: pointer;" onclick="openEvidenceModal('${r.id}')" title="Click to inspect optical evidence">
+            <img src="${r.image_url}" alt="${r.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.style.display='none'">
+            <div style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.75); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 4px; font-family: var(--ds-font-mono);">
+              ${r.ai_verified ? '✓ AI VERIFIED' : (r.is_fake ? '✕ QUARANTINED' : 'AUDIT QUEUE')}
+            </div>
+          </div>
+        ` : ''}
         <div style="padding: var(--ds-space-6); display: flex; flex-direction: column; flex: 1;">
           
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--ds-space-3);">
@@ -2174,198 +2578,6 @@ function loadSamplePreset(presetType) {
   });
 }
 
-// ── Emergency Copilot Chat, Tactical Intelligence & AI Incident Scribe ───
-let currentChatSessionId = "SES-" + Math.random().toString(36).substring(2, 9);
-
-function formatChatMarkdown(text) {
-  if (!text) return "";
-  let html = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.*?)\*/g, "<em>$1</em>")
-    .replace(/`([^`]+)`/g, "<code style='font-family: var(--ds-font-mono); background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; color: var(--ds-color-brand);'>$1</code>")
-    .replace(/^[•\*\-] (.*)$/gm, "<div style='display: flex; gap: 8px; margin: 4px 0;'><span style='color: var(--ds-color-brand);'>•</span><span>$1</span></div>")
-    .replace(/\n\n/g, "<div style='height: 10px;'></div>")
-    .replace(/\n/g, "<br>");
-  return html;
-}
-
-function handleSendChat(e) {
-  if (e) e.preventDefault();
-  const input = document.getElementById('chat-input-text');
-  const msg = input.value.trim();
-  if (!msg) return;
-
-  input.value = '';
-  appendChatMessage(msg, 'user');
-
-  // Show typing indicator
-  const container = document.getElementById('chat-messages-container');
-  let typingEl = document.createElement('div');
-  typingEl.id = 'chat-typing-indicator';
-  typingEl.className = 'aq-chat-typing';
-  typingEl.innerHTML = `AquaShield Copilot analyzing telemetry <span></span><span></span><span></span>`;
-  if (container) {
-    container.appendChild(typingEl);
-    container.scrollTop = container.scrollHeight;
-  }
-
-  const payload = {
-    message: msg,
-    session_id: currentChatSessionId
-  };
-
-  fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-  .then(res => {
-    if (!res.ok) throw new Error('API offline');
-    return res.json();
-  })
-  .then(data => {
-    const indicator = document.getElementById('chat-typing-indicator');
-    if (indicator) indicator.remove();
-    appendChatMessage(data.reply || data.response || "Telemetry verified. Coastal sector operating within normal hazard thresholds.", 'bot', data.sources, data.draft_report);
-  })
-  .catch(() => {
-    const indicator = document.getElementById('chat-typing-indicator');
-    if (indicator) indicator.remove();
-    setTimeout(() => {
-      let reply = "AquaShield Copilot: Telemetry received. All 21 buoys report operational mesh connectivity. Sea conditions in Sector 4 show wave heights between 1.2m and 1.8m.";
-      const low = msg.toLowerCase();
-      if (low.includes('help') || low.includes('number') || low.includes('contact')) {
-        reply = "Official Helplines:\n• Coast Guard SAR: 1554 (Toll-Free)\n• Emergency Dispatch: 112\n• Marine Wildlife Rescue: +91-98202-88120\n• Disaster Control: 1070 / 1077";
-      } else if (low.includes('cyclone') || low.includes('storm') || low.includes('surge')) {
-        reply = "AquaShield Copilot: Satellite radar tracks a low-pressure formation 240 nautical miles SW. Projected storm surge is +0.6m to +1.1m. Evacuation Route Alpha is primed for clearance.";
-      } else if (low.includes('b-12') || low.includes('wave') || low.includes('buoy')) {
-        reply = "AquaShield Copilot: Buoy B-12 (Offshore Trench) recorded peak wave swells of 3.4m with water temperature 27.4°C. Automatic vessel slowdown advisories have been broadcasted via AIS.";
-      } else if (low.includes('evac') || low.includes('route')) {
-        reply = "AquaShield Copilot: Evacuation Route Alpha via Highway 48 is currently CLEAR with 12,000 p/hr capacity. Shore Promenade (Route Charlie) is BLOCKED by tidal surge.";
-      } else if (low.includes('sar') || low.includes('rescue') || low.includes('vessel')) {
-        reply = "AquaShield Copilot: Fast Interceptor Craft CG-Sentinel-01 is actively patrolling Sector 4. Hovercraft H-04 on standby at Base Delta. Monitoring VHF Channel 16.";
-      }
-      appendChatMessage(reply, 'bot', ["AquaShield LoRa Mesh", "INCOIS Coastal Grid"]);
-    }, 300);
-  });
-}
-
-function quickAskCopilot(prompt) {
-  openCommandCenter('chat');
-  const input = document.getElementById('chat-input-text');
-  if (input) {
-    input.value = prompt;
-    // Small delay to let HUD panel render before firing
-    setTimeout(() => handleSendChat(), 80);
-  }
-}
-
-function appendChatMessage(text, sender, sources = [], draftReport = null) {
-  const container = document.getElementById('chat-messages-container');
-  if (!container) return;
-
-  const msgDiv = document.createElement('div');
-  msgDiv.className = `aq-chat-msg ${sender}`;
-  
-  if (sender === 'bot') {
-    let sourceHtml = "";
-    if (sources && sources.length > 0) {
-      sourceHtml = `<div class="aq-chat-sources"><span style="font-family: var(--ds-font-mono); font-size: 0.65rem; color: var(--ds-text-muted);">GROUNDED SOURCES:</span>` +
-        sources.map(s => `<span class="aq-chat-source-tag">${s}</span>`).join("") +
-        `</div>`;
-    }
-
-    let draftHtml = "";
-    if (draftReport) {
-      const draftJson = encodeURIComponent(JSON.stringify(draftReport));
-      draftHtml = `
-        <div style="margin-top: 14px; background: rgba(7, 17, 30, 0.95); border: 1px solid var(--ds-color-brand); border-radius: var(--ds-radius-lg); padding: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-family: var(--ds-font-mono); font-size: 0.7rem; color: var(--ds-color-brand); font-weight: bold; letter-spacing: 0.05em;">AI INCIDENT DOSSIER · READY FOR DISPATCH</span>
-            <span style="font-family: var(--ds-font-mono); font-size: 0.7rem; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 4px; color: var(--ds-color-brand); font-weight: bold;">URGENCY ${draftReport.urgency}/10</span>
-          </div>
-          <div style="font-family: var(--ds-font-display); font-weight: bold; font-size: 0.95rem; color: #fff; margin-bottom: 4px;">${draftReport.title}</div>
-          <div style="font-size: 0.8rem; color: var(--ds-text-secondary); margin-bottom: 8px;">${draftReport.location} · Lat: ${draftReport.latitude.toFixed(3)}°, Lon: ${draftReport.longitude.toFixed(3)}°</div>
-          <div style="font-size: 0.78rem; color: #cbd5e1; background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 4px; margin-bottom: 12px; border-left: 2px solid var(--ds-color-brand);">${draftReport.professional_description}</div>
-          <button onclick="submitGuidedComplaint('${draftJson}', this)" class="aq-btn-primary" style="width: 100%; padding: 10px 14px; font-size: var(--ds-text-xs); font-weight: bold; background: var(--ds-color-brand); color: #07111e; border-radius: var(--ds-radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <span>Confirm & File Report to Coast Guard Desk</span>
-          </button>
-        </div>
-      `;
-    }
-
-    msgDiv.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); letter-spacing: 0.05em; font-weight: bold;">
-        <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ds-color-brand);"></span>
-        AQUASHIELD AI SENTINEL COPILOT
-      </div>
-      <div style="line-height: 1.6;">${formatChatMarkdown(text)}</div>
-      ${draftHtml}
-      ${sourceHtml}
-    `;
-  } else {
-    msgDiv.textContent = text;
-  }
-  
-  container.appendChild(msgDiv);
-  container.scrollTop = container.scrollHeight;
-}
-
-function submitGuidedComplaint(encodedDraft, buttonEl) {
-  try {
-    const draft = JSON.parse(decodeURIComponent(encodedDraft));
-    if (buttonEl) {
-      buttonEl.disabled = true;
-      buttonEl.innerHTML = `<span>Submitting to Dispatch Desk...</span>`;
-    }
-
-    fetch('/api/chat/submit-guided-complaint', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(draft)
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        if (buttonEl) {
-          buttonEl.style.background = '#10b981';
-          buttonEl.style.color = '#fff';
-          buttonEl.innerHTML = `<span>REPORT FILED (${data.report_id}) : DISPATCH NOTIFIED</span>`;
-        }
-        showToast(`Incident ${data.report_id} verified and dispatched to Coast Guard!`);
-        loadReports();
-      } else {
-        throw new Error(data.message || 'Submission failed');
-      }
-    })
-    .catch(err => {
-      if (buttonEl) {
-        buttonEl.disabled = false;
-        buttonEl.innerHTML = `<span>Retry Submission</span>`;
-      }
-      showToast(`Submission error: ${err.message}`);
-    });
-  } catch(e) {
-    console.error(e);
-  }
-}
-
-function launchAiGuidedScribe() {
-  closeReportModal();
-  openCommandCenter('chat');
-  const input = document.getElementById('chat-input-text');
-  if (input) {
-    input.placeholder = "Describe what you saw in plain words (e.g. 'I saw thick black oil on Marine Drive')...";
-    input.focus();
-  }
-  appendChatMessage(
-    "**Welcome to AI Incident Scribe.**\n\nDescribe the coastal incident or hazard you witnessed in your own words (e.g. *what you saw, where it was, water depth, or animal distress*). I will convert your observation into a structured incident report and dispatch it to emergency teams!",
-    'bot'
-  );
-}
 
 // ── Emergency Rescue SOS Dispatcher ───────────────────────────────────────
 function triggerEmergencySOS() {
@@ -2544,7 +2756,7 @@ function plotBeachesOnHomepageMap() {
     const el = document.createElement('div');
     el.className = `maplibre-beach-marker ${b.status}`;
     el.innerHTML = `<span class="marker-dot"></span><span>${b.name.replace(' Beach', '').replace(' Promenade', '')}</span>`;
-    el.title = `${b.name} — ${b.statusText} (${b.wave} swell)`;
+    el.title = `${b.name} : ${b.statusText} (${b.wave} swell)`;
 
     const popup = new maplibregl.Popup({ offset: 14 }).setHTML(`
       <div style="background:#07111e; color:#f1f5f9; padding:10px; min-width: 210px; border-radius:6px; font-family:var(--ds-font-body);">
@@ -2582,8 +2794,10 @@ function plotBeachesOnHomepageMap() {
 
 function focusBeachOnMap(lat, lng, beachId) {
   const hpMapEl = document.getElementById('radar-map');
-  if (hpMapEl && homepageTacticalMap) {
+  if (hpMapEl) {
     hpMapEl.scrollIntoView({ behavior: 'smooth' });
+  }
+  if (homepageTacticalMap) {
     homepageTacticalMap.flyTo({ center: [lng, lat], zoom: 13.5, pitch: 30, duration: 1200 });
     const b = BEACHES_DATA.find(x => x.id === beachId);
     if (b) showToast('Beach Focused', `Zoomed to ${b.name}. Current swell: ${b.wave}.`, 'info');
@@ -2915,7 +3129,7 @@ async function initDisastersAndTelemetry() {
 }
 
 // ── Dynamic Evacuation Route Calculator (Pillar 2: Data Analysis & Pathfinding) ──
-async function computeEvacuationRoute() {
+async function computeEvacuationRoute(notify = false) {
   const fromLoc = document.getElementById('evac-from-input')?.value || 'Juhu Beach Area';
   const toLoc = document.getElementById('evac-to-input')?.value || 'High Ground Relief Shelter';
   const disaster = document.getElementById('evac-disaster-select')?.value || 'Cyclone Surge';
@@ -2990,7 +3204,9 @@ async function computeEvacuationRoute() {
       statusBadge.style.color = '#10b981';
       statusBadge.style.borderColor = '#10b981';
     }
-    showToast('Corridor Computed', `Optimal evacuation route to ${toLoc} verified clear (+48m elevation).`, 'success');
+    if (notify) {
+      showToast('Corridor Computed', `Optimal evacuation route to ${toLoc} verified clear (+48m elevation).`, 'success');
+    }
   } catch (err) {
     console.error('Evacuation routing error:', err);
     if (feedbackEl) {
@@ -3223,7 +3439,7 @@ function verifySecurityPillar() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CANONICAL API WRAPPERS — Full-stack integration connectors
+// CANONICAL API WRAPPERS - Full-stack integration connectors
 // All 9 routers: disasters, reports, marine, routes, sos, chat, sms, broadcast, auth
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -3232,7 +3448,7 @@ const calculateRoute = computeEvacuationRoute;
 window.calculateRoute = computeEvacuationRoute;
 
 /**
- * sendBroadcastAlert — POST to /api/broadcast (canonical alias)
+ * sendBroadcastAlert - POST to /api/broadcast (canonical alias)
  * Sends a structured emergency broadcast via the REST fallback.
  * When WebSocket is connected, mesh_broadcast.js handles it automatically.
  */
@@ -3258,7 +3474,7 @@ async function sendBroadcastAlert({ alertType = 'Flood', message = 'Emergency al
 window.sendBroadcastAlert = sendBroadcastAlert;
 
 /**
- * sendSMSAlert — POST to /api/sms (canonical alias for SMS send-sos)
+ * sendSMSAlert - POST to /api/sms (canonical alias for SMS send-sos)
  * Returns pre-formatted SMS body and clickable sms: links.
  */
 async function sendSMSAlert({ to = null, message = 'Emergency SOS', emergencyType = 'General', lat = null, lng = null } = {}) {
@@ -3311,4 +3527,1337 @@ window.AquaShieldAPI = {
 };
 
 console.log('[AquaShield] Full API surface loaded. window.AquaShieldAPI ready. All 9 routers connected.');
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🌐 INTERACTIVE COASTAL OPERATIONS & INTELLIGENCE DASHBOARD ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const DASHBOARD_SECTORS = {
+  mumbai: {
+    id: 'mumbai',
+    name: 'Mumbai Harbor & Central Coast',
+    coords: [18.96, 72.82],
+    waveHeight: 1.4,
+    waveTrend: '↑ +0.1m',
+    waveStatus: 'Moderate Swell',
+    period: 8.8,
+    freq: '0.114 Hz',
+    wind: 22,
+    windGusts: 29,
+    windDir: 245,
+    windCardinal: 'WSW',
+    temp: 28.4,
+    salinity: '35.2 PSU',
+    press: 1011.2,
+    pressStatus: 'Steady · Normal Gradient',
+    tide: '+1.62 m',
+    tideState: 'Ebb (Falling)',
+    chi: 3.4,
+    chiStatus: 'NOMINAL ADVISORY',
+    chiColor: '#10b981',
+    peakSwell: 'Peak Swell: 1.8m',
+    waveEnergy: '4.2 kW/m',
+    domDir: '240° WSW',
+    currentSpeed: 1.8,
+    currentDir: 190,
+    currentCardinal: 'S',
+    nextHigh: 'High: 17:42 UTC (+3.8m)',
+    nextLow: 'Low: 23:15 UTC (+0.6m)',
+    riskMatrix: { rip: 35, surge: 28, flood: 20, ais: 42, tox: 15 },
+    wavePoints: [1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.5, 1.7, 1.8, 1.75, 1.6, 1.5, 1.45, 1.4, 1.35, 1.3, 1.25, 1.2, 1.25, 1.3, 1.35, 1.4, 1.4],
+    tidePoints: [1.2, 1.8, 2.6, 3.4, 3.8, 3.6, 2.9, 2.0, 1.2, 0.7, 0.6, 0.9, 1.5, 2.3, 3.1, 3.7, 3.8, 3.4, 2.7, 1.9, 1.1, 0.7, 0.8, 1.62]
+  },
+  konkan: {
+    id: 'konkan',
+    name: 'Ratnagiri & Konkan Deep Mooring',
+    coords: [16.98, 73.12],
+    waveHeight: 3.2,
+    waveTrend: '↑ +0.4m',
+    waveStatus: 'Rough Sea State',
+    period: 11.2,
+    freq: '0.089 Hz',
+    wind: 34,
+    windGusts: 44,
+    windDir: 270,
+    windCardinal: 'W',
+    temp: 27.9,
+    salinity: '35.6 PSU',
+    press: 1007.4,
+    pressStatus: 'Falling · Low Pressure Trough',
+    tide: '+2.15 m',
+    tideState: 'Flood (Rising)',
+    chi: 6.8,
+    chiStatus: 'HIGH SURGE ADVISORY',
+    chiColor: '#f59e0b',
+    peakSwell: 'Peak Swell: 4.1m',
+    waveEnergy: '14.8 kW/m',
+    domDir: '275° W',
+    currentSpeed: 2.6,
+    currentDir: 175,
+    currentCardinal: 'S',
+    nextHigh: 'High: 19:10 UTC (+4.1m)',
+    nextLow: 'Low: 01:25 UTC (+0.4m)',
+    riskMatrix: { rip: 78, surge: 65, flood: 55, ais: 30, tox: 22 },
+    wavePoints: [2.5, 2.6, 2.7, 2.8, 3.0, 3.2, 3.5, 3.9, 4.1, 4.0, 3.8, 3.6, 3.4, 3.3, 3.2, 3.1, 3.0, 3.1, 3.2, 3.3, 3.4, 3.3, 3.2, 3.2],
+    tidePoints: [0.8, 1.3, 2.1, 3.1, 3.9, 4.1, 3.8, 3.0, 2.1, 1.2, 0.5, 0.4, 0.9, 1.8, 2.8, 3.8, 4.1, 3.7, 2.9, 1.9, 1.0, 0.6, 1.1, 2.15]
+  },
+  goa: {
+    id: 'goa',
+    name: 'Goa & Malabar Continental Shelf',
+    coords: [15.35, 73.68],
+    waveHeight: 2.2,
+    waveTrend: '↓ -0.2m',
+    waveStatus: 'Moderate Swell',
+    period: 9.6,
+    freq: '0.104 Hz',
+    wind: 18,
+    windGusts: 24,
+    windDir: 220,
+    windCardinal: 'SW',
+    temp: 29.1,
+    salinity: '34.8 PSU',
+    press: 1012.8,
+    pressStatus: 'Steady · High Pressure Ridge',
+    tide: '+1.10 m',
+    tideState: 'Low Slack',
+    chi: 4.1,
+    chiStatus: 'NOMINAL ADVISORY',
+    chiColor: '#10b981',
+    peakSwell: 'Peak Swell: 2.6m',
+    waveEnergy: '6.5 kW/m',
+    domDir: '225° SW',
+    currentSpeed: 1.4,
+    currentDir: 160,
+    currentCardinal: 'SSE',
+    nextHigh: 'High: 21:05 UTC (+3.2m)',
+    nextLow: 'Low: 03:40 UTC (+0.8m)',
+    riskMatrix: { rip: 45, surge: 32, flood: 25, ais: 22, tox: 18 },
+    wavePoints: [2.3, 2.2, 2.1, 2.0, 2.1, 2.2, 2.4, 2.6, 2.5, 2.4, 2.3, 2.2, 2.1, 2.0, 2.0, 2.1, 2.2, 2.3, 2.3, 2.2, 2.2, 2.2, 2.2, 2.2],
+    tidePoints: [1.4, 1.8, 2.3, 2.8, 3.1, 3.2, 2.9, 2.4, 1.7, 1.1, 0.8, 0.9, 1.3, 1.9, 2.5, 3.0, 3.2, 3.0, 2.5, 1.9, 1.3, 0.9, 0.9, 1.1]
+  },
+  bengal: {
+    id: 'bengal',
+    name: 'Bay of Bengal & Chennai Trench',
+    coords: [13.08, 80.27],
+    waveHeight: 2.8,
+    waveTrend: '↑ +0.3m',
+    waveStatus: 'Chippy Swell',
+    period: 10.4,
+    freq: '0.096 Hz',
+    wind: 28,
+    windGusts: 36,
+    windDir: 110,
+    windCardinal: 'ESE',
+    temp: 29.5,
+    salinity: '33.9 PSU',
+    press: 1009.6,
+    pressStatus: 'Slight Dip · Monsoon Convergence',
+    tide: '+1.45 m',
+    tideState: 'Flood (Rising)',
+    chi: 5.6,
+    chiStatus: 'MODERATE ADVISORY',
+    chiColor: '#f59e0b',
+    peakSwell: 'Peak Swell: 3.4m',
+    waveEnergy: '9.2 kW/m',
+    domDir: '115° ESE',
+    currentSpeed: 2.1,
+    currentDir: 25,
+    currentCardinal: 'NNE',
+    nextHigh: 'High: 16:20 UTC (+2.9m)',
+    nextLow: 'Low: 22:45 UTC (+0.5m)',
+    riskMatrix: { rip: 60, surge: 58, flood: 48, ais: 65, tox: 40 },
+    wavePoints: [2.0, 2.1, 2.3, 2.5, 2.7, 2.8, 3.1, 3.3, 3.4, 3.2, 3.0, 2.9, 2.8, 2.7, 2.6, 2.5, 2.6, 2.7, 2.8, 2.9, 2.8, 2.8, 2.8, 2.8],
+    tidePoints: [1.1, 1.5, 2.1, 2.7, 2.9, 2.8, 2.4, 1.8, 1.1, 0.6, 0.5, 0.7, 1.2, 1.8, 2.4, 2.8, 2.9, 2.6, 2.1, 1.4, 0.8, 0.5, 0.9, 1.45]
+  }
+};
+
+let activeDashboardSector = 'mumbai';
+let dashboardTimeHorizon = 'live';
+let simSurgeHeight = 0.0;
+let simWindSpeed = 22;
+let simTidePhase = 'mean';
+
+function getBeaufortForce(knots) {
+  if (knots < 1) return '0 · Calm';
+  if (knots <= 3) return '1 · Light Air';
+  if (knots <= 6) return '2 · Light Breeze';
+  if (knots <= 10) return '3 · Gentle Breeze';
+  if (knots <= 16) return '4 · Moderate Breeze';
+  if (knots <= 21) return '5 · Fresh Breeze';
+  if (knots <= 27) return '6 · Strong Breeze';
+  if (knots <= 33) return '7 · High Wind / Near Gale';
+  if (knots <= 40) return '8 · Gale';
+  if (knots <= 47) return '9 · Strong Gale';
+  if (knots <= 55) return '10 · Storm';
+  if (knots <= 63) return '11 · Violent Storm';
+  return '12 · Hurricane Force';
+}
+
+function getRiskWord(pct) {
+  if (pct < 25) return 'Safe';
+  if (pct < 50) return 'Moderate';
+  if (pct < 75) return 'High';
+  return 'Critical';
+}
+
+/**
+ * Initialize the Interactive Coastal Intelligence Dashboard
+ */
+function initInteractiveDashboard() {
+  console.log('[AquaShield] Initializing Interactive Coastal Intelligence Dashboard...');
+
+  // Setup initial sector data
+  switchDashboardSector('mumbai', true);
+
+  // Setup Buoy Grid
+  renderDashboardBuoys('all');
+
+  // Setup Simulator sliders
+  const surgeSlider = document.getElementById('sim-surge-slider');
+  const windSlider = document.getElementById('sim-wind-slider');
+
+  if (surgeSlider) {
+    surgeSlider.value = simSurgeHeight.toString();
+  }
+  if (windSlider) {
+    windSlider.value = simWindSpeed.toString();
+  }
+
+  recalculateSimulator();
+
+  // Setup interactive chart scrubber listeners
+  setupChartHoverListeners();
+
+  // Start 60 FPS live ocean animation loop
+  startDashboardAnimationLoop();
+
+  // Responsive redraw on window resize
+  window.addEventListener('resize', debounce(() => {
+    renderWaveChart(activeDashboardSector);
+    renderTideChart(activeDashboardSector);
+  }, 150));
+}
+
+function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+/**
+ * Switch Coastal Sector
+ */
+function switchDashboardSector(sectorKey, silent) {
+  if (!DASHBOARD_SECTORS[sectorKey]) return;
+  activeDashboardSector = sectorKey;
+  const s = DASHBOARD_SECTORS[sectorKey];
+
+  // 1. Update Sector Pill Tabs
+  document.querySelectorAll('#dash-sector-tabs .aq-sector-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  const activeBtn = document.getElementById(`sector-btn-${sectorKey}`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  // 2. Update KPI Tiles
+  const setEl = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = val;
+  };
+
+  setEl('kpi-wave-val', `${s.waveHeight.toFixed(1)} m`);
+  setEl('kpi-wave-trend', s.waveTrend);
+  const trendEl = document.getElementById('kpi-wave-trend');
+  if (trendEl) trendEl.style.color = s.waveTrend.includes('+') && s.waveHeight > 2.5 ? '#f59e0b' : '#10b981';
+  setEl('kpi-wave-status', s.waveStatus);
+
+  setEl('kpi-period-val', `${s.period.toFixed(1)} s`);
+  setEl('kpi-wind-val', `${s.wind} kt`);
+  setEl('kpi-wind-cardinal', `${s.windCardinal} ${s.windDir}° · Gusts ${s.windGusts} kt`);
+
+  setEl('kpi-temp-val', `${s.temp.toFixed(1)}°C`);
+  setEl('kpi-press-val', `${s.press.toFixed(1)} hPa`);
+  setEl('kpi-tide-val', s.tide);
+  setEl('kpi-tide-state', s.tideState);
+
+  setEl('kpi-chi-val', `${s.chi.toFixed(1)} <span style="font-size: 1rem; color: var(--ds-text-muted);">/ 10</span>`);
+  const chiValEl = document.getElementById('kpi-chi-val');
+  if (chiValEl) chiValEl.style.color = s.chiColor;
+  setEl('kpi-chi-status', s.chiStatus);
+  const chiStatusEl = document.getElementById('kpi-chi-status');
+  if (chiStatusEl) chiStatusEl.style.color = s.chiColor;
+
+  // 3. Update Chart 1 Labels
+  setEl('wave-spectrum-peak', s.peakSwell);
+  setEl('wave-energy-val', s.waveEnergy);
+  setEl('wave-dom-dir', s.domDir);
+
+  // 4. Update Compass
+  const needleWrap = document.getElementById('compass-needle-wrap');
+  if (needleWrap) {
+    needleWrap.style.transform = `rotate(${s.windDir}deg)`;
+  }
+  setEl('compass-wind-text', `${s.windDir}° ${s.windCardinal}`);
+  setEl('compass-beaufort-text', `Force ${getBeaufortForce(s.wind)}`);
+  setEl('compass-current-text', `${s.currentSpeed} kt @ ${s.currentDir}° ${s.currentCardinal}`);
+
+  // 5. Update Chart 2 Labels
+  setEl('tide-next-high', s.nextHigh);
+  setEl('tide-next-low', s.nextLow);
+
+  // 6. Update Risk Matrix Segmented Bars
+  const setRisk = (key, val) => {
+    setEl(`risk-val-${key}`, `${val}% (${getRiskWord(val)})`);
+    const bar = document.getElementById(`risk-bar-${key}`);
+    if (bar) {
+      bar.style.width = `${val}%`;
+      bar.style.background = val >= 70 ? '#ef4444' : val >= 40 ? '#f59e0b' : '#10b981';
+    }
+  };
+  setRisk('rip', s.riskMatrix.rip);
+  setRisk('surge', s.riskMatrix.surge);
+  setRisk('flood', s.riskMatrix.flood);
+  setRisk('ais', s.riskMatrix.ais);
+  setRisk('tox', s.riskMatrix.tox);
+
+  // 7. Update Simulator Baseline
+  simWindSpeed = s.wind;
+  const windSlider = document.getElementById('sim-wind-slider');
+  if (windSlider) {
+    windSlider.value = s.wind.toString();
+    const windVal = document.getElementById('sim-wind-val');
+    if (windVal) windVal.textContent = `${s.wind} kt`;
+  }
+  recalculateSimulator();
+
+  // 8. Draw Charts
+  renderWaveChart(sectorKey);
+  renderTideChart(sectorKey);
+
+  // 9. Sync with HUD Overview metrics if available
+  const hudWave = document.querySelector('#panel-overview .aq-beach-metrics');
+  const hudClock = document.getElementById('hud-clock');
+  if (hudClock) {
+    hudClock.textContent = `${s.name.toUpperCase()} // ACTIVE SECTOR`;
+  }
+
+  if (!silent) {
+    showToast('Sector Telemetry Loaded', `Live oceanographic sensors switched to ${s.name}.`, 'info');
+  }
+}
+
+/**
+ * Time Horizon Switcher
+ */
+function setDashboardTimeHorizon(horizon) {
+  dashboardTimeHorizon = horizon;
+  const buttons = ['live', '6h', '24h', '7d'];
+  buttons.forEach(h => {
+    const btn = document.getElementById(`time-btn-${h}`);
+    if (btn) {
+      if (h === horizon) {
+        btn.classList.add('active');
+        btn.style.background = 'var(--ds-color-brand)';
+        btn.style.color = 'var(--ds-bg-base)';
+        btn.style.fontWeight = '600';
+      } else {
+        btn.classList.remove('active');
+        btn.style.background = 'transparent';
+        btn.style.color = 'var(--ds-text-secondary)';
+        btn.style.fontWeight = '500';
+      }
+    }
+  });
+
+  renderWaveChart(activeDashboardSector);
+  renderTideChart(activeDashboardSector);
+  showToast('Time Horizon Updated', `Display window adjusted to ${horizon === 'live' ? 'Real-Time (1-minute resolution)' : horizon}.`, 'info');
+}
+
+/**
+ * Setup High DPI Retina Canvas Helper
+ */
+function setupDpiCanvas(canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = rect.width || canvas.parentElement.clientWidth || 600;
+  const h = rect.height || 220;
+
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.resetTransform();
+  ctx.scale(dpr, dpr);
+  return { ctx, width: w, height: h };
+}
+
+/**
+ * State & Caches for High-Precision Dynamic Oceanographic Visualization
+ */
+let waveScrubX = null;
+let waveIsHovering = false;
+let tideScrubX = null;
+let tideIsHovering = false;
+let waveChartPointsCache = [];
+let tideChartPointsCache = [];
+let animWavePhase = 0;
+let animDashboardLoopStarted = false;
+
+/**
+ * Setup High DPI Retina Canvas Helper
+ */
+function setupDpiCanvas(canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.round(rect.width || canvas.parentElement?.clientWidth || 600);
+  const h = Math.round(rect.height || 220);
+
+  if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.resetTransform();
+  ctx.scale(dpr, dpr);
+  return { ctx, width: w, height: h };
+}
+
+/**
+ * Render Wave Swell Spectrum Chart with Real-Time Dynamic Animation & Sub-Pixel Scrubber
+ */
+function renderWaveChart(sectorKey) {
+  const canvas = document.getElementById('dash-wave-chart');
+  if (!canvas) return;
+
+  const s = DASHBOARD_SECTORS[sectorKey];
+  if (!s) return;
+
+  const { ctx, width, height } = setupDpiCanvas(canvas);
+  ctx.clearRect(0, 0, width, height);
+
+  const padLeft = 46;
+  const padRight = 20;
+  const padTop = 22;
+  const padBottom = 30;
+  const plotW = width - padLeft - padRight;
+  const plotH = height - padTop - padBottom;
+
+  // Simulator coupling: gale winds and surge elevate the wave spectrum
+  const windSwellBonus = Math.max(0, (simWindSpeed - s.wind) * 0.045);
+  const surgeSwellBonus = simSurgeHeight * 0.18;
+  const totalForcing = windSwellBonus + surgeSwellBonus;
+
+  const rawMax = Math.max(...s.wavePoints) + totalForcing;
+  const maxVal = Math.max(5.0, Math.ceil((rawMax + 0.6) / 1.0) * 1.0);
+
+  // 1. Draw Horizontal Grid Lines
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+
+  const gridSteps = maxVal > 6 ? [2.0, 4.0, 6.0] : [1.0, 2.0, 3.0, 4.0];
+  ctx.font = '10px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#64748b';
+  ctx.textAlign = 'right';
+
+  gridSteps.forEach(val => {
+    const y = padTop + plotH - (val / maxVal) * plotH;
+    ctx.beginPath();
+    ctx.moveTo(padLeft, y);
+    ctx.lineTo(width - padRight, y);
+    ctx.stroke();
+    ctx.fillText(`${val.toFixed(1)}m`, padLeft - 6, y + 3.5);
+  });
+
+  // Zero baseline
+  ctx.beginPath();
+  ctx.moveTo(padLeft, padTop + plotH);
+  ctx.lineTo(width - padRight, padTop + plotH);
+  ctx.stroke();
+  ctx.fillText('0.0m', padLeft - 6, padTop + plotH + 3.5);
+  ctx.setLineDash([]);
+
+  // 2. Map Data Coordinates with live wave micro-shimmer
+  const rawData = s.wavePoints;
+  const stepX = plotW / (rawData.length - 1);
+  const pts = rawData.map((baseVal, i) => {
+    // Subtle hydrodynamic breathing ripple at live end
+    const liveShimmer = Math.sin(animWavePhase + i * 0.42) * (0.04 + totalForcing * 0.02);
+    const val = Math.max(0.2, baseVal + totalForcing + liveShimmer);
+    return {
+      x: padLeft + i * stepX,
+      y: padTop + plotH - (val / maxVal) * plotH,
+      val: val,
+      hour: i,
+      period: s.period + Math.sin(i * 0.8) * 0.4 + (simWindSpeed > 35 ? 1.5 : 0)
+    };
+  });
+  waveChartPointsCache = pts;
+
+  // 3. Draw Area Fill
+  const isSevere = Math.max(...pts.map(p => p.val)) >= 3.5;
+  const grad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
+  if (isSevere) {
+    grad.addColorStop(0, 'rgba(239, 68, 68, 0.32)');
+    grad.addColorStop(0.7, 'rgba(245, 158, 11, 0.08)');
+    grad.addColorStop(1, 'rgba(7, 17, 30, 0.0)');
+  } else {
+    grad.addColorStop(0, 'rgba(245, 158, 11, 0.30)');
+    grad.addColorStop(0.7, 'rgba(245, 158, 11, 0.06)');
+    grad.addColorStop(1, 'rgba(7, 17, 30, 0.0)');
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, padTop + plotH);
+  ctx.lineTo(pts[0].x, pts[0].y);
+
+  for (let i = 0; i < pts.length - 1; i++) {
+    const cpX = (pts[i].x + pts[i + 1].x) / 2;
+    ctx.bezierCurveTo(cpX, pts[i].y, cpX, pts[i + 1].y, pts[i + 1].x, pts[i + 1].y);
+  }
+
+  ctx.lineTo(pts[pts.length - 1].x, padTop + plotH);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // 4. Draw Wave Curve Stroke
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 0; i < pts.length - 1; i++) {
+    const cpX = (pts[i].x + pts[i + 1].x) / 2;
+    ctx.bezierCurveTo(cpX, pts[i].y, cpX, pts[i + 1].y, pts[i + 1].x, pts[i + 1].y);
+  }
+  ctx.strokeStyle = isSevere ? '#ef4444' : '#f59e0b';
+  ctx.lineWidth = 2.4;
+  ctx.stroke();
+
+  // Draw simulated swell forced badge if simulator is active
+  if (totalForcing > 0.1) {
+    ctx.font = 'bold 9px "JetBrains Mono", monospace';
+    ctx.fillStyle = isSevere ? '#ef4444' : 'var(--ds-color-brand)';
+    ctx.textAlign = 'right';
+    ctx.fillText(`⚡ SIMULATED GALE SURGE (+${totalForcing.toFixed(1)}m)`, width - padRight, padTop + 14);
+  }
+
+  // 5. Time Axis Ticks along Bottom
+  ctx.fillStyle = '#64748b';
+  ctx.textAlign = 'center';
+  const labelInterval = 4;
+  pts.forEach((pt, idx) => {
+    if (idx % labelInterval === 0 || idx === pts.length - 1) {
+      const hr = (idx % 24).toString().padStart(2, '0') + ':00';
+      ctx.fillText(hr, pt.x, height - 10);
+    }
+  });
+
+  // 6. Draw Current Live Endpoint
+  const currentPt = pts[pts.length - 1];
+  ctx.beginPath();
+  ctx.arc(currentPt.x, currentPt.y, 4.5, 0, Math.PI * 2);
+  ctx.fillStyle = isSevere ? '#ef4444' : '#f59e0b';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(currentPt.x, currentPt.y, 8.5 + Math.sin(animWavePhase * 2) * 1.5, 0, Math.PI * 2);
+  ctx.strokeStyle = isSevere ? 'rgba(239, 68, 68, 0.45)' : 'rgba(245, 158, 11, 0.45)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 7. Interactive Scrubber Crosshair & Tooltip Overlay
+  if (waveScrubX !== null && waveScrubX >= padLeft && waveScrubX <= width - padRight) {
+    const clampedX = Math.max(padLeft, Math.min(width - padRight, waveScrubX));
+    const idx = Math.min(pts.length - 2, Math.max(0, Math.floor((clampedX - padLeft) / stepX)));
+    const p0 = pts[idx];
+    const p1 = pts[idx + 1];
+    const t = Math.max(0, Math.min(1, (clampedX - p0.x) / (p1.x - p0.x)));
+    // Cubic Hermite smoothstep
+    const smoothT = t * t * (3 - 2 * t);
+    const interpY = p0.y * (1 - smoothT) + p1.y * smoothT;
+    const interpVal = p0.val * (1 - smoothT) + p1.val * smoothT;
+    const interpHour = p0.hour + t;
+    const interpPeriod = p0.period * (1 - t) + p1.period * t;
+    const interpEnergy = (0.49 * interpVal * interpVal * interpPeriod).toFixed(1);
+
+    const hrs = Math.floor(interpHour % 24).toString().padStart(2, '0');
+    const mins = Math.round((interpHour - Math.floor(interpHour)) * 60).toString().padStart(2, '0');
+    const timeText = `${hrs}:${mins}`;
+
+    // Vertical Reticle
+    ctx.save();
+    ctx.strokeStyle = isSevere ? 'rgba(239, 68, 68, 0.7)' : 'rgba(245, 158, 11, 0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(clampedX, padTop);
+    ctx.lineTo(clampedX, padTop + plotH);
+    ctx.stroke();
+
+    // Horizontal Guide
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(padLeft, interpY);
+    ctx.lineTo(clampedX, interpY);
+    ctx.stroke();
+    ctx.restore();
+
+    // Target Glowing Beacon on Curve
+    ctx.beginPath();
+    ctx.arc(clampedX, interpY, 12, 0, Math.PI * 2);
+    ctx.fillStyle = isSevere ? 'rgba(239, 68, 68, 0.25)' : 'rgba(245, 158, 11, 0.25)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(clampedX, interpY, 5.5, 0, Math.PI * 2);
+    ctx.fillStyle = isSevere ? '#ef4444' : '#f59e0b';
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Y Axis Badge
+    ctx.fillStyle = isSevere ? '#ef4444' : '#f59e0b';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(padLeft - 44, interpY - 9, 38, 18, 4);
+    else ctx.rect(padLeft - 44, interpY - 9, 38, 18);
+    ctx.fill();
+    ctx.font = 'bold 9px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#07111e';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${interpVal.toFixed(2)}m`, padLeft - 25, interpY + 3.5);
+
+    // X Axis Time Badge
+    ctx.fillStyle = isSevere ? '#ef4444' : '#f59e0b';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(clampedX - 26, height - padBottom + 2, 52, 18, 4);
+    else ctx.rect(clampedX - 26, height - padBottom + 2, 52, 18);
+    ctx.fill();
+    ctx.font = 'bold 9px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#07111e';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${timeText} UTC`, clampedX, height - padBottom + 14);
+
+    // Update HTML Tooltip
+    const tooltip = document.getElementById('wave-chart-tooltip');
+    if (tooltip) {
+      tooltip.innerHTML = `
+        <div style="font-family: var(--ds-font-mono); font-size: 10px; color: ${isSevere ? '#ef4444' : 'var(--ds-color-brand)'}; font-weight: bold; margin-bottom: 2px;">
+          ${timeText} UTC · OCEANOGRAPHIC SCRUBBER
+        </div>
+        <div style="font-size: 13px; font-weight: bold; color: #fff;">
+          Swell $H_s$: <span style="color: ${isSevere ? '#ef4444' : '#f59e0b'};">${interpVal.toFixed(2)}m</span>
+        </div>
+        <div style="font-size: 10px; color: var(--ds-text-secondary); margin-top: 3px; display: flex; gap: 8px;">
+          <span>Period: <strong style="color: #fff;">${interpPeriod.toFixed(1)}s</strong></span>
+          <span>Energy: <strong style="color: #fff;">${interpEnergy} kW/m</strong></span>
+        </div>
+      `;
+      const tw = 180;
+      const th = 62;
+      let tx = clampedX - tw / 2;
+      if (tx < 10) tx = 10;
+      if (tx > width - tw - 10) tx = width - tw - 10;
+      let ty = interpY - th - 14;
+      if (ty < 8) ty = interpY + 16;
+      tooltip.style.left = `${tx}px`;
+      tooltip.style.top = `${ty}px`;
+      tooltip.style.opacity = '1';
+    }
+
+    // Dynamic Header Card Sync
+    const peakBadge = document.getElementById('wave-spectrum-peak');
+    if (peakBadge) {
+      peakBadge.textContent = `Scrub: ${interpVal.toFixed(2)}m @ ${timeText} UTC`;
+      peakBadge.style.color = '#fff';
+      peakBadge.style.background = isSevere ? 'rgba(239,68,68,0.3)' : 'rgba(245, 158, 11, 0.3)';
+      peakBadge.style.borderColor = isSevere ? '#ef4444' : 'var(--ds-color-brand)';
+    }
+    const energyVal = document.getElementById('wave-energy-val');
+    if (energyVal) energyVal.textContent = `${interpEnergy} kW/m`;
+  }
+}
+
+/**
+ * Render 24-Hour Harmonic Tide Forecast Chart with Storm Surge Inundation & Precision Scrubber
+ */
+function renderTideChart(sectorKey) {
+  const canvas = document.getElementById('dash-tide-chart');
+  if (!canvas) return;
+
+  const s = DASHBOARD_SECTORS[sectorKey];
+  if (!s) return;
+
+  const { ctx, width, height } = setupDpiCanvas(canvas);
+  ctx.clearRect(0, 0, width, height);
+
+  const padLeft = 46;
+  const padRight = 20;
+  const padTop = 22;
+  const padBottom = 30;
+  const plotW = width - padLeft - padRight;
+  const plotH = height - padTop - padBottom;
+
+  // Simulator coupling: tide phase & storm surge
+  const tideModifier = simTidePhase === 'spring' ? 1.25 : simTidePhase === 'low' ? 0.75 : 1.0;
+  const maxVal = Math.max(5.0, Math.ceil((Math.max(...s.tidePoints) * tideModifier + simSurgeHeight + 0.6) / 1.0) * 1.0);
+
+  // 1. Draw High Water Datum Line (+4.0m)
+  const datumVal = 4.0;
+  const datumY = padTop + plotH - (datumVal / maxVal) * plotH;
+  ctx.strokeStyle = 'rgba(239, 68, 68, 0.65)';
+  ctx.lineWidth = 1.3;
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath();
+  ctx.moveTo(padLeft, datumY);
+  ctx.lineTo(width - padRight, datumY);
+  ctx.stroke();
+
+  ctx.font = 'bold 9px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#ef4444';
+  ctx.textAlign = 'right';
+  ctx.fillText('HIGH WATER DATUM (+4.0m MSL)', width - padRight, datumY - 5);
+
+  // 2. Horizontal Reference Grid Lines
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+  ctx.setLineDash([4, 4]);
+  [1.0, 2.0, 3.0].forEach(val => {
+    const y = padTop + plotH - (val / maxVal) * plotH;
+    ctx.beginPath();
+    ctx.moveTo(padLeft, y);
+    ctx.lineTo(width - padRight, y);
+    ctx.stroke();
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(`${val.toFixed(1)}m`, padLeft - 6, y + 3.5);
+  });
+  ctx.setLineDash([]);
+
+  // 3. Map Coordinates (Astronomical Tide)
+  const stepX = plotW / (s.tidePoints.length - 1);
+  const pts = s.tidePoints.map((baseVal, i) => {
+    const val = baseVal * tideModifier;
+    return {
+      x: padLeft + i * stepX,
+      y: padTop + plotH - (val / maxVal) * plotH,
+      val: val,
+      hour: i
+    };
+  });
+  tideChartPointsCache = pts;
+
+  // 4. If Storm Surge is Active: Draw Storm Surge Inundation Band
+  if (simSurgeHeight > 0.05) {
+    const surgePts = pts.map(p => {
+      const surgeVal = p.val + simSurgeHeight;
+      return {
+        x: p.x,
+        y: padTop + plotH - (surgeVal / maxVal) * plotH,
+        val: surgeVal
+      };
+    });
+
+    // Surge Flood Area Fill between astronomical tide and storm surge
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const cpX = (pts[i].x + pts[i + 1].x) / 2;
+      ctx.bezierCurveTo(cpX, pts[i].y, cpX, pts[i + 1].y, pts[i + 1].x, pts[i + 1].y);
+    }
+    // Backward along surge curve
+    ctx.lineTo(surgePts[surgePts.length - 1].x, surgePts[surgePts.length - 1].y);
+    for (let i = surgePts.length - 1; i > 0; i--) {
+      const cpX = (surgePts[i].x + surgePts[i - 1].x) / 2;
+      ctx.bezierCurveTo(cpX, surgePts[i].y, cpX, surgePts[i - 1].y, surgePts[i - 1].x, surgePts[i - 1].y);
+    }
+    ctx.closePath();
+
+    const hasBreach = Math.max(...surgePts.map(sp => sp.val)) >= 4.0;
+    ctx.fillStyle = hasBreach ? 'rgba(239, 68, 68, 0.28)' : 'rgba(245, 158, 11, 0.22)';
+    ctx.fill();
+
+    // Draw Storm Surge Curve Line
+    ctx.beginPath();
+    ctx.moveTo(surgePts[0].x, surgePts[0].y);
+    for (let i = 0; i < surgePts.length - 1; i++) {
+      const cpX = (surgePts[i].x + surgePts[i + 1].x) / 2;
+      ctx.bezierCurveTo(cpX, surgePts[i].y, cpX, surgePts[i + 1].y, surgePts[i + 1].x, surgePts[i + 1].y);
+    }
+    ctx.strokeStyle = hasBreach ? '#ef4444' : '#f59e0b';
+    ctx.lineWidth = 2.0;
+    ctx.setLineDash([4, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Surge Label Badge
+    ctx.font = 'bold 9px "JetBrains Mono", monospace';
+    ctx.fillStyle = hasBreach ? '#ef4444' : '#f59e0b';
+    ctx.textAlign = 'left';
+    ctx.fillText(`⚡ SIMULATED STORM SURGE INUNDATION (+${simSurgeHeight.toFixed(1)}m)`, padLeft + 6, padTop + 14);
+  }
+
+  // 5. Astronomical Tide Gradient Fill (Cyan)
+  const grad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
+  grad.addColorStop(0, 'rgba(56, 189, 248, 0.28)');
+  grad.addColorStop(0.7, 'rgba(56, 189, 248, 0.06)');
+  grad.addColorStop(1, 'rgba(7, 17, 30, 0.0)');
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, padTop + plotH);
+  ctx.lineTo(pts[0].x, pts[0].y);
+
+  for (let i = 0; i < pts.length - 1; i++) {
+    const cpX = (pts[i].x + pts[i + 1].x) / 2;
+    ctx.bezierCurveTo(cpX, pts[i].y, cpX, pts[i + 1].y, pts[i + 1].x, pts[i + 1].y);
+  }
+
+  ctx.lineTo(pts[pts.length - 1].x, padTop + plotH);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // 6. Astronomical Tide Stroke Line
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 0; i < pts.length - 1; i++) {
+    const cpX = (pts[i].x + pts[i + 1].x) / 2;
+    ctx.bezierCurveTo(cpX, pts[i].y, cpX, pts[i + 1].y, pts[i + 1].x, pts[i + 1].y);
+  }
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2.4;
+  ctx.stroke();
+
+  // 7. Time Axis Labels
+  ctx.fillStyle = '#64748b';
+  ctx.textAlign = 'center';
+  pts.forEach((pt, idx) => {
+    if (idx % 4 === 0 || idx === pts.length - 1) {
+      const hr = (idx % 24).toString().padStart(2, '0') + ':00';
+      ctx.fillText(hr, pt.x, height - 10);
+    }
+  });
+
+  // 8. Live Current Point
+  const currentPt = pts[pts.length - 1];
+  ctx.beginPath();
+  ctx.arc(currentPt.x, currentPt.y, 4.5, 0, Math.PI * 2);
+  ctx.fillStyle = '#38bdf8';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(currentPt.x, currentPt.y, 8.5 + Math.sin(animWavePhase * 2) * 1.5, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 9. Interactive Scrubber Crosshair & Tooltip Overlay
+  if (tideScrubX !== null && tideScrubX >= padLeft && tideScrubX <= width - padRight) {
+    const clampedX = Math.max(padLeft, Math.min(width - padRight, tideScrubX));
+    const idx = Math.min(pts.length - 2, Math.max(0, Math.floor((clampedX - padLeft) / stepX)));
+    const p0 = pts[idx];
+    const p1 = pts[idx + 1];
+    const t = Math.max(0, Math.min(1, (clampedX - p0.x) / (p1.x - p0.x)));
+    const smoothT = t * t * (3 - 2 * t);
+    const interpY = p0.y * (1 - smoothT) + p1.y * smoothT;
+    const interpVal = p0.val * (1 - smoothT) + p1.val * smoothT;
+    const interpHour = p0.hour + t;
+
+    // Rate of change for tidal state
+    const slope = p1.val - p0.val;
+    const tideState = slope > 0.04 ? 'Flood (Rising ↑)' : slope < -0.04 ? 'Ebb (Falling ↓)' : 'Slack Turn (↔)';
+
+    const totalLevel = interpVal + simSurgeHeight;
+    const datumClearance = datumVal - totalLevel;
+    const isBreached = datumClearance < 0;
+
+    const hrs = Math.floor(interpHour % 24).toString().padStart(2, '0');
+    const mins = Math.round((interpHour - Math.floor(interpHour)) * 60).toString().padStart(2, '0');
+    const timeText = `${hrs}:${mins}`;
+
+    // Vertical Reticle
+    ctx.save();
+    ctx.strokeStyle = isBreached ? 'rgba(239, 68, 68, 0.75)' : 'rgba(56, 189, 248, 0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(clampedX, padTop);
+    ctx.lineTo(clampedX, padTop + plotH);
+    ctx.stroke();
+
+    // Horizontal Guide
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(padLeft, interpY);
+    ctx.lineTo(clampedX, interpY);
+    ctx.stroke();
+    ctx.restore();
+
+    // Target Glowing Beacon on Curve
+    ctx.beginPath();
+    ctx.arc(clampedX, interpY, 12, 0, Math.PI * 2);
+    ctx.fillStyle = isBreached ? 'rgba(239, 68, 68, 0.25)' : 'rgba(56, 189, 248, 0.25)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(clampedX, interpY, 5.5, 0, Math.PI * 2);
+    ctx.fillStyle = isBreached ? '#ef4444' : '#38bdf8';
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Y Axis Badge
+    ctx.fillStyle = isBreached ? '#ef4444' : '#38bdf8';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(padLeft - 44, interpY - 9, 38, 18, 4);
+    else ctx.rect(padLeft - 44, interpY - 9, 38, 18);
+    ctx.fill();
+    ctx.font = 'bold 9px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#07111e';
+    ctx.textAlign = 'center';
+    ctx.fillText(`+${interpVal.toFixed(2)}m`, padLeft - 25, interpY + 3.5);
+
+    // X Axis Time Badge
+    ctx.fillStyle = isBreached ? '#ef4444' : '#38bdf8';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(clampedX - 26, height - padBottom + 2, 52, 18, 4);
+    else ctx.rect(clampedX - 26, height - padBottom + 2, 52, 18);
+    ctx.fill();
+    ctx.font = 'bold 9px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#07111e';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${timeText} UTC`, clampedX, height - padBottom + 14);
+
+    // Update HTML Tooltip
+    const tooltip = document.getElementById('tide-chart-tooltip');
+    if (tooltip) {
+      tooltip.innerHTML = `
+        <div style="font-family: var(--ds-font-mono); font-size: 10px; color: ${isBreached ? '#ef4444' : '#38bdf8'}; font-weight: bold; margin-bottom: 2px;">
+          ${timeText} UTC · TIDAL HYDRODYNAMICS
+        </div>
+        <div style="font-size: 13px; font-weight: bold; color: #fff;">
+          Tide: <span style="color: #38bdf8;">+${interpVal.toFixed(2)}m MSL</span>
+          <span style="font-size: 10px; font-weight: normal; color: var(--ds-text-secondary); margin-left: 6px;">(${tideState})</span>
+        </div>
+        ${simSurgeHeight > 0.05 ? `
+          <div style="font-size: 10px; color: ${isBreached ? '#ef4444' : '#f59e0b'}; margin-top: 2px;">
+            Simulated Storm Total: <strong>+${totalLevel.toFixed(2)}m</strong> (+${simSurgeHeight.toFixed(1)}m surge)
+          </div>
+        ` : ''}
+        <div style="font-size: 10px; color: ${isBreached ? '#ef4444' : '#10b981'}; margin-top: 3px; font-weight: bold;">
+          ${isBreached ? `⚠️ SEAWALL BREACHED BY +${Math.abs(datumClearance).toFixed(2)}m` : `✓ Datum Clearance: +${datumClearance.toFixed(2)}m (Safe)`}
+        </div>
+      `;
+      const tw = 205;
+      const th = simSurgeHeight > 0.05 ? 78 : 62;
+      let tx = clampedX - tw / 2;
+      if (tx < 10) tx = 10;
+      if (tx > width - tw - 10) tx = width - tw - 10;
+      let ty = interpY - th - 14;
+      if (ty < 8) ty = interpY + 16;
+      tooltip.style.left = `${tx}px`;
+      tooltip.style.top = `${ty}px`;
+      tooltip.style.opacity = '1';
+    }
+
+    // Dynamic Header Card Sync
+    const highBadge = document.getElementById('tide-next-high');
+    if (highBadge) {
+      highBadge.textContent = `Scrub: +${interpVal.toFixed(2)}m @ ${timeText} UTC (${tideState})`;
+      highBadge.style.color = '#fff';
+      highBadge.style.background = isBreached ? 'rgba(239,68,68,0.3)' : 'rgba(56, 189, 248, 0.25)';
+      highBadge.style.borderColor = isBreached ? '#ef4444' : '#38bdf8';
+    }
+  }
+}
+
+/**
+ * Interactive Scrubber Hover & Touch Listeners for Canvas Charts
+ */
+function setupChartHoverListeners() {
+  const waveCanvas = document.getElementById('dash-wave-chart');
+  const waveTooltip = document.getElementById('wave-chart-tooltip');
+
+  if (waveCanvas) {
+    const onWavePointer = (e) => {
+      const rect = waveCanvas.getBoundingClientRect();
+      const clientX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : null);
+      if (clientX === null) return;
+      waveScrubX = clientX - rect.left;
+      waveIsHovering = true;
+      renderWaveChart(activeDashboardSector);
+    };
+
+    const onWaveLeave = () => {
+      waveScrubX = null;
+      waveIsHovering = false;
+      if (waveTooltip) waveTooltip.style.opacity = '0';
+      const s = DASHBOARD_SECTORS[activeDashboardSector];
+      if (s) {
+        const peakBadge = document.getElementById('wave-spectrum-peak');
+        if (peakBadge) {
+          peakBadge.textContent = s.peakSwell;
+          peakBadge.style.color = 'var(--ds-color-brand-light)';
+          peakBadge.style.background = 'rgba(245, 158, 11, 0.1)';
+          peakBadge.style.borderColor = 'var(--ds-border-brand)';
+        }
+        const energyVal = document.getElementById('wave-energy-val');
+        if (energyVal) energyVal.textContent = s.waveEnergy;
+      }
+      renderWaveChart(activeDashboardSector);
+    };
+
+    waveCanvas.addEventListener('pointerdown', (e) => {
+      try { waveCanvas.setPointerCapture(e.pointerId); } catch(err){}
+      onWavePointer(e);
+    });
+    waveCanvas.addEventListener('pointermove', onWavePointer);
+    waveCanvas.addEventListener('pointerup', (e) => {
+      try { waveCanvas.releasePointerCapture(e.pointerId); } catch(err){}
+      onWaveLeave();
+    });
+    waveCanvas.addEventListener('pointercancel', onWaveLeave);
+    waveCanvas.addEventListener('pointerleave', onWaveLeave);
+
+    // Touch support with prevention of scrolling during chart inspection
+    waveCanvas.addEventListener('touchstart', onWavePointer, { passive: true });
+    waveCanvas.addEventListener('touchmove', onWavePointer, { passive: true });
+    waveCanvas.addEventListener('touchend', onWaveLeave);
+  }
+
+  const tideCanvas = document.getElementById('dash-tide-chart');
+  const tideTooltip = document.getElementById('tide-chart-tooltip');
+
+  if (tideCanvas) {
+    const onTidePointer = (e) => {
+      const rect = tideCanvas.getBoundingClientRect();
+      const clientX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : null);
+      if (clientX === null) return;
+      tideScrubX = clientX - rect.left;
+      tideIsHovering = true;
+      renderTideChart(activeDashboardSector);
+    };
+
+    const onTideLeave = () => {
+      tideScrubX = null;
+      tideIsHovering = false;
+      if (tideTooltip) tideTooltip.style.opacity = '0';
+      const s = DASHBOARD_SECTORS[activeDashboardSector];
+      if (s) {
+        const highBadge = document.getElementById('tide-next-high');
+        if (highBadge) {
+          highBadge.textContent = s.nextHigh;
+          highBadge.style.color = '#38bdf8';
+          highBadge.style.background = 'rgba(56, 189, 248, 0.1)';
+          highBadge.style.borderColor = 'rgba(56, 189, 248, 0.3)';
+        }
+        const lowBadge = document.getElementById('tide-next-low');
+        if (lowBadge) lowBadge.textContent = s.nextLow;
+      }
+      renderTideChart(activeDashboardSector);
+    };
+
+    tideCanvas.addEventListener('pointerdown', (e) => {
+      try { tideCanvas.setPointerCapture(e.pointerId); } catch(err){}
+      onTidePointer(e);
+    });
+    tideCanvas.addEventListener('pointermove', onTidePointer);
+    tideCanvas.addEventListener('pointerup', (e) => {
+      try { tideCanvas.releasePointerCapture(e.pointerId); } catch(err){}
+      onTideLeave();
+    });
+    tideCanvas.addEventListener('pointercancel', onTideLeave);
+    tideCanvas.addEventListener('pointerleave', onTideLeave);
+
+    tideCanvas.addEventListener('touchstart', onTidePointer, { passive: true });
+    tideCanvas.addEventListener('touchmove', onTidePointer, { passive: true });
+    tideCanvas.addEventListener('touchend', onTideLeave);
+  }
+}
+
+/**
+ * Real-Time 60 FPS Coastal Hydrodynamic Animation Loop
+ */
+function startDashboardAnimationLoop() {
+  if (animDashboardLoopStarted) return;
+  animDashboardLoopStarted = true;
+
+  let lastFrameTime = performance.now();
+
+  function animLoop(now) {
+    const dt = (now - lastFrameTime) / 1000;
+    lastFrameTime = now;
+
+    // Advance wave shimmer phase
+    animWavePhase += 0.038;
+
+    // Only render if dashboard is visible in browser viewport
+    const dashEl = document.getElementById('dashboard-section');
+    if (dashEl) {
+      const rect = dashEl.getBoundingClientRect();
+      const inView = rect.top < window.innerHeight && rect.bottom > 0;
+
+      if (inView) {
+        // Dynamic Compass Vector Micro-Sway (realistic turbulent gust flutter)
+        const needleWrap = document.getElementById('compass-needle-wrap');
+        const s = DASHBOARD_SECTORS[activeDashboardSector];
+        if (needleWrap && s) {
+          const gustAmp = simWindSpeed > 35 ? 3.8 : 1.6;
+          const sway = Math.sin(now * 0.003) * gustAmp + Math.cos(now * 0.007) * (gustAmp * 0.4);
+          needleWrap.style.transform = `rotate(${(s.windDir + sway).toFixed(1)}deg)`;
+        }
+
+        // Live ocean swell breathing on canvas
+        renderWaveChart(activeDashboardSector);
+        renderTideChart(activeDashboardSector);
+      }
+    }
+
+    requestAnimationFrame(animLoop);
+  }
+
+  requestAnimationFrame(animLoop);
+}
+
+/**
+ * Interactive Disaster Storm Surge & Monsoon Gale Simulator
+ */
+function handleSimulatorChange() {
+  const surgeSlider = document.getElementById('sim-surge-slider');
+  const windSlider = document.getElementById('sim-wind-slider');
+
+  if (surgeSlider) {
+    simSurgeHeight = parseFloat(surgeSlider.value);
+    const surgeVal = document.getElementById('sim-surge-val');
+    if (surgeVal) surgeVal.textContent = `+${simSurgeHeight.toFixed(1)} m`;
+  }
+
+  if (windSlider) {
+    simWindSpeed = parseInt(windSlider.value, 10);
+    const windVal = document.getElementById('sim-wind-val');
+    if (windVal) windVal.textContent = `${simWindSpeed} kt`;
+  }
+
+  recalculateSimulator();
+}
+
+function setSimTide(phase) {
+  simTidePhase = phase;
+  document.querySelectorAll('.sim-tide-btn').forEach(btn => {
+    btn.classList.remove('active');
+    btn.style.borderColor = 'var(--ds-border-subtle)';
+    btn.style.color = 'var(--ds-text-secondary)';
+    btn.style.background = 'transparent';
+  });
+
+  const activeBtn = document.getElementById(`sim-tide-${phase}`);
+  if (activeBtn) {
+    activeBtn.classList.add('active');
+    activeBtn.style.borderColor = 'var(--ds-color-brand)';
+    activeBtn.style.color = 'var(--ds-color-brand-light)';
+    activeBtn.style.background = 'rgba(245, 158, 11, 0.1)';
+  }
+
+  const note = document.getElementById('sim-tide-note');
+  if (note) {
+    if (phase === 'low') note.textContent = 'Astronomical tidal baseline: -0.8m (Low Tide Buffer)';
+    else if (phase === 'mean') note.textContent = 'Astronomical tidal baseline: +1.45m MSL (Standard)';
+    else note.textContent = 'Astronomical tidal baseline: +1.80m (Spring High Astronomical Coincidence)';
+  }
+
+  recalculateSimulator();
+}
+
+function resetSimulator() {
+  const s = DASHBOARD_SECTORS[activeDashboardSector] || DASHBOARD_SECTORS.mumbai;
+  simSurgeHeight = 0.0;
+  simWindSpeed = s.wind;
+  simTidePhase = 'mean';
+
+  const surgeSlider = document.getElementById('sim-surge-slider');
+  const windSlider = document.getElementById('sim-wind-slider');
+  if (surgeSlider) surgeSlider.value = '0.0';
+  if (windSlider) windSlider.value = s.wind.toString();
+
+  const surgeVal = document.getElementById('sim-surge-val');
+  if (surgeVal) surgeVal.textContent = '+0.0 m';
+  const windVal = document.getElementById('sim-wind-val');
+  if (windVal) windVal.textContent = `${s.wind} kt`;
+
+  setSimTide('mean');
+  recalculateSimulator();
+  showToast('Simulator Reset', 'Restored live oceanographic sensor baseline.', 'info');
+}
+
+function recalculateSimulator() {
+  const s = DASHBOARD_SECTORS[activeDashboardSector] || DASHBOARD_SECTORS.mumbai;
+  const baseChi = s.chi;
+
+  // Hydrodynamic formula
+  const surgeFactor = simSurgeHeight * 1.6;
+  const windForcing = Math.max(0, (simWindSpeed - 22) * 0.11);
+  const tideModifier = simTidePhase === 'spring' ? 1.25 : simTidePhase === 'low' ? 0.8 : 1.0;
+
+  let calculatedChi = (baseChi + surgeFactor + windForcing) * tideModifier;
+  calculatedChi = Math.min(10.0, Math.max(1.0, calculatedChi));
+
+  const chiReadout = document.getElementById('sim-chi-readout');
+  const chiCategory = document.getElementById('sim-chi-category');
+  const banner = document.getElementById('sim-result-banner');
+  const heading = document.getElementById('sim-threat-heading');
+  const details = document.getElementById('sim-threat-details');
+
+  if (chiReadout) {
+    chiReadout.textContent = calculatedChi.toFixed(1);
+  }
+
+  // Dynamically update Hazard Radar Matrix bars with simulated surge & storm forcing
+  const simSurgePct = Math.min(100, Math.round(s.riskMatrix.surge + (simSurgeHeight * 18) + (Math.max(0, simWindSpeed - 20) * 0.35)));
+  const simFloodPct = Math.min(100, Math.round(s.riskMatrix.flood + (simSurgeHeight * 22) + (simTidePhase === 'spring' ? 14 : simTidePhase === 'low' ? -10 : 0)));
+  const simRipPct = Math.min(100, Math.round(s.riskMatrix.rip + (Math.max(0, simWindSpeed - 20) * 0.45)));
+
+  const updateSimRisk = (key, val) => {
+    const valEl = document.getElementById(`risk-val-${key}`);
+    const barEl = document.getElementById(`risk-bar-${key}`);
+    if (valEl) valEl.textContent = `${val}% (${getRiskWord(val)})`;
+    if (barEl) {
+      barEl.style.width = `${val}%`;
+      barEl.style.background = val >= 70 ? '#ef4444' : val >= 40 ? '#f59e0b' : '#10b981';
+    }
+  };
+  updateSimRisk('surge', simSurgePct);
+  updateSimRisk('flood', simFloodPct);
+  updateSimRisk('rip', simRipPct);
+
+  if (calculatedChi >= 7.0) {
+    // Critical Inundation
+    if (chiReadout) chiReadout.style.color = '#ef4444';
+    if (chiCategory) {
+      chiCategory.textContent = 'CRITICAL INUNDATION';
+      chiCategory.style.color = '#ef4444';
+    }
+    if (banner) {
+      banner.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+      banner.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.2)';
+    }
+    if (heading) {
+      heading.textContent = 'Severe Surge Overtopping · Lowland Inundation Imminent';
+      heading.style.color = '#ef4444';
+    }
+    if (details) {
+      details.innerHTML = `Simulated surge (+${simSurgeHeight.toFixed(1)}m) combined with ${simWindSpeed} kt gale exceeds seawall design tolerance (+3.8m). <strong>High hazard on 3 coastal corridors:</strong> Versova Creek Causeway, Colaba Waterfront Road, Mahim Lowland corridor. NDMA Phase-2 siren broadcast & elevated shelter relocation recommended.`;
+    }
+  } else if (calculatedChi >= 4.5) {
+    // High Advisory
+    if (chiReadout) chiReadout.style.color = '#f59e0b';
+    if (chiCategory) {
+      chiCategory.textContent = 'HIGH SURGE ADVISORY';
+      chiCategory.style.color = '#f59e0b';
+    }
+    if (banner) {
+      banner.style.borderColor = 'rgba(245, 158, 11, 0.5)';
+      banner.style.boxShadow = '0 0 15px rgba(245, 158, 11, 0.15)';
+    }
+    if (heading) {
+      heading.textContent = 'Elevated Surge Swell · Intertidal Caution Directive';
+      heading.style.color = '#f59e0b';
+    }
+    if (details) {
+      details.innerHTML = `Wave runup may overtop rocky promenades during high tide window. Minor backflow in storm drains. <strong>All primary evacuation corridors remain open</strong>, but swimming and small craft navigation are restricted by port authority.`;
+    }
+  } else {
+    // Nominal
+    if (chiReadout) chiReadout.style.color = '#10b981';
+    if (chiCategory) {
+      chiCategory.textContent = 'NOMINAL COND';
+      chiCategory.style.color = '#10b981';
+    }
+    if (banner) {
+      banner.style.borderColor = 'var(--ds-border-default)';
+      banner.style.boxShadow = 'none';
+    }
+    if (heading) {
+      heading.textContent = 'Conditions Stable · Standard Maritime Caution';
+      heading.style.color = 'var(--ds-text-primary)';
+    }
+    if (details) {
+      details.innerHTML = `Seawalls and coastal drainage functioning nominal. Wave overtopping probability &lt; 5%. All 3 major coastal evacuation corridors (West Highway, Creek Bridge, Elevated Flyover) remain 100% open and navigable.`;
+    }
+  }
+
+  // Dynamic live chart redraw reacting to stress-test simulation forcing
+  renderWaveChart(activeDashboardSector);
+  renderTideChart(activeDashboardSector);
+}
+
+/**
+ * Smart Buoy Fleet Diagnostics Grid
+ */
+function renderDashboardBuoys(filter) {
+  const container = document.getElementById('dash-buoy-grid');
+  if (!container || !Array.isArray(BUOYS_DATA)) return;
+
+  let filtered = BUOYS_DATA;
+  if (filter === 'nominal') {
+    filtered = BUOYS_DATA.filter(b => b.status === 'nominal');
+  } else if (filter === 'warning') {
+    filtered = BUOYS_DATA.filter(b => b.status === 'warning' || b.status === 'critical');
+  }
+
+  container.innerHTML = filtered.map(b => {
+    const isWarning = b.status === 'warning' || b.status === 'critical';
+    const statusColor = isWarning ? (b.status === 'critical' ? '#ef4444' : '#f59e0b') : '#10b981';
+    const statusBg = isWarning ? (b.status === 'critical' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)') : 'rgba(16, 185, 129, 0.15)';
+    const cardClass = isWarning ? (b.status === 'critical' ? 'critical-state' : 'warning-state') : '';
+
+    return `
+      <div class="aq-fleet-card ${cardClass}" onclick="focusBuoyOnMap(${b.lat}, ${b.lng}, '${b.id}')" title="Inspect ${b.name} on Tactical Map">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: ${statusColor}; box-shadow: 0 0 8px ${statusColor};"></span>
+            <div>
+              <div style="font-family: var(--ds-font-mono); font-size: 11px; font-weight: bold; color: var(--ds-text-primary);">${b.id} · ${b.name}</div>
+              <div style="font-family: var(--ds-font-mono); font-size: 10px; color: var(--ds-text-muted);">${b.lat.toFixed(3)}°N, ${b.lng.toFixed(3)}°E</div>
+            </div>
+          </div>
+          <span style="font-family: var(--ds-font-mono); font-size: 9px; text-transform: uppercase; font-weight: bold; color: ${statusColor}; background: ${statusBg}; padding: 2px 6px; border-radius: 4px;">${b.status}</span>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; font-family: var(--ds-font-mono); font-size: 11px;">
+          <div style="background: var(--ds-bg-surface); padding: 6px 8px; border-radius: 4px; border: 1px solid var(--ds-border-subtle);">
+            <div style="color: var(--ds-text-muted); font-size: 9px;">SWELL HEIGHT</div>
+            <div style="color: var(--ds-color-brand-light); font-weight: bold;">${b.wave}</div>
+          </div>
+          <div style="background: var(--ds-bg-surface); padding: 6px 8px; border-radius: 4px; border: 1px solid var(--ds-border-subtle);">
+            <div style="color: var(--ds-text-muted); font-size: 9px;">WATER TEMP</div>
+            <div style="color: var(--ds-text-primary); font-weight: bold;">${b.temp}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-family: var(--ds-font-mono); color: var(--ds-text-muted); padding-top: 6px; border-top: 1px solid var(--ds-border-subtle);">
+          <span>Mesh Sync: 24ms · 100%</span>
+          <span style="color: var(--ds-color-brand-light); font-weight: 600;">Focus Radar Map ↗</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterDashboardBuoys(filter, btn) {
+  document.querySelectorAll('#dashboard-section .aq-type-pill').forEach(p => p.classList.remove('selected'));
+  if (btn) btn.classList.add('selected');
+  renderDashboardBuoys(filter);
+}
+
+// Expose globally for HTML event handlers
+window.switchDashboardSector = switchDashboardSector;
+window.setDashboardTimeHorizon = setDashboardTimeHorizon;
+window.handleSimulatorChange = handleSimulatorChange;
+window.setSimTide = setSimTide;
+window.resetSimulator = resetSimulator;
+window.filterDashboardBuoys = filterDashboardBuoys;
+window.initInteractiveDashboard = initInteractiveDashboard;
+
 

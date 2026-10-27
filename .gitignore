@@ -29,3 +29,5 @@ dataset/
 *.tif
 *.tiff
 backend/assets/uploads/
+assets/uploads/*
+!assets/uploads/.gitkeep

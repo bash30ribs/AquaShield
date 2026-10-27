@@ -75,6 +75,10 @@ class EmergencyMeshEngine {
             this.handleIncomingAlert(data.alert, 'Online Server');
           } else if (data.event === 'history_sync' && data.alerts) {
             data.alerts.forEach(a => this.handleIncomingAlert(a, 'Server Sync'));
+          } else if (data.event === 'new_incident_report' || data.event === 'report_status_updated' || data.event === 'report_deleted' || data.event === 'sar_escalation_alert') {
+            if (typeof loadReports === 'function') {
+              loadReports();
+            }
           }
         } catch (e) {
           console.warn('WS message error:', e);

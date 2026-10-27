@@ -3,7 +3,6 @@ import '../theme/app_colors.dart';
 import 'tactical_map_screen.dart';
 import 'report_incident_screen.dart';
 import 'threat_scanner_screen.dart';
-import 'copilot_screen.dart';
 import 'emergency_sos_screen.dart';
 import 'evacuation_screen.dart';
 
@@ -21,7 +20,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     TacticalMapScreen(),
     ReportIncidentScreen(),
     ThreatScannerScreen(),
-    CopilotScreen(),
+    EvacuationScreen(),
     EmergencySOSScreen(),
   ];
 
@@ -60,9 +59,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               label: 'AI Scanner',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.smart_toy_outlined),
-              activeIcon: Icon(Icons.smart_toy),
-              label: 'Copilot',
+              icon: Icon(Icons.directions_run_outlined),
+              activeIcon: Icon(Icons.directions_run),
+              label: 'Evac Routes',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.sos_outlined),

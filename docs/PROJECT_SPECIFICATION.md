@@ -107,7 +107,7 @@ AquaShield follows a modern, decoupled **3-Tier Architecture**:
 │                       │                                      │         │
 │                       ▼                                      ▼         │
 │           ┌───────────────────────┐            ┌───────────────────┐   │
-│           │   AI Forensic Service │            │  Coastal Copilot  │   │
+│           │   AI Forensic Service │            │ Tactical Assistant│   │
 │           │ (Dual-Stream Net/ELA) │            │ (RAG & SOP Engine)│   │
 │           └───────────────────────┘            └───────────────────┘   │
 └──────────────────────────────────────┬─────────────────────────────────┘
@@ -178,7 +178,7 @@ sequenceDiagram
 | **Marine Wildlife Rescue** | Stranded marine life reporting & dispatch | SQLAlchemy Async ORM, GPS coordinate locator | `GET/POST /api/marine` |
 | **Offline PWA Engine** | Local asset caching during network blackouts | Service Worker Cache API, Web Manifest | `sw.js`, `manifest.json` |
 | **SMS Emergency SOS** | Zero-data emergency alert dispatch | Standard `sms:` URI protocol | `POST /api/sos/broadcast` |
-| **Disaster Copilot** | Interactive SOP assistant for cyclones & first aid | Context-aware Rule/RAG Matcher, SQLite | `POST /api/chat` |
+| **Tactical SOP Engine** | Interactive SOP assistant for cyclones & first aid | Context-aware Rule/RAG Matcher, SQLite | `POST /api/chat` |
 | **Mesh Broadcast** | Local emergency alert propagation | Peer-to-peer WebRTC & localStorage fallback | `mesh_broadcast.js` |
 
 ---

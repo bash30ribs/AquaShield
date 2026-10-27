@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-AquaShield AI — Comprehensive Coastal Intelligence & Copilot Engine
+AquaShield AI — Comprehensive Coastal Intelligence & Tactical Engine
 Includes:
 - Full semantic intent matching (helplines, buoys, radars, evacuation, forensics, SOS)
 - Interactive AI Incident Scribe & Guided Complaint Assistant for citizens
@@ -229,7 +229,7 @@ class ChatService:
                 import urllib.request
                 gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
                 system_prompt = (
-                    "You are AquaShield Sentinel AI Copilot, the official tactical assistant for the AquaShield Coastal Disaster Intelligence Platform. "
+                    "You are AquaShield Sentinel Tactical Assistant, the official tactical assistant for the AquaShield Coastal Disaster Intelligence Platform. "
                     "You assist citizens and commanders in reporting coastal incidents, understanding marine hazards, tracking buoys, finding evacuation routes, and contacting emergency helplines. "
                     "Format responses cleanly with markdown bolding and bullet points. "
                     f"Live Telemetry Context: {json.dumps(context)}."

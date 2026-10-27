@@ -236,7 +236,7 @@ Generate an engineering Block Diagram for "AquaShield AI" organized into 5 funct
    - PyTorch DualStreamForensicNet (RGB EfficientNet-B0 + ELA Stream)
    - Error Level Analysis & Noise Entropy Engine
    - Risk-Weighted Evacuation Route Optimizer (A*)
-   - Disaster Copilot RAG & Emergency SOP Engine
+   - Context-Aware Emergency SOP & Protocol Engine
 5. Persistence & Dispatch Block:
    - SQLite / PostgreSQL Database
    - Encrypted Image Store

@@ -65,24 +65,6 @@ class ApiService {
     }
   }
 
-  // 4. Copilot Maritime Chat Query
-  static Future<String> askCopilot(String prompt) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/chat'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'message': prompt}),
-      ).timeout(const Duration(seconds: 8));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['reply'] ?? 'Tactical response received.';
-      }
-    } catch (e) {
-      // Fallback offline tactical advisory
-    }
-    return 'COASTAL COMMAND ADVISORY: Marine telemetry indicates calm sea state. Deploy containment protocols if entering hazardous sectors.';
-  }
 
   // 5. Threat Scanner Vision Analysis
   static Future<ThreatAssessment> analyzeThreatImage(String imageBase64) async {

@@ -391,7 +391,7 @@ graph TB
         A1[🧠 PyTorch DualStreamForensicNet: EfficientNet-B0 RGB + ELA]
         A2[🔍 Error Level Analysis & Noise Entropy Engine]
         A3[🗺️ Elevation Risk-Weighted A* Route Optimizer]
-        A4[💬 Context-Aware Disaster Copilot SOP Engine]
+        A4[💬 Context-Aware Disaster Protocol SOP Engine]
     end
 
     subgraph STORAGE_BLOCK [5. PERSISTENCE & INTEGRATION BLOCK]
@@ -442,7 +442,7 @@ graph TB
 >    - PyTorch DualStreamForensicNet (RGB EfficientNet-B0 + ELA Stream)
 >    - Error Level Analysis (ELA) and Noise Entropy Filter
 >    - Risk-Weighted Evacuation Routing Engine (Dijkstra / A*)
->    - Disaster Copilot RAG & SOP Emergency Knowledge Engine
+>    - Emergency Protocol RAG & SOP Knowledge Engine
 > 
 > 5. Persistence & External Dispatch Block:
 >    - SQLite / PostgreSQL Database
