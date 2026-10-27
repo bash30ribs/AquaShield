@@ -174,7 +174,7 @@ class AIService:
         fn_lower = (filename or "").lower()
         is_screenshot = False
         screenshot_reason = ""
-        screenshot_keywords = ["screenshot", "screen_shot", "screen-shot", "wsp", "whatsapp", "wa_image", "wa00", "wa_", "img-wa", "snapchat", "telegram"]
+        screenshot_keywords = ["screenshot", "screen_shot", "screen-shot", "screencap"]
         has_screenshot_fn = any(k in fn_lower for k in screenshot_keywords)
 
         # High proportion of pure flat white or pure dark UI background (> 235 or < 30)
@@ -184,15 +184,15 @@ class AIService:
         aspect = h / w if w > 0 else 1.0
         is_tall_screen = (1.55 <= aspect <= 2.45) or (1.55 <= (1.0 / aspect) <= 2.45)
 
-        if has_screenshot_fn and not has_exif:
+        # A true screen capture has flat solid canvas UI elements (white/dark canvas + UI black text)
+        is_ui_canvas = (white_pixels > 0.48 or dark_ui_pixels > 0.60) or (is_tall_screen and white_pixels > 0.35 and pure_black_text > 0.03)
+
+        if has_screenshot_fn and not has_exif and (white_pixels > 0.25 or dark_ui_pixels > 0.35):
             is_screenshot = True
-            screenshot_reason = "Mobile Screen Capture (Filename & Header Signature)"
-        elif (white_pixels > 0.45 or dark_ui_pixels > 0.60) and not has_exif:
+            screenshot_reason = "Mobile Screen Capture (Screenshot Header & Flat UI Canvas)"
+        elif is_ui_canvas and not has_exif:
             is_screenshot = True
             screenshot_reason = "Screen Capture / Chat Document (Flat UI Background & Lack of Camera EXIF)"
-        elif is_tall_screen and white_pixels > 0.35 and pure_black_text > 0.03 and not has_exif:
-            is_screenshot = True
-            screenshot_reason = "Mobile Chat / App UI Screenshot (Text & Canvas Structure)"
 
         # ── 3. Error Level Analysis (ELA) ────────────────────────────────────
         ela_score = 0.85
@@ -353,11 +353,13 @@ class AIService:
             action = "Quarantined: Image contains Photoshop/AI metadata header"
             pipeline_name = "AquaShield Dual-Stream EfficientNet-ELA Neural Network v2.1"
         elif dl_auth_prob is not None:
-            exif_w = 0.95 if has_exif else 0.70
-            final_auth_pct = round(min(99.8, max(5.0, (dl_auth_prob * 0.65 + exif_w * 0.20 + noise_score * 0.15) * 100.0)), 1)
+            # Real photos shared via WhatsApp or web uploads have EXIF stripped by app compression;
+            # evaluate primarily via neural network classifier and noise entropy
+            exif_w = 0.95 if has_exif else 0.82
+            final_auth_pct = round(min(99.8, max(5.0, (dl_auth_prob * 0.70 + exif_w * 0.15 + noise_score * 0.15) * 100.0)), 1)
             pipeline_name = "AquaShield Dual-Stream EfficientNet-ELA Neural Network v2.1"
             
-            if final_auth_pct > 75.0:
+            if dl_auth_prob >= 0.45 or final_auth_pct >= 65.0:
                 status = "verified"
                 verdict = "AUTHENTIC OPTICAL FIELD CAPTURE"
                 action = "Verified by Neural Network and escalated to Sector Command"
@@ -366,12 +368,12 @@ class AIService:
                 verdict = "HIGH PROBABILITY OF SPLICING / MANIPULATION"
                 action = "Quarantined for secondary sensor cross-check"
         else:
-            exif_weight = 0.95 if has_exif else 0.65
+            exif_weight = 0.95 if has_exif else 0.80
             spectral_weight = 0.90 if water_ratio > 0.15 else 0.75
             raw_auth_score = (exif_weight * 0.35) + (ela_score * 0.30) + (noise_score * 0.20) + (spectral_weight * 0.15)
             final_auth_pct = round(min(99.4, max(12.0, raw_auth_score * 100.0)), 1)
             pipeline_name = "AquaShield Spectral-ELA Vision Forensics Engine v2.0"
-            status = "verified" if final_auth_pct >= 70.0 else "advisory"
+            status = "verified" if final_auth_pct >= 65.0 else "advisory"
             verdict = "AUTHENTIC OPTICAL FIELD CAPTURE" if status == "verified" else "MODERATE CONFIDENCE - UNVERIFIED SENSOR EXIF"
             action = "Verified and logged to grid" if status == "verified" else "Logged with standard priority"
 

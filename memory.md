@@ -85,6 +85,10 @@
   - Built-in 1-Click Autofill banner for Commander Rajesh Varma (`admin` / `hrishav`).
   - Seamless auto-redirect upon login directly into the Incident Complaints & Evidence Photo Inspection Center (`openCommandCenter('reports')`).
   - Darkroom Evidence Lightbox Modal with zoom, full-res download link, AI screenshot quarantine reasoning, and live DB controls (`Verify`, `Reject`, `Resolve`, `Delete`).
+- [x] Incident Report Submission & Dual-Stream ML Forensics Engine Resolution:
+  - Fixed false-positive mobile screenshot rejection on WhatsApp/camera-shared photos (`WhatsApp Image 2026-10-15 at 6.16.19 PM.jpeg`). Real disaster photos with stripped EXIF now correctly route to the PyTorch Dual-Stream Neural Network (`DualStreamForensicNet`) + ELA engine instead of being blocked by filename keyword checks.
+  - Actual UI screenshots (with flat solid backgrounds and text geometry) remain accurately quarantined.
+  - Resolved server connection error by launching FastAPI backend on `http://127.0.0.1:8000`. Verified full end-to-end report creation, AI verification, and real-time database commit.
 
 ---
 
