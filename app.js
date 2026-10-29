@@ -1854,7 +1854,9 @@ function renderReportsList(reports) {
   if (reports.length === 0) {
     container.innerHTML = `
       <div style="background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-lg); padding: 32px 20px; text-align: center; color: var(--ds-text-secondary);">
-        <div style="font-size: 24px; margin-bottom: 8px;">📋</div>
+        <div style="color: var(--ds-text-muted); margin-bottom: 8px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+        </div>
         <div style="font-weight: bold; color: var(--ds-text-primary); margin-bottom: 4px;">No incident complaints matching current filter</div>
         <div style="font-size: 12px; color: var(--ds-text-muted);">Adjust status or hazard type filters above to view other incident complaints.</div>
       </div>
@@ -1890,11 +1892,13 @@ function renderReportsList(reports) {
           ${r.image_url ? `
             <div style="position: relative; width: 92px; height: 92px; flex-shrink: 0; border-radius: var(--ds-radius-md); overflow: hidden; border: 1px solid var(--ds-border-default); cursor: pointer; background: #000;" onclick="openEvidenceModal('${r.id}')" title="Click to inspect optical evidence in high resolution">
               <img src="${r.image_url}" alt="${r.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\'width:92px;height:92px;display:flex;align-items:center;justify-content:center;background:var(--ds-bg-raised);color:var(--ds-text-muted);font-size:10px;\'>No Image</div>'">
-              <span style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.75); color: #fff; font-size: 9px; padding: 1px 4px; border-radius: 3px; font-family: var(--ds-font-mono);">🔍 Zoom</span>
+              <span style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.75); color: #fff; font-size: 9px; padding: 1px 4px; border-radius: 3px; font-family: var(--ds-font-mono); display: inline-flex; align-items: center; gap: 2px;">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Zoom
+              </span>
             </div>
           ` : `
             <div style="width: 92px; height: 92px; flex-shrink: 0; border-radius: var(--ds-radius-md); border: 1px dashed var(--ds-border-default); background: var(--ds-bg-raised); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--ds-text-muted); font-size: 10px; gap: 4px;">
-              <span style="font-size: 18px;">📷</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
               <span>No Photo</span>
             </div>
           `}
@@ -1917,9 +1921,18 @@ function renderReportsList(reports) {
               ${r.description}
             </p>
 
-            <div style="font-size: 0.72rem; color: var(--ds-text-muted); display: flex; flex-direction: column; gap: 3px;">
-              <div>📍 <strong style="color: var(--ds-text-primary);">${r.address || 'Coastal Shoreline'}</strong> <span style="font-family: var(--ds-font-mono);">[${Number(r.latitude).toFixed(4)}, ${Number(r.longitude).toFixed(4)}]</span></div>
-              <div>👤 Filed by: <strong style="color: var(--ds-text-primary);">${r.reporter_name || 'Citizen'}</strong> (${r.reporter_badge || 'CITIZEN-0000'}) · 🕒 ${r.created_at ? new Date(r.created_at).toLocaleString() : 'Recent telemetry'}</div>
+            <div style="font-size: 0.72rem; color: var(--ds-text-muted); display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ds-color-brand)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span><strong style="color: var(--ds-text-primary);">${r.address || 'Coastal Shoreline'}</strong> <span style="font-family: var(--ds-font-mono);">[${Number(r.latitude).toFixed(4)}, ${Number(r.longitude).toFixed(4)}]</span></span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ds-text-secondary)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Filed by: <strong style="color: var(--ds-text-primary);">${r.reporter_name || 'Citizen'}</strong> (${r.reporter_badge || 'CITIZEN-0000'})</span>
+                <span style="color: var(--ds-text-muted); margin: 0 4px;">·</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ds-text-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>${r.created_at ? new Date(r.created_at).toLocaleString() : 'Recent telemetry'}</span>
+              </div>
             </div>
           </div>
 
@@ -1937,8 +1950,8 @@ function renderReportsList(reports) {
 
           <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
             ${r.image_url ? `
-              <button class="aq-btn-ghost" style="padding: 5px 10px; font-size: 0.72rem; color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); border-radius: 4px; font-weight: 600;" onclick="openEvidenceModal('${r.id}')">
-                🔍 Inspect Evidence
+              <button class="aq-btn-ghost" style="padding: 5px 10px; font-size: 0.72rem; color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); border-radius: 4px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" onclick="openEvidenceModal('${r.id}')">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Inspect Evidence
               </button>
             ` : ''}
 
@@ -1954,16 +1967,16 @@ function renderReportsList(reports) {
               ⚓ Resolved
             </button>
 
-            <button class="aq-btn-ghost" style="padding: 5px 10px; font-size: 0.72rem; color: #f59e0b; border: 1px solid rgba(245,158,11,0.5); border-radius: 4px; font-weight: 600;" onclick="escalateReportInDb('${r.id}')" title="Escalate to Indian Coast Guard SAR">
-              🚨 SAR Alert
+            <button class="aq-btn-ghost" style="padding: 5px 10px; font-size: 0.72rem; color: #f59e0b; border: 1px solid rgba(245,158,11,0.5); border-radius: 4px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" onclick="escalateReportInDb('${r.id}')" title="Escalate to Indian Coast Guard SAR">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> SAR Alert
             </button>
 
             <button class="aq-btn-primary" style="padding: 5px 10px; font-size: 0.72rem; background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 4px;" onclick="focusReportOnMap(${r.latitude}, ${r.longitude}, '${r.id}')">
               Plot GIS ↗
             </button>
 
-            <button class="aq-btn-ghost" style="padding: 5px 8px; font-size: 0.72rem; color: var(--ds-text-muted); border: 1px solid var(--ds-border-default); border-radius: 4px;" onclick="deleteReportFromDb('${r.id}')" title="Permanently delete complaint from database">
-              🗑
+            <button class="aq-btn-ghost" style="padding: 5px 8px; font-size: 0.72rem; color: var(--ds-text-muted); border: 1px solid var(--ds-border-default); border-radius: 4px; display: inline-flex; align-items: center;" onclick="deleteReportFromDb('${r.id}')" title="Permanently delete complaint from database">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
           </div>
         </div>
@@ -2167,14 +2180,14 @@ function openEvidenceModal(reportId) {
       <button class="aq-btn-ghost" style="padding: 7px 14px; font-size: 0.75rem; color: #0ea5e9; border: 1px solid rgba(14,165,233,0.5); border-radius: 4px; font-weight: bold;" onclick="updateReportStatusInDb('${rep.id}', 'resolved')">
         ⚓ Mark Resolved
       </button>
-      <button class="aq-btn-ghost" style="padding: 7px 14px; font-size: 0.75rem; color: #f59e0b; border: 1px solid rgba(245,158,11,0.5); border-radius: 4px; font-weight: bold;" onclick="escalateReportInDb('${rep.id}')">
-        🚨 SAR Escalate
+      <button class="aq-btn-ghost" style="padding: 7px 14px; font-size: 0.75rem; color: #f59e0b; border: 1px solid rgba(245,158,11,0.5); border-radius: 4px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;" onclick="escalateReportInDb('${rep.id}')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> SAR Escalate
       </button>
       <button class="aq-btn-primary" style="padding: 7px 14px; font-size: 0.75rem; background: var(--ds-color-brand); color: var(--ds-bg-base); font-weight: bold; border-radius: 4px;" onclick="closeEvidenceModal(); focusReportOnMap(${rep.latitude}, ${rep.longitude}, '${rep.id}')">
         Plot GIS Map ↗
       </button>
-      <button class="aq-btn-ghost" style="padding: 7px 12px; font-size: 0.75rem; color: var(--ds-text-muted); border: 1px solid var(--ds-border-default); border-radius: 4px;" onclick="deleteReportFromDb('${rep.id}')" title="Permanently delete from database">
-        🗑 Delete
+      <button class="aq-btn-ghost" style="padding: 7px 12px; font-size: 0.75rem; color: var(--ds-text-muted); border: 1px solid var(--ds-border-default); border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;" onclick="deleteReportFromDb('${rep.id}')" title="Permanently delete from database">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete
       </button>
     `;
   }
@@ -2804,10 +2817,35 @@ function focusBeachOnMap(lat, lng, beachId) {
   }
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+let searchDropdownSelectedIndex = -1;
+
+function handleCitizenSearchFocus() {
+  const input = document.getElementById('citizen-search-input');
+  if (input && input.value.trim().length > 0) {
+    handleCitizenSearch(input.value);
+  }
+}
+
 function handleCitizenSearch(query) {
   const cleanQ = (query || '').trim().toLowerCase();
+  const dropdown = document.getElementById('search-autocomplete-dropdown');
+  
   if (!cleanQ) {
     renderBeachCards(BEACHES_DATA);
+    if (dropdown) {
+      dropdown.style.display = 'none';
+      dropdown.innerHTML = '';
+    }
     return;
   }
 
@@ -2820,6 +2858,100 @@ function handleCitizenSearch(query) {
   );
 
   renderBeachCards(filtered);
+
+  // Render the instant live autocomplete dropdown
+  if (dropdown) {
+    searchDropdownSelectedIndex = -1;
+    if (filtered.length === 0) {
+      dropdown.innerHTML = `
+        <div class="aq-search-dropdown-empty">
+          <div style="color: var(--ds-text-primary); font-weight: 600; margin-bottom: 4px;">No coastal beaches match "${escapeHtml(query)}"</div>
+          <div style="font-size: 12px; color: var(--ds-text-muted);">Try searching for <strong>Juhu</strong>, <strong>Bandra</strong>, <strong>Marine Drive</strong>, or <strong>Safe</strong>.</div>
+        </div>
+      `;
+      dropdown.style.display = 'flex';
+    } else {
+      dropdown.innerHTML = filtered.slice(0, 6).map((b, idx) => {
+        const statusColor = b.status === 'safe' ? '#10b981' : (b.status === 'caution' ? '#f59e0b' : '#ef4444');
+        return `
+          <div class="aq-search-dropdown-item" data-index="${idx}" onclick="selectSearchDropdownBeach('${b.id}')">
+            <div class="aq-search-item-info">
+              <div class="aq-search-item-title">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: ${statusColor}; box-shadow: 0 0 6px ${statusColor}; flex-shrink: 0;"></span>
+                <span>${b.name}</span>
+              </div>
+              <div class="aq-search-item-sub">${b.location} · ${b.statusText}</div>
+            </div>
+            <div class="aq-search-item-meta">
+              <span style="font-family: var(--ds-font-mono); font-size: 11px; color: var(--ds-color-brand-light); background: var(--ds-bg-raised); border: 1px solid var(--ds-border-subtle); padding: 2px 8px; border-radius: 4px;">${b.wave}</span>
+              <span style="font-size: 12px; color: var(--ds-color-brand); font-weight: 600;">Inspect →</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+      dropdown.style.display = 'flex';
+    }
+  }
+}
+
+function selectSearchDropdownBeach(beachId) {
+  const dropdown = document.getElementById('search-autocomplete-dropdown');
+  if (dropdown) {
+    dropdown.style.display = 'none';
+  }
+  openBeachDrawer(beachId);
+}
+
+// Global click-away handler to dismiss search dropdown
+document.addEventListener('click', (e) => {
+  const searchBox = document.querySelector('.aq-search-hero-box');
+  const dropdown = document.getElementById('search-autocomplete-dropdown');
+  if (dropdown && searchBox && !searchBox.contains(e.target)) {
+    dropdown.style.display = 'none';
+  }
+});
+
+// Keyboard navigation in search input
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.getElementById('citizen-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('keydown', (e) => {
+      const dropdown = document.getElementById('search-autocomplete-dropdown');
+      if (!dropdown || dropdown.style.display === 'none') return;
+      const items = dropdown.querySelectorAll('.aq-search-dropdown-item');
+      if (items.length === 0) return;
+
+      if (e.key === 'Escape') {
+        dropdown.style.display = 'none';
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        searchDropdownSelectedIndex = Math.min(items.length - 1, searchDropdownSelectedIndex + 1);
+        updateDropdownSelection(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        searchDropdownSelectedIndex = Math.max(0, searchDropdownSelectedIndex - 1);
+        updateDropdownSelection(items);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (searchDropdownSelectedIndex >= 0 && items[searchDropdownSelectedIndex]) {
+          items[searchDropdownSelectedIndex].click();
+        } else if (items[0]) {
+          items[0].click();
+        }
+      }
+    });
+  }
+});
+
+function updateDropdownSelection(items) {
+  items.forEach((it, idx) => {
+    if (idx === searchDropdownSelectedIndex) {
+      it.classList.add('selected');
+      it.scrollIntoView({ block: 'nearest' });
+    } else {
+      it.classList.remove('selected');
+    }
+  });
 }
 
 function filterBeaches(filterType, btn) {
@@ -3529,7 +3661,7 @@ window.AquaShieldAPI = {
 console.log('[AquaShield] Full API surface loaded. window.AquaShieldAPI ready. All 9 routers connected.');
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 🌐 INTERACTIVE COASTAL OPERATIONS & INTELLIGENCE DASHBOARD ENGINE
+// COASTAL OPERATIONS & INTELLIGENCE DASHBOARD ENGINE
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const DASHBOARD_SECTORS = {

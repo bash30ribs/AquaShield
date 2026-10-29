@@ -578,7 +578,7 @@
         </p>
 
         <!-- Interactive Search Bar with "Near Me" GPS Button -->
-        <div class="aq-search-hero-box" style="width: 100%; max-width: 680px; margin: 0 auto 20px;">
+        <div class="aq-search-hero-box" style="width: 100%; max-width: 680px; margin: 0 auto 20px; position: relative;">
           <div class="aq-search-input-wrap" style="display: flex; align-items: center; background: var(--ds-bg-card); border: 2px solid var(--ds-border-strong); border-radius: var(--ds-radius-xl); padding: 6px 8px 6px 16px; box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 20px rgba(245, 158, 11, 0.15);">
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="margin-right: 8px; flex-shrink: 0;">
               <path d="M9 15C12.3137 15 15 12.3137 15 9C15 5.68629 12.3137 3 9 3C5.68629 3 3 5.68629 3 9C3 12.3137 5.68629 15 9 15Z" stroke="var(--ds-color-brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -587,7 +587,7 @@
             <input type="text" id="citizen-search-input" class="aq-search-input" 
               style="flex: 1; background: transparent; border: none; font-family: var(--ds-font-body); font-size: var(--ds-text-base); color: var(--ds-text-primary); outline: none; padding: 8px 6px;"
               placeholder="Search coastal sectors (e.g., Juhu, Bandra, Marine Drive, Versova, Aksa)..." 
-              oninput="handleCitizenSearch(this.value)" autocomplete="off">
+              oninput="handleCitizenSearch(this.value)" onfocus="handleCitizenSearchFocus()" autocomplete="off">
             <button class="aq-geo-btn" onclick="findBeachesNearMe()" title="Find beaches closest to your GPS coordinates"
               style="display: inline-flex; align-items: center; gap: 6px; background: var(--ds-bg-raised); border: 1px solid var(--ds-border-default); color: var(--ds-color-brand-light); font-family: var(--ds-font-body); font-size: var(--ds-text-xs); font-weight: bold; padding: 8px 14px; border-radius: var(--ds-radius-lg); cursor: pointer; white-space: nowrap;">
               <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
@@ -596,6 +596,8 @@
               Near Me
             </button>
           </div>
+          <!-- Live Autocomplete & Quick Results Dropdown -->
+          <div id="search-autocomplete-dropdown" class="aq-search-dropdown" style="display: none;"></div>
         </div>
 
         <!-- Interactive Filter Chips -->
@@ -673,8 +675,9 @@
               <div style="margin-top: 8px; font-size: var(--ds-text-xs); color: #ef4444; font-weight: 600;">Open emergency dialer ↗</div>
             </div>
           </div>
-
         </div>
+      </div>
+    </section>
 
     <!-- ====================================================================
          INTERACTIVE COASTAL OPERATIONS & INTELLIGENCE DASHBOARD
@@ -2238,14 +2241,18 @@
                   <div style="font-family: var(--ds-font-mono); font-size: 0.68rem; color: var(--ds-text-muted);">TOTAL FILED</div>
                   <div style="font-size: 1.4rem; font-weight: bold; color: var(--ds-text-primary);" id="report-kpi-total">0</div>
                 </div>
-                <div style="color: var(--ds-text-muted); font-size: 1.2rem;">📋</div>
+                <div style="color: var(--ds-text-muted); display: flex; align-items: center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                </div>
               </div>
               <div style="background: var(--ds-bg-card); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--ds-radius-lg); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                   <div style="font-family: var(--ds-font-mono); font-size: 0.68rem; color: #f59e0b;">PENDING AUDIT</div>
                   <div style="font-size: 1.4rem; font-weight: bold; color: #f59e0b;" id="report-kpi-pending">0</div>
                 </div>
-                <div style="color: #f59e0b; font-size: 1.2rem;">⏳</div>
+                <div style="color: #f59e0b; display: flex; align-items: center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
               </div>
               <div style="background: var(--ds-bg-card); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--ds-radius-lg); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
@@ -3276,11 +3283,23 @@
               <div style="font-family: var(--ds-font-mono); font-size: 0.68rem; color: var(--ds-color-brand); letter-spacing: 0.08em; margin-bottom: 6px;">COMPLAINT REPORT</div>
               <h3 id="evidence-modal-heading" style="font-size: 1.1rem; color: var(--ds-text-primary); font-weight: bold; margin-bottom: 6px;">--</h3>
               <p id="evidence-modal-desc" style="font-size: 0.82rem; color: var(--ds-text-secondary); line-height: 1.6; margin-bottom: 12px;">--</p>
-              <div style="font-size: 0.75rem; color: var(--ds-text-muted); display: flex; flex-direction: column; gap: 6px;">
-                <div>📍 <strong style="color: var(--ds-text-primary);">Location:</strong> <span id="evidence-modal-address">--</span></div>
-                <div>👤 <strong style="color: var(--ds-text-primary);">Reporter:</strong> <span id="evidence-modal-reporter">--</span></div>
-                <div>🕒 <strong style="color: var(--ds-text-primary);">Timestamp:</strong> <span id="evidence-modal-time">--</span></div>
-                <div>⚡ <strong style="color: var(--ds-text-primary);">Urgency Priority:</strong> <span id="evidence-modal-urgency">--</span></div>
+              <div style="font-size: 0.75rem; color: var(--ds-text-muted); display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ds-color-brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span><strong style="color: var(--ds-text-primary);">Location:</strong> <span id="evidence-modal-address">--</span></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ds-text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <span><strong style="color: var(--ds-text-primary);">Reporter:</strong> <span id="evidence-modal-reporter">--</span></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ds-text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span><strong style="color: var(--ds-text-primary);">Timestamp:</strong> <span id="evidence-modal-time">--</span></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span><strong style="color: var(--ds-text-primary);">Urgency Priority:</strong> <span id="evidence-modal-urgency">--</span></span>
+                </div>
               </div>
             </div>
 
@@ -4339,8 +4358,8 @@
       <button id="drawer-report-btn" class="aq-btn-ghost" style="flex: 1; padding: 10px 16px; font-size: var(--ds-text-sm); font-weight: 600; color: var(--ds-color-brand-light); border: 1px solid var(--ds-border-brand); border-radius: var(--ds-radius-md);" onclick="reportFromDrawer()">
         + Report Issue Here
       </button>
-      <a id="drawer-directions-link" href="#" target="_blank" rel="noopener" onclick="if(this.getAttribute('href')==='#'||!this.getAttribute('href')){event.preventDefault(); window.open('https://www.google.com/maps/search/coastal+beaches', '_blank');}" class="aq-btn-ghost" style="padding: 10px 16px; font-size: var(--ds-text-sm); font-weight: 600; color: var(--ds-text-primary); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-md); display: flex; align-items: center; gap: 4px;">
-        📍 Directions ↗
+      <a id="drawer-directions-link" href="#" target="_blank" rel="noopener" onclick="if(this.getAttribute('href')==='#'||!this.getAttribute('href')){event.preventDefault(); window.open('https://www.google.com/maps/search/coastal+beaches', '_blank');}" class="aq-btn-ghost" style="padding: 10px 16px; font-size: var(--ds-text-sm); font-weight: 600; color: var(--ds-text-primary); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-md); display: flex; align-items: center; gap: 6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Directions ↗
       </a>
     </div>
   </div>
@@ -4350,7 +4369,9 @@
     <div class="aq-dialog-container" style="max-width: 540px;">
       <div class="aq-dialog-header" style="background: rgba(239,68,68,0.12); border-bottom: 1px solid rgba(239,68,68,0.3);">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 22px;">🆘</span>
+          <div style="width: 32px; height: 32px; border-radius: var(--ds-radius-md); background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); display: flex; align-items: center; justify-content: center; color: #ef4444;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
           <div>
             <h3 style="font-family: var(--ds-font-display); font-size: var(--ds-text-lg); font-weight: bold; color: var(--ds-text-primary);">
               Emergency Coastal Assistance
@@ -4374,7 +4395,10 @@
               <div style="font-size: 14px; font-weight: bold; color: var(--ds-text-primary);">National Emergency Services (112)</div>
               <div style="font-size: 12px; color: var(--ds-text-secondary);">Police, Ambulance & Fire Rescue Dispatch</div>
             </div>
-            <span class="aq-helpline-call">📞 Call 112</span>
+            <span class="aq-helpline-call">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              Call 112
+            </span>
           </a>
 
           <a href="tel:1554" class="aq-helpline-card" style="text-decoration: none;">
@@ -4382,7 +4406,10 @@
               <div style="font-size: 14px; font-weight: bold; color: var(--ds-text-primary);">Indian Coast Guard (1554)</div>
               <div style="font-size: 12px; color: var(--ds-text-secondary);">Maritime Search & Rescue at Sea</div>
             </div>
-            <span class="aq-helpline-call">⚓ Call 1554</span>
+            <span class="aq-helpline-call">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>
+              Call 1554
+            </span>
           </a>
 
           <a href="tel:1077" class="aq-helpline-card" style="text-decoration: none;">
@@ -4390,7 +4417,10 @@
               <div style="font-size: 14px; font-weight: bold; color: var(--ds-text-primary);">Disaster Control Authority (1077)</div>
               <div style="font-size: 12px; color: var(--ds-text-secondary);">Flood Relief & Cyclone Warning Desk</div>
             </div>
-            <span class="aq-helpline-call">🌊 Call 1077</span>
+            <span class="aq-helpline-call">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M20 12v8H4v-8"/><path d="m4 4 8-2 8 2v4H4z"/></svg>
+              Call 1077
+            </span>
           </a>
 
           <a href="tel:+919820288120" class="aq-helpline-card" style="text-decoration: none;">
@@ -4398,7 +4428,10 @@
               <div style="font-size: 14px; font-weight: bold; color: var(--ds-text-primary);">Marine Animal Stranding Helpline</div>
               <div style="font-size: 12px; color: var(--ds-text-secondary);">Stranded Turtles, Whales, Dolphins</div>
             </div>
-            <span class="aq-helpline-call">🐢 Call NGO</span>
+            <span class="aq-helpline-call">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Call NGO
+            </span>
           </a>
         </div>
 
@@ -4406,8 +4439,9 @@
           <span style="font-size: var(--ds-text-xs); color: var(--ds-text-muted);">
             Broadcast encrypted GPS distress telemetry:
           </span>
-          <button class="aq-btn-primary" style="background: #ef4444; color: #fff; font-size: var(--ds-text-xs); font-weight: bold; padding: 7px 14px; border-radius: 6px;" onclick="triggerEmergencySOS(); closeEmergencyModal();">
-            🚨 Send SOS Alert
+          <button class="aq-btn-primary" style="background: #ef4444; color: #fff; font-size: var(--ds-text-xs); font-weight: bold; padding: 7px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;" onclick="triggerEmergencySOS(); closeEmergencyModal();">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Send SOS Alert
           </button>
         </div>
       </div>
