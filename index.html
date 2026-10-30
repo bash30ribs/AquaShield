@@ -2847,6 +2847,26 @@
               <strong>✓ SOS BROADCAST TRANSMITTED!</strong><br>
               Coast Guard Cutter dispatched. ETA: 12 minutes. Real-time telemetry tracking live on GIS Radar.
             </div>
+
+            <!-- Active SOS Distress Events Registry -->
+            <div style="width: 100%; max-width: 900px; margin-top: 24px; text-align: left;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <div>
+                  <div style="font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); color: var(--ds-color-brand); font-weight: bold; letter-spacing: 0.1em;">
+                    LIVE DISTRESS TRANSMISSION REGISTRY (API: GET /api/sos/logs)
+                  </div>
+                  <div style="font-size: var(--ds-text-xs); color: var(--ds-text-secondary);">
+                    Real-time emergency distress events persisted in database. Operators can acknowledge, dispatch SAR cutters, or resolve.
+                  </div>
+                </div>
+                <button type="button" onclick="loadSosLogs()" class="aq-btn-ghost" style="padding: 6px 12px; font-size: 0.72rem; border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-md); color: var(--ds-text-secondary); cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                  ↻ Refresh SOS Log
+                </button>
+              </div>
+              <div id="sos-logs-container" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Populated via loadSosLogs() in app.js -->
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2933,6 +2953,27 @@
       </div>
 
       <form id="report-submit-form" onsubmit="handleReportSubmit(event)" class="aq-dialog-body">
+        <!-- AI Incident Scribe Assistant Quick-Fill -->
+        <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid var(--ds-border-brand); border-radius: var(--ds-radius-md); padding: 12px 14px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ds-color-brand)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <span style="font-family: var(--ds-font-mono); font-size: 0.68rem; font-weight: bold; color: var(--ds-color-brand); letter-spacing: 0.08em;">
+                AI INCIDENT SCRIBE · NATURAL LANGUAGE AUTO-FILL
+              </span>
+            </div>
+            <span style="font-size: 0.65rem; color: var(--ds-text-muted); font-family: var(--ds-font-mono);">POST /api/chat</span>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <input type="text" id="ai-scribe-input" placeholder="Type what you saw (e.g. 'Severe black oily water spreading near Gateway of India')" style="flex: 1; min-width: 240px; padding: 7px 10px; font-size: 0.8rem; background: var(--ds-bg-surface); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-md); color: var(--ds-text-primary);" onkeydown="if(event.key==='Enter'){event.preventDefault(); runAiIncidentScribe();}">
+            <button type="button" onclick="runAiIncidentScribe()" class="aq-btn-primary" style="padding: 7px 14px; font-size: 0.75rem; font-weight: bold; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: var(--ds-radius-md); border: none; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Auto-Structure with AI
+            </button>
+          </div>
+          <div id="ai-scribe-feedback" style="display: none; font-size: 0.72rem; margin-top: 6px; color: var(--ds-color-brand-light); line-height: 1.4;"></div>
+        </div>
+
         <!-- Incident Category Picker -->
         <div class="aq-form-group">
           <label class="aq-form-label">Incident Classification *</label>

@@ -93,8 +93,17 @@
   - Fixed critical unclosed `<section id="hero">` and `<div>` nesting bug in `index.html`, restoring proper document hierarchy for all 9 subsequent top-level sections (`#dashboard-section`, `#beaches-section`, `#radar-map`, etc.).
   - Replaced 100% of emojis in headings, modals (Emergency, Evidence Lightbox, KPI counters, Drawers), and database control toolbars with crisp, tactical SVG iconography, strictly adhering to `AGENTS.md` and `STANDARDS.md`.
   - Implemented real-time hero search autocomplete dropdown (`.aq-search-dropdown`) with instant beach suggestions, live swim safety badges, swell meters, keyboard navigation (Arrow Up/Down, Enter, Esc), and global click-away dismiss.
-  - Upgraded beach card hover states with Obsidian Maritime amber depth glow (`box-shadow: 0 16px 36px rgba(0,0,0,0.65), 0 0 20px var(--ds-color-brand-glow)`).
-  - Verified 0 HTML parsing errors, 0 emoji lines across all frontend assets, and 100% operational FastAPI backend routes.
+- [x] Comprehensive Implementation of Unfinished & Missing Platform Capabilities:
+  - Implemented new Admin Operations router (`backend/app/routers/admin.py`) providing `/api/admin/overview`, `/api/admin/stats` (consolidated KPIs across reports, SOS, disasters, marine rescues), and `/api/admin/audit-log` (unified chronological feed), fulfilling `Disallow: /api/admin/` in `robots.txt`.
+  - Implemented OAuth2 password token flow in `backend/app/routers/auth.py` (`POST /api/auth/token`, `GET /api/auth/me`, `POST /api/auth/logout`), fulfilling `Disallow: /api/auth/token` in `robots.txt`.
+  - Implemented vision forensic scan endpoint `POST /api/threat-scan` in `backend/app/main.py` powering the mobile vision forensic scanner (`mobile/lib/services/api_service.dart`).
+  - Implemented complete SOS Emergency lifecycle (`POST /api/sos/{id}/dispatch`, `POST /api/sos/{id}/resolve`, `DELETE /api/sos/{id}`) with WebSocket broadcast sync.
+  - Implemented Marine Rescue lifecycle transitions (`PATCH /api/marine/{id}/status`, `DELETE /api/marine/{id}`).
+  - Implemented GeoJSON spatial feature endpoints for GIS mapping (`GET /api/reports/geojson`, `GET /api/disasters/geojson`) and reports aggregations (`GET /api/reports/stats`).
+  - Added interactive **AI Incident Scribe** in report modal (`index.html`, `app.js`) enabling natural-language complaint ingestion, automatic GPS/severity extraction, and form pre-fill via `POST /api/chat`.
+  - Added live **Distress Transmission Registry** in `#panel-sos` (`index.html`, `app.js`) with one-click Indian Coast Guard SAR Cutter dispatch and scene resolution.
+  - Modernized all datetime calls across models, routers, and database seeds to Python 3.14 compatible `datetime.now(timezone.utc)`.
+  - Added automated backend API test suite in `backend/tests/test_api.py` validating 100% of routes and lifecycle flows.
 
 ---
 

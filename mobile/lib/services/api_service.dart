@@ -17,7 +17,10 @@ class ApiService {
     try {
       final response = await http.get(Uri.parse('$baseUrl/api/reports')).timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
+        final decoded = jsonDecode(response.body);
+        final List<dynamic> data = decoded is List
+            ? decoded
+            : (decoded is Map && decoded['reports'] is List ? decoded['reports'] : []);
         return data.map((json) => Report.fromJson(json)).toList();
       }
     } catch (e) {

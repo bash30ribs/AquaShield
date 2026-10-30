@@ -10,6 +10,7 @@ from app.routers.chat import router as chat_router
 from app.routers.sms import router as sms_router
 from app.routers.broadcast import router as broadcast_router
 from app.routers.auth import router as auth_router
+from app.routers.admin import router as admin_router
 
 __all__ = [
     "disasters_router",
@@ -21,6 +22,7 @@ __all__ = [
     "sms_router",
     "broadcast_router",
     "auth_router",
+    "admin_router",
 ]
 
 

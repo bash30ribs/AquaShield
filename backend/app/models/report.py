@@ -3,7 +3,7 @@ SQLAlchemy Model: CommunityReport
 """
 import uuid
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, Boolean, Float, DateTime, Text, Integer, ForeignKey, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
@@ -44,5 +44,5 @@ class CommunityReport(Base):
     is_fake: Mapped[bool] = mapped_column(Boolean, default=False)
     urgency_rank: Mapped[int] = mapped_column(Integer, default=5)
     status: Mapped[ReportStatus] = mapped_column(SAEnum(ReportStatus), default=ReportStatus.pending)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 

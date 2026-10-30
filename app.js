@@ -438,6 +438,8 @@ function switchHudTab(tabName) {
     loadReports();
   } else if (tabName === 'marine') {
     loadMarineRescues();
+  } else if (tabName === 'sos') {
+    loadSosLogs();
   } else if (tabName === 'pillars') {
     runAllPillarDiagnostics(false);
   } else if (tabName === 'evac') {
@@ -1561,6 +1563,84 @@ function selectReportType(type, elem) {
   if (typeInput) typeInput.value = type;
 }
 
+// ── AI Incident Scribe (Smart NLP Auto-Fill) ─────────────────────────────────
+async function runAiIncidentScribe() {
+  const inputEl = document.getElementById('ai-scribe-input');
+  const feedbackEl = document.getElementById('ai-scribe-feedback');
+  if (!inputEl) return;
+
+  const rawText = inputEl.value.trim();
+  if (!rawText) {
+    showToast('AI Scribe', 'Please describe what you observed first.', 'warning');
+    inputEl.focus();
+    return;
+  }
+
+  if (feedbackEl) {
+    feedbackEl.style.display = 'block';
+    feedbackEl.innerHTML = '<span style="color: var(--ds-color-brand-light); font-family: var(--ds-font-mono);">Analyzing incident observation with AI Scribe NLP...</span>';
+  }
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: rawText })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    const draft = data.draft_report;
+    if (draft) {
+      // 1. Set Title
+      const titleInput = document.getElementById('report-form-title');
+      if (titleInput && draft.title) titleInput.value = draft.title;
+
+      // 2. Set Category
+      if (draft.hazard_type) {
+        const pill = document.querySelector(`#report-type-selector .aq-type-pill[data-type="${draft.hazard_type}"]`);
+        selectReportType(draft.hazard_type, pill);
+      }
+
+      // 3. Set Address / Location
+      const addrInput = document.getElementById('report-form-address');
+      if (addrInput && draft.location) addrInput.value = draft.location;
+
+      // 4. Set Coordinates
+      if (draft.latitude && draft.longitude) {
+        setReportPickerCoords(draft.latitude, draft.longitude);
+      }
+
+      // 5. Set Urgency
+      const urgencySlider = document.getElementById('report-form-urgency');
+      if (urgencySlider && draft.urgency) {
+        urgencySlider.value = draft.urgency;
+        updateUrgencyLabel(draft.urgency);
+      }
+
+      // 6. Set Description
+      const descInput = document.getElementById('report-form-desc');
+      if (descInput) {
+        descInput.value = draft.professional_description || rawText;
+      }
+
+      if (feedbackEl) {
+        feedbackEl.innerHTML = `✓ <strong>AI Scribe:</strong> Classified as <code>${(draft.hazard_type || 'hazard').toUpperCase()}</code> at ${escapeHtml(draft.location || 'pinned sector')}. Details auto-populated.`;
+      }
+      showToast('AI Scribe Success', 'Incident details structured and auto-filled!', 'success');
+    } else {
+      if (feedbackEl) {
+        feedbackEl.innerHTML = `✓ Observation received. Review and complete incident fields below.`;
+      }
+    }
+  } catch (err) {
+    console.warn('AI Scribe error:', err);
+    if (feedbackEl) {
+      feedbackEl.textContent = 'Could not connect to AI Scribe. Please complete fields manually.';
+    }
+  }
+}
+
 function updateUrgencyLabel(val) {
   const badge = document.getElementById('urgency-badge');
   if (!badge) return;
@@ -2621,8 +2701,135 @@ function triggerEmergencySOS() {
       triggerBtn.style.borderColor = 'var(--ds-color-brand)';
       triggerBtn.style.color = 'var(--ds-bg-base)';
       simulateEmergencyMarker();
+      loadSosLogs();
     }, 500);
   });
+}
+
+// ── Live SOS Distress Event Registry & Dispatcher Operations ──────────────
+async function loadSosLogs() {
+  const container = document.getElementById('sos-logs-container');
+  if (!container) return;
+
+  container.innerHTML = '<div style="font-size: 12px; color: var(--ds-text-secondary); font-family: var(--ds-font-mono);">Querying active SOS distress events from database...</div>';
+
+  try {
+    const res = await fetch('/api/sos/logs');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const events = data.events || [];
+
+    if (events.length === 0) {
+      container.innerHTML = '<div style="background: var(--ds-bg-surface); border: 1px solid var(--ds-border-default); border-radius: var(--ds-radius-md); padding: 16px; font-size: 13px; color: var(--ds-text-secondary); text-align: center;">No active emergency distress calls in sector. All channels standby.</div>';
+      return;
+    }
+
+    container.innerHTML = events.map(ev => {
+      const isResolved = ev.status === 'resolved';
+      const isDispatched = ev.status === 'dispatched';
+      const isAcked = ev.status === 'acknowledged';
+
+      let statusColor = '#ef4444'; // transmitted
+      let statusLabel = 'ACTIVE DISTRESS';
+      if (isResolved) {
+        statusColor = '#10b981';
+        statusLabel = 'RESOLVED';
+      } else if (isDispatched) {
+        statusColor = '#00f0ff';
+        statusLabel = 'SAR DISPATCHED';
+      } else if (isAcked) {
+        statusColor = '#f59e0b';
+        statusLabel = 'ACKNOWLEDGED';
+      }
+
+      return `
+        <div style="background: var(--ds-bg-surface); border: 1px solid ${isResolved ? 'var(--ds-border-default)' : 'var(--ds-border-brand)'}; border-radius: var(--ds-radius-lg); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div style="flex: 1; min-width: 240px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              <span style="font-family: var(--ds-font-mono); font-size: 11px; font-weight: bold; color: var(--ds-color-brand);">${escapeHtml(ev.id)}</span>
+              <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: rgba(0,0,0,0.4); color: ${statusColor}; border: 1px solid ${statusColor};">${statusLabel}</span>
+              <span style="font-size: 12px; color: var(--ds-text-primary); font-weight: 600;">${escapeHtml(ev.type || 'Emergency')}</span>
+            </div>
+            <div style="font-size: 12px; color: var(--ds-text-secondary); margin-bottom: 3px;">
+              Reporter: <strong>${escapeHtml(ev.sender || 'Citizen Sentinel')}</strong> · Geolocation: <code style="color: var(--ds-color-brand-light);">${ev.lat.toFixed(4)}, ${ev.lng.toFixed(4)}</code>
+            </div>
+            <div style="font-size: 11px; color: var(--ds-text-muted); font-family: var(--ds-font-mono);">
+              Logged: ${escapeHtml(ev.timestamp || 'Just now')} · ${escapeHtml(ev.details || 'Distress signal received')}
+            </div>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+            ${!isAcked && !isDispatched && !isResolved ? `
+              <button onclick="acknowledgeSosEvent('${ev.id}')" class="aq-btn-ghost" style="padding: 5px 10px; font-size: 11px; border: 1px solid var(--ds-border-brand); border-radius: 4px; color: var(--ds-color-brand); cursor: pointer;">
+                ✓ Acknowledge
+              </button>
+            ` : ''}
+            ${!isDispatched && !isResolved ? `
+              <button onclick="dispatchSarForSos('${ev.id}')" class="aq-btn-primary" style="padding: 5px 12px; font-size: 11px; font-weight: bold; background: var(--ds-color-brand); color: var(--ds-bg-base); border-radius: 4px; border: none; cursor: pointer;">
+                ⚓ Dispatch SAR
+              </button>
+            ` : ''}
+            ${!isResolved ? `
+              <button onclick="resolveSosEvent('${ev.id}')" class="aq-btn-ghost" style="padding: 5px 10px; font-size: 11px; border: 1px solid #10b981; border-radius: 4px; color: #10b981; cursor: pointer;">
+                ✓ Resolve
+              </button>
+            ` : ''}
+            <button onclick="deleteSosEvent('${ev.id}')" class="aq-btn-ghost" style="padding: 5px 8px; font-size: 11px; border: 1px solid var(--ds-border-default); border-radius: 4px; color: #ef4444; cursor: pointer;" title="Delete Record">
+              ✕
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.warn('Failed to load SOS logs:', err);
+    container.innerHTML = '<div style="color: #ef4444; font-size: 12px;">Failed to connect to SOS database logs.</div>';
+  }
+}
+
+async function acknowledgeSosEvent(id) {
+  try {
+    const res = await fetch(`/api/sos/${encodeURIComponent(id)}/acknowledge`, { method: 'PATCH' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast('SOS Acknowledged', `Distress call ${id} marked acknowledged.`, 'info');
+    loadSosLogs();
+  } catch (err) {
+    showToast('Error', 'Failed to acknowledge SOS call.', 'warning');
+  }
+}
+
+async function dispatchSarForSos(id) {
+  try {
+    const res = await fetch(`/api/sos/${encodeURIComponent(id)}/dispatch`, { method: 'POST' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    showToast('SAR Cutter Dispatched', data.message || 'Cutter en route.', 'success');
+    loadSosLogs();
+  } catch (err) {
+    showToast('Error', 'Failed to dispatch SAR cutter.', 'warning');
+  }
+}
+
+async function resolveSosEvent(id) {
+  try {
+    const res = await fetch(`/api/sos/${encodeURIComponent(id)}/resolve`, { method: 'POST' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast('Incident Resolved', `SOS event ${id} marked resolved on scene.`, 'success');
+    loadSosLogs();
+  } catch (err) {
+    showToast('Error', 'Failed to resolve SOS call.', 'warning');
+  }
+}
+
+async function deleteSosEvent(id) {
+  if (!confirm(`Are you sure you want to remove SOS record ${id}?`)) return;
+  try {
+    const res = await fetch(`/api/sos/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast('SOS Record Deleted', `Record ${id} removed.`, 'info');
+    loadSosLogs();
+  } catch (err) {
+    showToast('Error', 'Failed to delete SOS record.', 'warning');
+  }
 }
 
 function playAcousticBeacon() {
@@ -3382,15 +3589,54 @@ async function loadMarineRescues() {
             Status: ${op.status} · Rapid Response Team Dispatched
           </div>
         </div>
-        <div style="display: flex; gap: 8px;">
-          <a href="tel:+919820288120" style="padding: 6px 14px; font-size: 11px; font-weight: bold; background: var(--ds-bg-raised); color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); border-radius: 4px; text-decoration: none;">
-            Call NGO Hotline
+        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+          <button onclick="updateMarineRescueStatus('${op.id}', 'in_rescue')" class="aq-btn-ghost" style="padding: 5px 9px; font-size: 11px; border: 1px solid var(--ds-border-brand); border-radius: 4px; color: var(--ds-color-brand); cursor: pointer;">
+            ✓ In Rescue
+          </button>
+          <button onclick="updateMarineRescueStatus('${op.id}', 'rehabilitated')" class="aq-btn-ghost" style="padding: 5px 9px; font-size: 11px; border: 1px solid #10b981; border-radius: 4px; color: #10b981; cursor: pointer;">
+            ✓ Rehabilitated
+          </button>
+          <button onclick="updateMarineRescueStatus('${op.id}', 'released')" class="aq-btn-ghost" style="padding: 5px 9px; font-size: 11px; border: 1px solid #00f0ff; border-radius: 4px; color: #00f0ff; cursor: pointer;">
+            🌊 Release
+          </button>
+          <a href="tel:+919820288120" style="padding: 5px 10px; font-size: 11px; font-weight: bold; background: var(--ds-bg-raised); color: var(--ds-color-brand); border: 1px solid var(--ds-border-brand); border-radius: 4px; text-decoration: none;">
+            Hotline
           </a>
+          <button onclick="deleteMarineRescue('${op.id}')" class="aq-btn-ghost" style="padding: 5px 8px; font-size: 11px; border: 1px solid var(--ds-border-default); border-radius: 4px; color: #ef4444; cursor: pointer;" title="Delete Record">
+            ✕
+          </button>
         </div>
       </div>
     `).join('');
   } catch (err) {
     console.warn('Marine rescue feed fallback:', err);
+  }
+}
+
+async function updateMarineRescueStatus(id, newStatus) {
+  try {
+    const res = await fetch(`/api/marine/${encodeURIComponent(id)}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast('Marine Status Updated', `Rescue ticket ${id} updated to ${newStatus.replace('_', ' ')}.`, 'success');
+    loadMarineRescues();
+  } catch (err) {
+    showToast('Error', 'Failed to update marine status.', 'warning');
+  }
+}
+
+async function deleteMarineRescue(id) {
+  if (!confirm(`Are you sure you want to delete marine rescue record ${id}?`)) return;
+  try {
+    const res = await fetch(`/api/marine/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast('Record Removed', `Marine record ${id} deleted.`, 'info');
+    loadMarineRescues();
+  } catch (err) {
+    showToast('Error', 'Failed to delete marine rescue record.', 'warning');
   }
 }
 

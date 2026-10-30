@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 import uuid
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.database import get_db
 from app.models.broadcast_alert import BroadcastAlert
@@ -55,7 +55,7 @@ BROADCAST_HISTORY: List[dict] = [
         "sender": "NDMA Authority",
         "location": "Ratnagiri & South Konkan",
         "severity": "CRITICAL",
-        "timestamp": datetime.utcnow().strftime("%H:%M:%S UTC"),
+        "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S UTC"),
         "origin_mode": "Online Server Broadcast"
     }
 ]
@@ -87,7 +87,7 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_text()
             try:
                 payload = json.loads(data)
-                payload["timestamp"] = datetime.utcnow().strftime("%H:%M:%S UTC")
+                payload["timestamp"] = datetime.now(timezone.utc).strftime("%H:%M:%S UTC")
                 payload["id"] = f"alert-ws-{uuid.uuid4().hex[:6]}"
                 BROADCAST_HISTORY.append(payload)
                 await manager.broadcast({"event": "new_alert", "alert": payload})
@@ -144,7 +144,7 @@ async def create_broadcast_alert(
         location    = location,
         severity    = severity,
         origin_mode = mode,
-        created_at  = datetime.utcnow(),
+        created_at  = datetime.now(timezone.utc),
     )
     db.add(db_alert)
     await db.commit()

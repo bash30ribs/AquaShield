@@ -3,7 +3,7 @@ SQLAlchemy Model: MarineRescue
 """
 import uuid
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, Float, DateTime, Text, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
@@ -21,6 +21,8 @@ class RescueStatus(str, enum.Enum):
     ngo_alerted = "ngo_alerted"
     in_rescue = "in_rescue"
     rescued = "rescued"
+    rehabilitated = "rehabilitated"
+    released = "released"
 
 class MarineRescue(Base):
     __tablename__ = "marine_rescues"
@@ -36,4 +38,4 @@ class MarineRescue(Base):
     beach_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     ngo_assigned: Mapped[str | None] = mapped_column(String(200), nullable=True)
     status: Mapped[RescueStatus] = mapped_column(SAEnum(RescueStatus), default=RescueStatus.reported)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))

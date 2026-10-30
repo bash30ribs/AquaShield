@@ -73,7 +73,7 @@ async def submit_guided_complaint(request: Request, db: AsyncSession = Depends(g
         is_fake=False,
         urgency_rank=int(data.get("urgency", 7)),
         status=ReportStatus.verified,
-        created_at=datetime.datetime.utcnow()
+        created_at=datetime.datetime.now(datetime.timezone.utc)
     )
     
     db.add(report)

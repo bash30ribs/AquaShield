@@ -4,7 +4,7 @@ Live disaster alerts now read from AND write to the disasters DB table.
 Seeded on first boot; new disasters can be submitted via POST.
 """
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -83,7 +83,42 @@ async def get_live_disasters(db: AsyncSession = Depends(get_db)):
         "disasters":            [_row_to_dict(d) for d in disasters],
         "weather":              _WEATHER,
         "buoy_telemetry":       _BUOYS,
-        "timestamp":            datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+        "timestamp":            datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+    }
+
+
+@router.get("/geojson")
+async def get_disasters_geojson(db: AsyncSession = Depends(get_db)):
+    """Export active disasters as GeoJSON FeatureCollection for GIS overlay."""
+    result = await db.execute(
+        select(Disaster).where(Disaster.is_active == True).order_by(desc(Disaster.created_at))
+    )
+    disasters = result.scalars().all()
+
+    features = []
+    for d in disasters:
+        features.append({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [d.longitude, d.latitude]
+            },
+            "properties": {
+                "id": d.id,
+                "title": d.title,
+                "type": d.type.value,
+                "severity": d.severity.value,
+                "region": d.region,
+                "radius_km": d.radius_km,
+                "advisory": d.description,
+                "is_active": d.is_active,
+                "created_at": d.created_at.isoformat() if d.created_at else None
+            }
+        })
+
+    return {
+        "type": "FeatureCollection",
+        "features": features
     }
 
 
@@ -109,6 +144,14 @@ class DisasterCreateRequest(BaseModel):
     source:      Optional[str] = "Citizen Report"
 
 
+class DisasterUpdateRequest(BaseModel):
+    severity:    Optional[str] = None
+    title:       Optional[str] = None
+    description: Optional[str] = None
+    radius_km:   Optional[float] = None
+    is_active:   Optional[bool] = None
+
+
 @router.post("")
 async def create_disaster(req: DisasterCreateRequest, db: AsyncSession = Depends(get_db)):
     """Submit a new disaster event: persisted to the disasters table."""
@@ -118,6 +161,7 @@ async def create_disaster(req: DisasterCreateRequest, db: AsyncSession = Depends
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
+    now = datetime.now(timezone.utc)
     d = Disaster(
         id          = str(uuid.uuid4()),
         type        = dtype,
@@ -131,13 +175,44 @@ async def create_disaster(req: DisasterCreateRequest, db: AsyncSession = Depends
         radius_km   = req.radius_km,
         source      = req.source,
         is_active   = True,
-        started_at  = datetime.utcnow(),
-        created_at  = datetime.utcnow(),
+        started_at  = now,
+        created_at  = now,
     )
     db.add(d)
     await db.commit()
     await db.refresh(d)
     return {"status": "created", "disaster": _row_to_dict(d)}
+
+
+@router.patch("/{disaster_id}")
+async def update_disaster(
+    disaster_id: str,
+    req: DisasterUpdateRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Update active disaster parameters (severity, advisory, radius)."""
+    result = await db.execute(select(Disaster).where(Disaster.id == disaster_id))
+    d = result.scalar_one_or_none()
+    if not d:
+        raise HTTPException(status_code=404, detail="Disaster not found")
+
+    if req.severity:
+        try:
+            d.severity = SeverityLevel(req.severity.lower())
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid severity '{req.severity}'")
+    if req.title:
+        d.title = req.title
+    if req.description is not None:
+        d.description = req.description
+    if req.radius_km is not None:
+        d.radius_km = req.radius_km
+    if req.is_active is not None:
+        d.is_active = req.is_active
+
+    await db.commit()
+    await db.refresh(d)
+    return {"status": "updated", "disaster": _row_to_dict(d)}
 
 
 @router.delete("/{disaster_id}")

@@ -24,11 +24,12 @@ class Report {
   });
 
   factory Report.fromJson(Map<String, dynamic> json) {
+    final rawSeverity = json['severity'] ?? (json['urgency_rank'] != null ? (json['urgency_rank'] >= 8 ? 'Critical' : (json['urgency_rank'] >= 5 ? 'High' : 'Moderate')) : 'Medium');
     return Report(
       id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
       title: json['title'] ?? 'Incident Report',
-      category: json['category'] ?? 'General',
-      severity: json['severity'] ?? 'Medium',
+      category: json['category'] ?? json['type'] ?? 'General',
+      severity: rawSeverity.toString(),
       latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
       description: json['description'] ?? '',

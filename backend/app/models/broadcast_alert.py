@@ -4,7 +4,7 @@ Persists every emergency broadcast alert to SQLite/PostgreSQL.
 Complements the in-memory WebSocket history with durable storage.
 """
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, DateTime, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
@@ -20,4 +20,4 @@ class BroadcastAlert(Base):
     location:    Mapped[str]        = mapped_column(String(200), nullable=False, default="Coastal Zone")
     severity:    Mapped[str]        = mapped_column(String(30),  nullable=False, default="HIGH")
     origin_mode: Mapped[str]        = mapped_column(String(50),  nullable=False, default="Online")
-    created_at:  Mapped[datetime]   = mapped_column(DateTime,    default=datetime.utcnow)
+    created_at:  Mapped[datetime]   = mapped_column(DateTime,    default=lambda: datetime.now(timezone.utc))

@@ -4,7 +4,7 @@ Fully Integrated with SQLite / PostgreSQL Async Database & YOLOv11 + ViT AI Scan
 """
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query, Request
@@ -198,7 +198,7 @@ async def submit_community_report(
         is_fake=(not is_verified),
         urgency_rank=urgency_rank or (8 if is_verified else 3),
         status=initial_status,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
 
     db.add(new_report)
@@ -287,7 +287,7 @@ async def submit_community_report_json(
         ai_confidence=96.4 if is_verified else 20.0,
         urgency_rank=data.urgency_rank or 5,
         status=ReportStatus.verified if is_verified else ReportStatus.pending,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
 
     db.add(new_report)
@@ -351,6 +351,74 @@ async def get_all_reports(
         "status": "success",
         "total": len(output),
         "reports": output
+    }
+
+@router.get("/reports/stats")
+async def get_reports_stats(db: AsyncSession = Depends(get_db)):
+    """Summary metrics of incident reports grouped by classification and status."""
+    stmt = select(CommunityReport)
+    result = await db.execute(stmt)
+    reports = result.scalars().all()
+
+    by_type = {}
+    by_status = {}
+    total_verified = 0
+    total_quarantined = 0
+    high_urgency = 0
+
+    for r in reports:
+        t = r.report_type.value if hasattr(r.report_type, "value") else str(r.report_type)
+        s = r.status.value if hasattr(r.status, "value") else str(r.status)
+        by_type[t] = by_type.get(t, 0) + 1
+        by_status[s] = by_status.get(s, 0) + 1
+        if r.ai_verified:
+            total_verified += 1
+        if r.is_fake:
+            total_quarantined += 1
+        if (r.urgency_rank or 0) >= 8:
+            high_urgency += 1
+
+    return {
+        "status": "success",
+        "total_reports": len(reports),
+        "total_verified": total_verified,
+        "total_quarantined": total_quarantined,
+        "high_urgency_count": high_urgency,
+        "by_type": by_type,
+        "by_status": by_status
+    }
+
+@router.get("/reports/geojson")
+async def get_reports_geojson(db: AsyncSession = Depends(get_db)):
+    """Export reports as standard GeoJSON FeatureCollection for GIS integration."""
+    stmt = select(CommunityReport).order_by(desc(CommunityReport.created_at)).limit(100)
+    result = await db.execute(stmt)
+    reports = result.scalars().all()
+
+    features = []
+    for r in reports:
+        features.append({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [r.longitude, r.latitude]
+            },
+            "properties": {
+                "id": r.id,
+                "title": r.title,
+                "type": r.report_type.value if hasattr(r.report_type, "value") else str(r.report_type),
+                "address": r.address,
+                "urgency": r.urgency_rank,
+                "status": r.status.value if hasattr(r.status, "value") else str(r.status),
+                "ai_verified": r.ai_verified,
+                "is_fake": r.is_fake,
+                "created_at": r.created_at.isoformat() if r.created_at else None
+            }
+        })
+
+    return {
+        "type": "FeatureCollection",
+        "features": features
     }
 
 @router.get("/reports/{report_id}")

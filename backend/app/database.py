@@ -5,7 +5,7 @@ Includes Schema Initialization & Pre-seeded User Accounts & Field Reports
 import uuid
 import hashlib
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import select
@@ -132,7 +132,7 @@ async def init_db():
                     is_fake=False,
                     urgency_rank=8,
                     status=ReportStatus.verified,
-                    created_at=datetime.utcnow()
+                    created_at=datetime.now(timezone.utc)
                 ),
                 CommunityReport(
                     id="REP-88231",
@@ -151,7 +151,7 @@ async def init_db():
                     is_fake=False,
                     urgency_rank=9,
                     status=ReportStatus.verified,
-                    created_at=datetime.utcnow()
+                    created_at=datetime.now(timezone.utc)
                 ),
                 CommunityReport(
                     id="REP-77104",
@@ -170,7 +170,7 @@ async def init_db():
                     is_fake=False,
                     urgency_rank=7,
                     status=ReportStatus.verified,
-                    created_at=datetime.utcnow()
+                    created_at=datetime.now(timezone.utc)
                 )
             ]
             session.add_all(sample_reports)
@@ -192,7 +192,7 @@ async def init_db():
                     longitude=72.8120,
                     ngo_assigned="Sea Turtle Conservation Foundation",
                     status=RescueStatus.ngo_alerted,
-                    created_at=datetime.utcnow()
+                    created_at=datetime.now(timezone.utc)
                 ),
                 MarineRescue(
                     id="MAR-002",
@@ -205,7 +205,7 @@ async def init_db():
                     longitude=72.8264,
                     ngo_assigned="Wildlife SOS Marine Wing",
                     status=RescueStatus.in_rescue,
-                    created_at=datetime.utcnow()
+                    created_at=datetime.now(timezone.utc)
                 )
             ]
             session.add_all(sample_rescues)
@@ -228,8 +228,8 @@ async def init_db():
                     radius_km   = 120.0,
                     source      = "IMD / INCOIS",
                     is_active   = True,
-                    started_at  = datetime.utcnow(),
-                    created_at  = datetime.utcnow(),
+                    started_at  = datetime.now(timezone.utc),
+                    created_at  = datetime.now(timezone.utc),
                 ),
                 Disaster(
                     id          = str(uuid.uuid4()),
@@ -244,8 +244,8 @@ async def init_db():
                     radius_km   = 80.0,
                     source      = "INCOIS Buoy Network",
                     is_active   = True,
-                    started_at  = datetime.utcnow(),
-                    created_at  = datetime.utcnow(),
+                    started_at  = datetime.now(timezone.utc),
+                    created_at  = datetime.now(timezone.utc),
                 ),
                 Disaster(
                     id          = str(uuid.uuid4()),
@@ -260,8 +260,8 @@ async def init_db():
                     radius_km   = 50.0,
                     source      = "IMD Regional Centre",
                     is_active   = True,
-                    started_at  = datetime.utcnow(),
-                    created_at  = datetime.utcnow(),
+                    started_at  = datetime.now(timezone.utc),
+                    created_at  = datetime.now(timezone.utc),
                 ),
                 Disaster(
                     id          = str(uuid.uuid4()),
@@ -276,8 +276,8 @@ async def init_db():
                     radius_km   = 30.0,
                     source      = "NIOT / INCOIS",
                     is_active   = True,
-                    started_at  = datetime.utcnow(),
-                    created_at  = datetime.utcnow(),
+                    started_at  = datetime.now(timezone.utc),
+                    created_at  = datetime.now(timezone.utc),
                 ),
             ]
             session.add_all(seed_disasters)
@@ -294,7 +294,7 @@ async def init_db():
                 location    = "Ratnagiri & South Konkan",
                 severity    = "CRITICAL",
                 origin_mode = "Online Server Broadcast",
-                created_at  = datetime.utcnow(),
+                created_at  = datetime.now(timezone.utc),
             ))
             await session.commit()
 

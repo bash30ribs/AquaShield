@@ -4,7 +4,7 @@ Sends SOS alerts via SMS when internet is unavailable.
 Uses native device SMS (sms: URI) as primary, with Twilio API as optional backend.
 """
 from fastapi import APIRouter, Form
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/sms", tags=["SMS Emergency"])
 
@@ -29,7 +29,7 @@ def send_sms_sos(
     In production, this would integrate with Twilio/MSG91/TextLocal API.
     For demo, it returns the pre-formatted SMS body and emergency numbers.
     """
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     
     sms_body = (
         f"SOS EMERGENCY ALERT - AquaShield AI\n"

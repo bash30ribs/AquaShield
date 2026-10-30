@@ -3,7 +3,7 @@ FastAPI Router: Marine Animal Rescue
 Integrated with SQLite / PostgreSQL Async DB & NGO Dispatch Engine
 """
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, Request, Form
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -138,7 +138,7 @@ async def report_marine_rescue(
             longitude=lng or 72.82,
             ngo_assigned=assigned_ngo,
             status=RescueStatus.ngo_alerted,
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         db.add(new_rescue)
         await db.commit()
@@ -157,4 +157,83 @@ async def report_marine_rescue(
         "severity": sev,
         "location": loc
     }
+
+from pydantic import BaseModel
+from fastapi import HTTPException
+
+class MarineStatusUpdate(BaseModel):
+    status: str
+    ngo_assigned: Optional[str] = None
+    notes: Optional[str] = None
+
+@router.get("/{rescue_id}")
+async def get_marine_rescue_by_id(rescue_id: str, db: AsyncSession = Depends(get_db)):
+    """Fetch single marine rescue ticket by ID."""
+    stmt = select(MarineRescue).where(MarineRescue.id == rescue_id)
+    result = await db.execute(stmt)
+    r = result.scalar_one_or_none()
+    if not r:
+        raise HTTPException(status_code=404, detail="Marine rescue ticket not found")
+
+    return {
+        "status": "success",
+        "rescue": {
+            "id": r.id,
+            "species": r.species_detail or (r.species.value.capitalize() if hasattr(r.species, 'value') else str(r.species)),
+            "location": r.beach_name,
+            "latitude": r.latitude,
+            "longitude": r.longitude,
+            "status": r.status.value if hasattr(r.status, 'value') else str(r.status),
+            "ngo": r.ngo_assigned,
+            "severity": r.injury_severity,
+            "description": r.description,
+            "created_at": r.created_at.isoformat() if r.created_at else None
+        }
+    }
+
+@router.patch("/{rescue_id}/status")
+async def update_marine_status(
+    rescue_id: str,
+    payload: MarineStatusUpdate,
+    db: AsyncSession = Depends(get_db)
+):
+    """Update status of a marine rescue operation (e.g. ngo_alerted, in_rescue, rehabilitated, released)."""
+    stmt = select(MarineRescue).where(MarineRescue.id == rescue_id)
+    result = await db.execute(stmt)
+    rescue = result.scalar_one_or_none()
+    if not rescue:
+        raise HTTPException(status_code=404, detail="Marine rescue ticket not found")
+
+    try:
+        new_status = RescueStatus(payload.status.lower().replace(" ", "_"))
+    except ValueError:
+        valid_statuses = [s.value for s in RescueStatus]
+        raise HTTPException(status_code=400, detail=f"Invalid status '{payload.status}'. Valid: {valid_statuses}")
+
+    rescue.status = new_status
+    if payload.ngo_assigned:
+        rescue.ngo_assigned = payload.ngo_assigned
+    await db.commit()
+    await db.refresh(rescue)
+
+    return {
+        "status": "success",
+        "message": f"Marine rescue {rescue_id} updated to status '{rescue.status.value}'",
+        "rescue_id": rescue.id,
+        "new_status": rescue.status.value
+    }
+
+@router.delete("/{rescue_id}")
+async def delete_marine_rescue(rescue_id: str, db: AsyncSession = Depends(get_db)):
+    """Delete a marine rescue record from database."""
+    stmt = select(MarineRescue).where(MarineRescue.id == rescue_id)
+    result = await db.execute(stmt)
+    rescue = result.scalar_one_or_none()
+    if not rescue:
+        raise HTTPException(status_code=404, detail="Marine rescue ticket not found")
+
+    await db.delete(rescue)
+    await db.commit()
+    return {"status": "success", "message": f"Marine rescue {rescue_id} deleted"}
+
 

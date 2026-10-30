@@ -4,7 +4,7 @@ Persists every emergency SOS distress call to SQLite/PostgreSQL.
 """
 import uuid
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, Float, DateTime, Text, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
@@ -28,4 +28,4 @@ class SOSEvent(Base):
     details:        Mapped[str | None]   = mapped_column(Text,        nullable=True)
     sms_payload:    Mapped[str | None]   = mapped_column(Text,        nullable=True)
     status:         Mapped[SOSStatus]    = mapped_column(SAEnum(SOSStatus), default=SOSStatus.transmitted)
-    created_at:     Mapped[datetime]     = mapped_column(DateTime,    default=datetime.utcnow)
+    created_at:     Mapped[datetime]     = mapped_column(DateTime,    default=lambda: datetime.now(timezone.utc))

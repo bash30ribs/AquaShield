@@ -4,7 +4,7 @@ Stores raw citizen incident complaints, multi-turn dialogue, and AI-structured d
 for real-time dispatch and future NLP/ML fine-tuning.
 """
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, Text, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
@@ -24,4 +24,4 @@ class ConversationalComplaint(Base):
     extracted_urgency: Mapped[int] = mapped_column(Integer, default=5)
     filed_report_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     status: Mapped[str] = mapped_column(String(50), default="draft")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
